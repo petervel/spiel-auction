@@ -1,0 +1,33 @@
+{
+	"name": "spiel-auction-backend",
+	"version": "1.0.0",
+	"description": "The backend for the BGG auctions tool",
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "npx tsc",
+		"start": "forever start dist/index.js",
+		"dev": "node --watch -r ts-node/register src/index.ts",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Peter Vel",
+	"license": "ISC",
+	"dependencies": {
+		"@prisma/client": "5.16.1",
+		"axios": "^1.6.8",
+		"dotenv": "^16.4.5",
+		"express": "^4.19.2",
+		"fast-xml-parser": "^4.3.6",
+		"html-entities": "^2.5.2",
+		"latinize": "1",
+		"mysql2": "^3.9.4",
+		"prettier": "^3.3.3",
+		"prisma": "^5.16.1"
+	},
+	"devDependencies": {
+		"@types/express": "^4.17.21",
+		"@types/latinize": "^0.2.18",
+		"@types/node": "^20.12.7",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.4.5"
+	}
+}

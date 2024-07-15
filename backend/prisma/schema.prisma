@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Fair {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  status     FairStatus @default(ACTIVE)
+  geeklistId Int
+  list       List?      @relation(fields: [listId], references: [id])
+  listId     Int?       @unique
+}
+
+model List {
+  id            Int           @unique
+  fair          Fair?
+  title         String
+  username      String
+  postDate      DateTime
+  postTimestamp Int
+  editDate      DateTime
+  editTimestamp Int
+  thumbs        Int
+  itemCount     Int
+  description   String        @db.Text
+  tosUrl        String
+  comments      ListComment[]
+  items         Item[]
+}
+
+model Item {
+  id     Int  @unique
+  list   List @relation(fields: [listId], references: [id])
+  listId Int
+
+  objectType    String
+  objectSubtype String
+  objectId      Int
+  objectName    String @db.Text
+
+  username String
+  postDate DateTime
+  postTimestamp Int
+  editDate DateTime
+  editTimestamp Int
+  thumbs   Int
+  imageId  Int
+
+  body String @db.Text
+
+  deleted  Boolean       @default(false)
+  comments ItemComment[]
+
+  // Derived data
+  language  String? @db.Text
+  condition String? @db.Text
+
+  startingBid Int?
+  softReserve Int?
+  hardReserve Int?
+  binPrice    Int?
+
+  highestBid Int?
+
+  auctionEnd     String? @db.Text
+  auctionEndDate String? @db.Text
+
+  lastSeen Int?
+}
+
+model ListComment {
+  list          List     @relation(fields: [listId], references: [id])
+  listId        Int
+  username      String
+  date          String
+  postDate      DateTime
+  postTimestamp Int
+  editDate      DateTime
+  editTimestamp Int
+  thumbs        Int      @default(0)
+  text          String   @db.Text
+  @@unique([listId, username, postTimestamp])
+}
+
+model ItemComment {
+  item          Item     @relation(fields: [itemId], references: [id])
+  itemId        Int
+  username      String
+  date          String
+  postDate      DateTime
+  postTimestamp Int
+  editDate      DateTime
+  editTimestamp Int
+  thumbs        Int      @default(0)
+  text          String   @db.Text
+  isBin         Boolean  @default(false)
+  bid           Int?
+
+  @@unique([itemId, username, postTimestamp])
+}
+
+enum FairStatus {
+  ACTIVE
+  ARCHIVED
+}

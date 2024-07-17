@@ -1,4 +1,4 @@
-import { ItemComment } from "@prisma/client";
+import { ItemComment, PrismaPromise } from "@prisma/client";
 import { decode } from "html-entities";
 import prisma from "../../prismaClient";
 import {
@@ -91,7 +91,7 @@ export class ItemCommentWrapper {
 	}
 
 	public static saveAll(comments: ItemCommentWrapper[]) {
-		return comments.map((comment) =>
+		const upserts: PrismaPromise<any>[] = comments.map((comment) =>
 			prisma.itemComment.upsert({
 				where: {
 					itemId_username_postTimestamp: {
@@ -104,6 +104,7 @@ export class ItemCommentWrapper {
 				update: comment.dbObject,
 			}),
 		);
+		return upserts;
 	}
 
 	public static getHighestBid(comments: ItemCommentWrapper[]) {

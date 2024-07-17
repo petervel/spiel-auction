@@ -1,4 +1,4 @@
-import { List } from "@prisma/client";
+import { List, PrismaPromise } from "@prisma/client";
 import { decode } from "html-entities";
 import prisma from "../../prismaClient";
 import { ok } from "../util/result";
@@ -57,7 +57,7 @@ export class ListWrapper {
 	}
 
 	public async save() {
-		let upserts: any[] = [];
+		let upserts: PrismaPromise<any>[] = [];
 
 		upserts.push(
 			prisma.list.upsert({

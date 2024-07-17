@@ -1,4 +1,4 @@
-import { Item } from "@prisma/client";
+import { Item, PrismaPromise } from "@prisma/client";
 import { decode } from "html-entities";
 import prisma from "../../prismaClient";
 import {
@@ -45,7 +45,7 @@ export class ItemWrapper {
 			imageId: Number(source["@_imageid"]),
 			body: decode(source["body"]),
 			deleted: false,
-			lastSeen: Date.now(),
+			lastSeen: Math.floor(Date.now() / 1000),
 			...this.getDerivedData(source["body"], commentData, false),
 			...this.getDerivedData(source["body"], commentData),
 		};
@@ -143,8 +143,8 @@ export class ItemWrapper {
 		return items;
 	}
 
-	public static async saveAll(items: ItemWrapper[]) {
-		let upserts: any[] = [];
+	public static saveAll(items: ItemWrapper[]) {
+		let upserts: PrismaPromise<any>[] = [];
 		for (const wrapper of items) {
 			upserts.push(
 				prisma.item.upsert({

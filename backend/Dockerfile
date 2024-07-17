@@ -14,6 +14,7 @@ RUN yarn install
 COPY . .
 
 RUN yarn build
+RUN npx prisma generate
 
 FROM node:20-alpine
 
@@ -23,7 +24,12 @@ COPY --from=builder /app/yarn.lock ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
 EXPOSE 3000
 
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 # 👇 new migrate and start app script
-CMD [  "yarn", "start:migrate:prod" ]
+CMD [  "yarn", "start" ]

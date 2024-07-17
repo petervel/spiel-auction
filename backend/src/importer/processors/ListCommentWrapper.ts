@@ -1,4 +1,4 @@
-import { ListComment } from "@prisma/client";
+import { ListComment, PrismaPromise } from "@prisma/client";
 import { decode } from "html-entities";
 import { toArray } from "../../importer/util/helpers";
 import prisma from "../../prismaClient";
@@ -34,8 +34,8 @@ export class ListCommentWrapper {
 		);
 	}
 
-	public static async saveAll(comments: ListCommentWrapper[]) {
-		const upserts = comments.map((comment) =>
+	public static saveAll(comments: ListCommentWrapper[]) {
+		const upserts: PrismaPromise<any>[] = comments.map((comment) =>
 			prisma.listComment.upsert({
 				where: {
 					listId_username_postTimestamp: {

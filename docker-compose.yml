@@ -1,26 +1,21 @@
 services:
   backend:
     build: ./backend
+    volumes:
+      - ./.env:/app/.env
+    env_file: ./.env
     ports:
       - 3000:3000
-    environment:
-      MYSQL_HOST: db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: 4uc710n5DB
-      MYSQL_DB: auctions
-      DATABASE_URL: mysql://root:4uc710n5DB@db:3306/auctions
     depends_on:
       db:
         condition: service_healthy
 
   db:
-    image: mysql
+    image: mysql:latest
+    env_file: ./.env
     environment:
-      MYSQL_ROOT_PASSWORD: 4uc710n5DB
-      MYSQL_DATABASE: auctions
-    ports:
-      - "3306:3306"
-    volumes:
+      - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}
+    volumes: 
       - ./data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "--silent"]

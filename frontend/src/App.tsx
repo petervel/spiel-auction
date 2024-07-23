@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
-  const [fairs, setFairs] = useState<any>([]);
+  const [fairs, setFairs] = useState<
+    Record<string, string | number | null | undefined>[]
+  >([]);
 
   useEffect(() => {
     async function fetchData() {

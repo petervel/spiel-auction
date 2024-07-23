@@ -1,5 +1,5 @@
-import fairs from './fairs';
 import auctions from "./auctions";
+import fairs from "./fairs";
 
 export default [
 	{ path: "/fairs", object: fairs },

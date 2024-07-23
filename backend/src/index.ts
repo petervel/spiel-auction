@@ -9,8 +9,13 @@ const app = express();
 // host the API
 import routes from "./api";
 for (const route of routes) {
-	app.use(route.path, route.object);
+	app.use("/api" + route.path, route.object);
 }
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+	res.status(200).json({ status: "ok" });
+});
 
 // host the update endpoint (TODO: temp, make this cronjob)
 import { updateData } from "./importer/updateData";
@@ -21,6 +26,12 @@ app.use("/update", async (_, res) => {
 
 // start the server
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
 	console.log(`Listening on port ${port}`);
+});
+
+process.on("SIGTERM", () => {
+	server.close(() => {
+		console.log("Process terminated");
+	});
 });

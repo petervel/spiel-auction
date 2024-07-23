@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# Stage 1: Build the application
+FROM node:20-alpine AS builder
 
 # Create and change to the app directory
 WORKDIR /app
@@ -15,8 +16,17 @@ COPY . .
 # Build the application for production
 RUN yarn build
 
-# Expose the frontend port
-EXPOSE 5173
+# Stage 2: Serve the application with Nginx
+FROM nginx:alpine
 
-# Start the Vite development server
-CMD ["yarn", "dev"]
+# Copy the built files from the previous stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy Nginx configuration file
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 80 to the outside world
+EXPOSE 80
+
+# Start Nginx server
+CMD ["nginx", "-g", "daemon off;"]

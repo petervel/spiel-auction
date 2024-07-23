@@ -7,8 +7,12 @@ function App() {
   useEffect(() => {
     async function fetchData() {
       const response = await fetch(`/api/fairs`);
-      const data = await response.json();
-      setFairs(data);
+      if (response.status == 200) {
+        const data = await response.json();
+        setFairs(data);
+      } else {
+        console.error("Failed to fetch data:", response.statusText);
+      }
     }
     fetchData();
   }, []);

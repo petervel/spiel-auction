@@ -35,7 +35,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "5173:5173"
+      - "80:5173"
     networks:
       - internal
       - default
@@ -43,3 +43,14 @@ services:
 networks:
   internal:
     driver: bridge
+
+
+      #nginxproxymgr:
+  #  image: 'jc21/nginx-proxy-manager:latest'
+  #  restart: unless-stopped
+  #  ports:
+  #    - '80:80'
+  #    - '443:443'
+  #    - '81:81'
+  #  volumes:
+  #    - ./letsencrypt:/etc/letsencrypt

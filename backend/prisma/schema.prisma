@@ -49,13 +49,13 @@ model Item {
   objectId      Int
   objectName    String @db.Text
 
-  username String
-  postDate DateTime
+  username      String
+  postDate      DateTime
   postTimestamp Int
-  editDate DateTime
+  editDate      DateTime
   editTimestamp Int
-  thumbs   Int
-  imageId  Int
+  thumbs        Int
+  imageId       Int
 
   body String @db.Text
 
@@ -90,6 +90,7 @@ model ListComment {
   editTimestamp Int
   thumbs        Int      @default(0)
   text          String   @db.Text
+
   @@unique([listId, username, postTimestamp])
 }
 

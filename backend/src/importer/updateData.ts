@@ -1,4 +1,4 @@
-import { Fair } from "@prisma/client";
+import { Fair, FairStatus, JobResult } from "@prisma/client";
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
 import prisma from "../prismaClient";
@@ -11,20 +11,39 @@ export const updateData = async () => {
 	const updateTime = Math.floor(Date.now() / 1000);
 
 	const fairs = await prisma.fair.findMany({
-		where: { status: "ACTIVE", lastUpdated: { lt: updateTime - 5 * 60 } },
+		where: {
+			status: FairStatus.ACTIVE,
+			OR: [
+				{ lastResult: { not: JobResult.RUNNING } },
+				{ startedAt: { lt: updateTime - 5 * 60 } },
+			],
+			lastUpdated: { lt: updateTime - 5 * 60 },
+		},
 	});
 
 	for (const fair of fairs) {
+		await prisma.fair.update({
+			where: { id: fair.id },
+			data: { lastResult: JobResult.RUNNING, startedAt: updateTime },
+		});
 		const result = await update(fair, updateTime);
 		if (result.isOk()) {
 			await prisma.fair.update({
 				where: { id: fair.id },
-				data: { lastUpdated: updateTime },
+				data: {
+					lastUpdated: updateTime,
+					lastResult: JobResult.SUCCESS,
+				},
 			});
 			console.log(
 				`"${fair.name}" successfully updated at ${updateTime}.`,
 			);
 		} else {
+			await prisma.fair.update({
+				where: { id: fair.id },
+				data: { lastResult: JobResult.FAILURE },
+			});
+
 			console.log(
 				`Processing fair ${fair.id} unsuccessful: ${result.error}`,
 			);

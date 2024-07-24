@@ -19,6 +19,8 @@ model Fair {
   status      FairStatus @default(ACTIVE)
   geeklistId  Int
   lastUpdated Int        @default(0)
+  lastResult  JobResult  @default(NONE)
+  startedAt   Int        @default(0)
   list        List?      @relation(fields: [listId], references: [id])
   listId      Int?       @unique
 }
@@ -119,4 +121,11 @@ model ItemComment {
 enum FairStatus {
   ACTIVE
   ARCHIVED
+}
+
+enum JobResult {
+  NONE
+  FAILURE
+  SUCCESS
+  RUNNING
 }

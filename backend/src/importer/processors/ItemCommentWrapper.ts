@@ -15,7 +15,11 @@ export class ItemCommentWrapper {
 		this.dbObject = dbObject;
 	}
 
-	public static fromXml(itemId: number, source: Record<string, any>) {
+	public static fromXml(
+		itemId: number,
+		source: Record<string, any>,
+		updateTime: number,
+	) {
 		const text = decode(`${source["#text"]}`); // force this to be a string, for parsing purposes.
 
 		let is_bin = false;
@@ -43,6 +47,7 @@ export class ItemCommentWrapper {
 			text: text,
 			isBin: is_bin,
 			bid: bid,
+			lastSeen: updateTime,
 		};
 
 		return new ItemCommentWrapper(dbObject);
@@ -82,17 +87,18 @@ export class ItemCommentWrapper {
 	public static loadAll(
 		itemId: number,
 		source: String,
+		updateTime: number,
 	): ItemCommentWrapper[] {
 		if (!source) return [];
 
 		return toArray(source).map((commentData) =>
-			ItemCommentWrapper.fromXml(itemId, commentData),
+			ItemCommentWrapper.fromXml(itemId, commentData, updateTime),
 		);
 	}
 
 	public static saveAll(comments: ItemCommentWrapper[]) {
-		const upserts: PrismaPromise<any>[] = comments.map((comment) =>
-			prisma.itemComment.upsert({
+		const upserts: PrismaPromise<any>[] = comments.map((comment) => {
+			const upsert = prisma.itemComment.upsert({
 				where: {
 					itemId_username_postTimestamp: {
 						itemId: comment.dbObject.itemId,
@@ -102,8 +108,9 @@ export class ItemCommentWrapper {
 				},
 				create: comment.dbObject,
 				update: comment.dbObject,
-			}),
-		);
+			});
+			return upsert;
+		});
 		return upserts;
 	}
 

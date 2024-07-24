@@ -21,12 +21,14 @@ export class ItemWrapper {
 	public static fromXml(
 		listId: number,
 		source: Record<string, any>,
+		updateTime: number,
 	): ItemWrapper {
 		const itemId = Number(source["@_id"]);
 
 		const commentData = ItemCommentWrapper.loadAll(
 			itemId,
 			source["comment"],
+			updateTime,
 		);
 
 		const itemData = {
@@ -45,7 +47,7 @@ export class ItemWrapper {
 			imageId: Number(source["@_imageid"]),
 			body: decode(source["body"]),
 			deleted: false,
-			lastSeen: Math.floor(Date.now() / 1000),
+			lastSeen: updateTime,
 			...this.getDerivedData(source["body"], commentData, false),
 			...this.getDerivedData(source["body"], commentData),
 		};
@@ -128,14 +130,18 @@ export class ItemWrapper {
 		};
 	}
 
-	public static loadAll(listId: number, source: String): ItemWrapper[] {
+	public static loadAll(
+		listId: number,
+		source: String,
+		updateTime: number,
+	): ItemWrapper[] {
 		if (!source) return [];
 
 		const itemsArray = Array.isArray(source) ? source : [source];
 
 		const items = [];
 		for (const itemArray of itemsArray) {
-			const wrapper = ItemWrapper.fromXml(listId, itemArray);
+			const wrapper = ItemWrapper.fromXml(listId, itemArray, updateTime);
 
 			items.push(wrapper);
 		}

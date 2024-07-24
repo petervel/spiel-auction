@@ -15,14 +15,15 @@ export const updateData = async () => {
 	});
 
 	for (const fair of fairs) {
-		const result = await update(fair);
+		const result = await update(fair, updateTime);
 		if (result.isOk()) {
-			console.log(`setting ${fair.id} to ${updateTime}`);
 			await prisma.fair.update({
 				where: { id: fair.id },
 				data: { lastUpdated: updateTime },
 			});
-			console.log(`"${fair.name}" successfully updated.`);
+			console.log(
+				`"${fair.name}" successfully updated at ${updateTime}.`,
+			);
 		} else {
 			console.log(
 				`Processing fair ${fair.id} unsuccessful: ${result.error}`,
@@ -33,7 +34,7 @@ export const updateData = async () => {
 	return true;
 };
 
-export async function update(fair: Fair) {
+export async function update(fair: Fair, updateTime: number) {
 	console.info(`${fair.id}: Fetching XML... ${fair.geeklistId}`);
 	const xmlString = await getXml(fair.geeklistId);
 
@@ -43,10 +44,10 @@ export async function update(fair: Fair) {
 	const object = parseResult.value;
 
 	console.info(`${fair.id}: Loading auction list object...`);
-	const listWrapper = ListWrapper.fromXml(fair.id, object);
+	const listWrapper = await ListWrapper.fromXml(fair.id, object, updateTime);
 
 	console.info(`${fair.id}: Data loaded. Saving...`);
-	const upsertResult = await (await listWrapper).save();
+	const upsertResult = await listWrapper.save();
 
 	if (upsertResult.isErr()) return upsertResult;
 

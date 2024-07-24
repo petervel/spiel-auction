@@ -22,12 +22,17 @@ export class ListWrapper {
 		this.items = items;
 	}
 
-	public static async fromXml(fairId: number, source: Record<string, any>) {
+	public static async fromXml(
+		fairId: number,
+		source: Record<string, any>,
+		updateTime: number,
+	) {
 		const listId = Number(source["@_id"]);
 
 		const commentsData = ListCommentWrapper.loadAll(
 			listId,
 			source["comment"],
+			updateTime,
 		);
 
 		let editTimestamp = Number(source["editdate_timestamp"]);
@@ -49,9 +54,10 @@ export class ListWrapper {
 			itemCount: Number(source["numitems"]),
 			description: decode(source["description"]),
 			tosUrl: source["@_termsofuse"],
+			lastSeen: updateTime,
 		};
 
-		const items = ItemWrapper.loadAll(listId, source["item"]);
+		const items = ItemWrapper.loadAll(listId, source["item"], updateTime);
 
 		return new ListWrapper(listData, commentsData, items);
 	}

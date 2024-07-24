@@ -7,17 +7,27 @@ import { Result, err, ok } from "./util/result";
 
 export const updateData = async () => {
 	console.log("Update data");
-	const fairs = await prisma.fair.findMany({ where: { status: "ACTIVE" } });
+
+	const updateTime = Math.floor(Date.now() / 1000);
+
+	const fairs = await prisma.fair.findMany({
+		where: { status: "ACTIVE", lastUpdated: { lt: updateTime - 5 * 60 } },
+	});
 
 	for (const fair of fairs) {
 		const result = await update(fair);
-		if (result.isErr()) {
+		if (result.isOk()) {
+			console.log(`setting ${fair.id} to ${updateTime}`);
+			await prisma.fair.update({
+				where: { id: fair.id },
+				data: { lastUpdated: updateTime },
+			});
+			console.log(`"${fair.name}" successfully updated.`);
+		} else {
 			console.log(
 				`Processing fair ${fair.id} unsuccessful: ${result.error}`,
 			);
 			return false;
-		} else {
-			console.log(`"${fair.name}" successfully updated.`);
 		}
 	}
 	return true;

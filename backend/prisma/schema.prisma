@@ -14,12 +14,13 @@ datasource db {
 }
 
 model Fair {
-  id         Int        @id @default(autoincrement())
-  name       String     @unique
-  status     FairStatus @default(ACTIVE)
-  geeklistId Int
-  list       List?      @relation(fields: [listId], references: [id])
-  listId     Int?       @unique
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  status      FairStatus @default(ACTIVE)
+  geeklistId  Int
+  lastUpdated Int        @default(0)
+  list        List?      @relation(fields: [listId], references: [id])
+  listId      Int?       @unique
 }
 
 model List {

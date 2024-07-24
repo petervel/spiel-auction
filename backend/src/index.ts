@@ -2,6 +2,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import cron from "node-cron";
+
 // initialize express server
 import express from "express";
 const app = express();
@@ -19,9 +21,14 @@ app.get("/health", (req, res) => {
 
 // host the update endpoint (TODO: temp, make this cronjob)
 import { updateData } from "./importer/updateData";
-app.use("/update", async (_, res) => {
+cron.schedule("* * * * *", async () => {
+	console.log("Starting update job...");
+	const startTime = performance.now();
 	const successful = await updateData();
-	return res.json({ status: successful ? 201 : 202 });
+	const endTime = performance.now();
+	console.log(
+		`Update job ${successful ? "completed" : "failed"}. Time taken: ${((endTime - startTime) / 1000).toFixed(2)}s`,
+	);
 });
 
 // start the server

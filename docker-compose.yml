@@ -23,8 +23,6 @@ services:
       DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
     expose:
       - "3000"
-    # ports: # temp for dev
-    #   - "3000:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -35,7 +33,6 @@ services:
       retries: 5
     networks:
       - internal
-      # - default
     restart: unless-stopped
 
   frontend:
@@ -55,14 +52,3 @@ services:
 networks:
   internal:
     driver: bridge
-
-
-      #nginxproxymgr:
-  #  image: 'jc21/nginx-proxy-manager:latest'
-  #  restart: unless-stopped
-  #  ports:
-  #    - '80:80'
-  #    - '443:443'
-  #    - '81:81'
-  #  volumes:
-  #    - ./letsencrypt:/etc/letsencrypt

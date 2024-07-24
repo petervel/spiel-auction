@@ -179,3 +179,14 @@ export const allSettledWithRetries = async (
 
 export const toArray = <T>(item: T): T[] =>
 	Array.isArray(item) ? item : [item];
+
+export const queryWithTimeout = async (
+	queryFn: () => Promise<any>,
+	timeoutMs: number,
+) => {
+	const timeoutPromise = new Promise((_, reject) =>
+		setTimeout(() => reject(new Error("Query timed out")), timeoutMs),
+	);
+
+	return Promise.race([queryFn(), timeoutPromise]);
+};

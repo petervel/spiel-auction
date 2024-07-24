@@ -4,6 +4,7 @@ import prisma from "../../prismaClient";
 import { ok } from "../util/result";
 import { ItemWrapper } from "./ItemWrapper";
 import { ListCommentWrapper } from "./ListCommentWrapper";
+import { queryWithTimeout } from "../util/helpers";
 
 const BATCH_SIZE = 1000;
 
@@ -80,7 +81,7 @@ export class ListWrapper {
 		let offset = 0;
 		while (offset < upserts.length) {
 			const batch = upserts.slice(offset, offset + BATCH_SIZE);
-			await prisma.$transaction(batch);
+			await queryWithTimeout(() => prisma.$transaction(batch), 30000); // 30s timeout
 			offset += BATCH_SIZE;
 		}
 

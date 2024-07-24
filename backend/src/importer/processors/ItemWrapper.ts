@@ -46,8 +46,8 @@ export class ItemWrapper {
 			thumbs: Number(source["@_thumbs"]),
 			imageId: Number(source["@_imageid"]),
 			body: decode(source["body"]),
-			deleted: false,
 			lastSeen: updateTime,
+			deleted: false,
 			...this.getDerivedData(source["body"], commentData, false),
 			...this.getDerivedData(source["body"], commentData),
 		};

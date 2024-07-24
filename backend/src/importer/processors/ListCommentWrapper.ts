@@ -26,6 +26,7 @@ export class ListCommentWrapper {
 			thumbs: Number(source["@_thumbs"]),
 			text: decode(`${source["#text"]}`), // force this to be a string, for parsing purposes.
 			lastSeen: updateTime,
+			deleted: false,
 		};
 
 		return new ListCommentWrapper(dbObject);

@@ -1,10 +1,10 @@
 import { List, PrismaPromise } from "@prisma/client";
 import { decode } from "html-entities";
 import prisma from "../../prismaClient";
+import { queryWithTimeout } from "../util/helpers";
 import { ok } from "../util/result";
 import { ItemWrapper } from "./ItemWrapper";
 import { ListCommentWrapper } from "./ListCommentWrapper";
-import { queryWithTimeout } from "../util/helpers";
 
 const BATCH_SIZE = 1000;
 
@@ -56,6 +56,7 @@ export class ListWrapper {
 			description: decode(source["description"]),
 			tosUrl: source["@_termsofuse"],
 			lastSeen: updateTime,
+			deleted: false,
 		};
 
 		const items = ItemWrapper.loadAll(listId, source["item"], updateTime);

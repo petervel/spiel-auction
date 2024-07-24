@@ -48,6 +48,7 @@ export class ItemCommentWrapper {
 			isBin: is_bin,
 			bid: bid,
 			lastSeen: updateTime,
+			deleted: false,
 		};
 
 		return new ItemCommentWrapper(dbObject);

@@ -41,7 +41,8 @@ model List {
   comments      ListComment[]
   items         Item[]
 
-  lastSeen Int @default(0)
+  lastSeen Int     @default(0)
+  deleted  Boolean @default(false)
 }
 
 model Item {
@@ -64,7 +65,6 @@ model Item {
 
   body String @db.Text
 
-  deleted  Boolean       @default(false)
   comments ItemComment[]
 
   // Derived data
@@ -81,7 +81,8 @@ model Item {
   auctionEnd     String? @db.Text
   auctionEndDate String? @db.Text
 
-  lastSeen Int @default(0)
+  lastSeen Int     @default(0)
+  deleted  Boolean @default(false)
 }
 
 model ListComment {
@@ -95,7 +96,9 @@ model ListComment {
   editTimestamp Int
   thumbs        Int      @default(0)
   text          String   @db.Text
-  lastSeen      Int      @default(0)
+
+  lastSeen Int     @default(0)
+  deleted  Boolean @default(false)
 
   @@unique([listId, username, postTimestamp])
 }
@@ -113,7 +116,9 @@ model ItemComment {
   text          String   @db.Text
   isBin         Boolean  @default(false)
   bid           Int?
-  lastSeen      Int      @default(0)
+
+  lastSeen Int     @default(0)
+  deleted  Boolean @default(false)
 
   @@unique([itemId, username, postTimestamp])
 }

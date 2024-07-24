@@ -22,7 +22,7 @@ app.get("/health", (req, res) => {
 // host the update endpoint (TODO: temp, make this cronjob)
 import { updateData } from "./importer/updateData";
 cron.schedule("* * * * *", async () => {
-	console.log("Starting update job...");
+	console.log("Starting update job... ", Date());
 	const startTime = performance.now();
 	const successful = await updateData();
 	const endTime = performance.now();

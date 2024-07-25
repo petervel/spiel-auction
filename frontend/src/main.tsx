@@ -12,6 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       domain={authConfig.domain}
       clientId={authConfig.clientId}
       authorizationParams={{
+        audience: authConfig.audience,
         redirect_uri: authConfig.redirectUri,
       }}
     >

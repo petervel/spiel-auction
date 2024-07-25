@@ -27,18 +27,23 @@ function App() {
 
   return (
     <>
-      <div>
-        {import.meta.env.VITE_AUTH0_DOMAIN}
-        <LoginButton />
-        {JSON.stringify(import.meta.env)}
-      </div>
-      <div>
-        <Profile />
-      </div>
-      <div>
-        <LogoutButton />
-      </div>
-      <div>{JSON.stringify(fairs)}</div>
+      {!isAuthenticated && (
+        <div>
+          {import.meta.env.VITE_AUTH0_DOMAIN}
+          <LoginButton />
+        </div>
+      )}
+      {isAuthenticated && (
+        <>
+          <div>
+            <Profile />
+          </div>
+          <div>
+            <LogoutButton />
+          </div>
+          <div>{JSON.stringify(fairs)}</div>
+        </>
+      )}
     </>
   );
 }

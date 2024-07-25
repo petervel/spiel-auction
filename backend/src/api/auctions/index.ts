@@ -5,6 +5,10 @@ const router = express.Router();
 
 const MAX_RESULTS = 3;
 
+router.get("/", (_, res) => {
+	return res.status(400).json({ error: "No listId parameter provided." });
+});
+
 router.get("/:listId", async (req, res) => {
 	if (!req.params.listId) {
 		return res.status(400).json({ error: "No listId parameter provided." });

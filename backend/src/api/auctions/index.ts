@@ -7,20 +7,20 @@ const MAX_RESULTS = 3;
 
 router.get("/:listId", async (req, res) => {
 	if (!req.params.listId) {
-		return error(res, 400, "No listId parameter provided.");
+		return res.status(400).json({ error: "No listId parameter provided." });
 	}
 	const listId = +req.params.listId;
 	if (Number.isNaN(listId)) {
-		return error(
-			res,
-			400,
-			`Invalid listId provided (must be a number): ${req.params.listId}`,
-		);
+		return res.status(400).json({
+			error: `Invalid listId provided (must be a number): ${req.params.listId}`,
+		});
 	}
 
 	const list = await prisma.list.findUnique({ where: { id: listId } });
 	if (!list) {
-		return error(res, 404, `No list found with id ${listId}`);
+		return res
+			.status(404)
+			.json({ error: `No list found with id ${listId}` });
 	}
 
 	const offset: number = +(req.query.offset ?? 0);
@@ -40,8 +40,5 @@ router.get("/:listId", async (req, res) => {
 	}
 	res.status(200).json(items);
 });
-
-const error = (res: express.Response, status: number, text: string) =>
-	res.status(status).json({ error: text });
 
 export default router;

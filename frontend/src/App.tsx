@@ -25,11 +25,11 @@ function App() {
     fetchData();
   }, [isAuthenticated]);
 
+  console.log(import.meta.env);
   return (
     <>
       {!isAuthenticated && (
         <div>
-          {import.meta.env.VITE_AUTH0_DOMAIN}
           <LoginButton />
         </div>
       )}

@@ -10,7 +10,7 @@ if npx prisma migrate status --schema ./prisma/schema.prisma | grep 'Database sc
   npx prisma migrate deploy
 else
   echo "Database schema is not initialized. Pushing initial schema..."
-  npx prisma db push
+  npx prisma db push --accept-data-loss
 fi
 
 # Execute the provided command

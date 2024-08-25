@@ -1,9 +1,10 @@
-import { Item, PrismaPromise } from "@prisma/client";
+import { Item, ItemType, PrismaPromise } from "@prisma/client";
 import { decode } from "html-entities";
 import prisma from "../../prismaClient";
 import {
 	extractNumber,
 	extractString,
+	formatTimeToDate,
 	parseEndDateString,
 	removeStrikethrough,
 } from "../util/helpers";
@@ -31,7 +32,7 @@ export class ItemWrapper {
 			updateTime,
 		);
 
-		const itemData = {
+		const itemData: Item = {
 			id: itemId,
 			listId: listId,
 			objectType: source["@_objecttype"],
@@ -61,6 +62,17 @@ export class ItemWrapper {
 		removeStrikeThrough: boolean = true,
 	) {
 		text = removeStrikeThrough ? removeStrikethrough(text) : text;
+
+		const auctionTypeString =
+			extractString(
+				text,
+				/(?:\[b\])?\s*type?(?:\[\/b\])?\s*:\s*(?:\[[^\]]*])*([^[\n]*)/i,
+			)?.toLowerCase() ?? "GAME";
+
+		let itemType: ItemType = ItemType.GAME;
+		if (auctionTypeString?.indexOf("promo") !== -1) {
+			itemType = ItemType.PROMO;
+		}
 
 		const language =
 			extractString(
@@ -115,7 +127,27 @@ export class ItemWrapper {
 			? (parseEndDateString(auctionEnd) ?? null)
 			: null;
 
-		const highestBid = ItemCommentWrapper.getHighestBid(commentsData);
+		const { highestBid, highestBidder } =
+			ItemCommentWrapper.getHighestBid(commentsData);
+
+		const isSold = !!highestBidder && highestBid == binPrice;
+
+		const hasBids = !!highestBidder;
+
+		const stripped = removeStrikethrough(text);
+		let isEnded =
+			isSold ||
+			(stripped.length < 100 &&
+				(stripped.length == 0 || text.length / stripped.length > 4)) ||
+			(!!auctionEndDate && auctionEndDate < formatTimeToDate());
+
+		const currentBid =
+			highestBid ??
+			startingBid ??
+			softReserve ??
+			hardReserve ??
+			binPrice ??
+			undefined;
 
 		return {
 			language,
@@ -126,7 +158,12 @@ export class ItemWrapper {
 			binPrice,
 			auctionEnd,
 			auctionEndDate,
-			highestBid,
+			highestBidder,
+			hasBids,
+			isSold,
+			isEnded,
+			currentBid,
+			itemType,
 		};
 	}
 

@@ -1,11 +1,10 @@
 import { Home, Sell, ShoppingBasket, SortByAlpha } from '@mui/icons-material';
-import { Stack, Button } from '@mui/material';
-import { MouseEvent, ReactNode, useState } from 'react';
-import css from './TabBar.module.css';
+import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
+import { MouseEvent, ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router';
-import useBggUsername from '../../hooks/useBggUsername';
 import { usePageId } from '../../hooks/usePageId';
+import css from './TabBar.module.css';
 
 type PageData = {
 	id: 'latest' | 'sorted' | 'selling' | 'buying' | 'starred';
@@ -18,7 +17,8 @@ type PageData = {
 const TabBar = () => {
 	const pageId = usePageId();
 	const [page] = useState(pageId);
-	const username = useBggUsername();
+	// const username = useBggUsername();
+	const username = 'petervel';
 
 	const pages: PageData[] = [
 		{
@@ -79,7 +79,7 @@ const TabBar = () => {
 						key={pageData.id}
 						className={classNames(
 							css.button,
-							pageData.id == page ? css.active : '',
+							pageData.id == page ? css.active : ''
 						)}
 						aria-label={pageData.label}
 						href={pageData.url}

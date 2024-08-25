@@ -1,0 +1,20 @@
+# Stage 1: Setup the development environment with Vite
+FROM node:20-alpine AS dev
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and yarn.lock
+COPY package.json yarn.lock ./
+
+# Install dependencies
+RUN yarn install
+
+# Copy all application files
+COPY . .
+
+# Expose the Vite dev server port
+EXPOSE 5173
+
+# Start the Vite development server
+CMD ["yarn", "dev"]

@@ -5,6 +5,7 @@ import {
 	extractNumber,
 	extractString,
 	formatTimeToDate,
+	nullToUndefined,
 	parseEndDateString,
 	removeStrikethrough,
 } from "../util/helpers";
@@ -49,8 +50,22 @@ export class ItemWrapper {
 			body: decode(source["body"]),
 			lastSeen: updateTime,
 			deleted: false,
+			language: null,
+			condition: null,
+			startingBid: null,
+			softReserve: null,
+			hardReserve: null,
+			binPrice: null,
+			auctionEnd: null,
+			auctionEndDate: null,
+			highestBidder: null,
+			hasBids: false,
+			isSold: false,
+			isEnded: false,
+			currentBid: null,
+			itemType: ItemType.GAME,
+			...this.getDerivedData(source["body"], commentData, true),
 			...this.getDerivedData(source["body"], commentData, false),
-			...this.getDerivedData(source["body"], commentData),
 		};
 
 		return new ItemWrapper(itemData, commentData);
@@ -147,9 +162,9 @@ export class ItemWrapper {
 			softReserve ??
 			hardReserve ??
 			binPrice ??
-			undefined;
+			0;
 
-		return {
+		return nullToUndefined({
 			language,
 			condition,
 			startingBid,
@@ -164,7 +179,7 @@ export class ItemWrapper {
 			isEnded,
 			currentBid,
 			itemType,
-		};
+		});
 	}
 
 	public static loadAll(

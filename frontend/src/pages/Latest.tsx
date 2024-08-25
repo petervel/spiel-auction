@@ -1,9 +1,7 @@
+import AuctionItem from '../components/AuctionItem/AuctionItem';
 import useItems from '../hooks/useItems';
+import { Item } from '../model/Item';
 
-type Item = {
-	id: number;
-	objectName: string;
-};
 const Latest = () => {
 	const { data, isLoading, error } = useItems();
 
@@ -17,7 +15,7 @@ const Latest = () => {
 		<div>
 			<ul>
 				{data.map((item: Item) => (
-					<li key={item.id}>{item.objectName}</li>
+					<AuctionItem key={item.id} item={item} />
 				))}
 			</ul>
 		</div>

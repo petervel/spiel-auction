@@ -126,7 +126,7 @@ export class ItemCommentWrapper {
 			}
 		}
 		return {
-			highestBid,
+			highestBid: highestBidder ? highestBid : null,
 			highestBidder,
 		};
 	}

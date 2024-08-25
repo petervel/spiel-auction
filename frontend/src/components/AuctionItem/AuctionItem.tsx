@@ -40,7 +40,9 @@ const AuctionItem = ({ item }: Props) => {
 						{item.objectName}
 					</div>
 					<div className={classNames(css.details, css.hideOverflow)}>
-						{item.language} . {item.auctionEnd} . {item.condition}
+						{[item.language, item.auctionEnd, item.condition]
+							.filter((v) => !!v)
+							.join(' · ')}
 					</div>
 				</div>
 				{showCompare && (

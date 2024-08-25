@@ -192,3 +192,35 @@ export const queryWithTimeout = async (
 
 	return Promise.race([queryFn(), timeoutPromise]);
 };
+
+export const undefinedToNull = (
+	obj: Record<string, any>,
+): Record<string, any> => {
+	const result: Record<string, any> = {};
+	for (const [key, value] of Object.entries(obj)) {
+		if (value === undefined || value === null) {
+			result[key] = null;
+		} else if (typeof value == "object") {
+			result[key] = undefinedToNull(value);
+		} else {
+			result[key] = value;
+		}
+	}
+	return result;
+};
+
+export const nullToUndefined = (
+	obj: Record<string, any>,
+): Record<string, any> => {
+	const result: Record<string, any> = {};
+	for (const [key, value] of Object.entries(obj)) {
+		if (value === null) {
+			delete result[key];
+		} else if (typeof value == "object") {
+			result[key] = nullToUndefined(value);
+		} else {
+			result[key] = value;
+		}
+	}
+	return result;
+};

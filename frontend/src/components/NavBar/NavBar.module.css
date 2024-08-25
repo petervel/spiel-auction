@@ -1,0 +1,46 @@
+.navbar {
+	background: radial-gradient(
+			circle,
+			var(--colour-main) 0%,
+			var(--colour-main) 50%,
+			var(--colour-main-alt) 100%
+		)
+		fixed;
+	margin-bottom: 15px;
+	box-shadow: #00000038 0px 6px 10px 0px;
+	padding: 12px 24px !important;
+}
+
+.navbar button {
+	color: var(--colour-on-main);
+}
+
+.navbar button svg {
+	font-size: 30px;
+}
+
+.navbar .title {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	color: var(--colour-on-main);
+}
+
+.navbar .content {
+	display: flex;
+	align-content: center;
+	justify-content: center;
+}
+
+.darkMode {
+	display: none !important;
+}
+
+@media only screen and (min-width: 768px) {
+	.darkMode {
+		display: flex !important;
+	}
+	.darkModeMenu {
+		display: none !important;
+	}
+}

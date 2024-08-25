@@ -48,7 +48,6 @@ app.get("/health", (req, res) => {
 	res.status(200).json({ status: "ok" });
 });
 
-// host the update endpoint (TODO: temp, make this cronjob)
 import { updateData } from "./importer/updateData";
 cron.schedule("* * * * *", async () => {
 	console.log("Starting update job... ", Date());

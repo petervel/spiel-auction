@@ -1,0 +1,14 @@
+.button {
+	color: var(--colour-inactive) !important;
+}
+
+.button.active {
+	background-color: var(--colour-main) !important;
+	color: var(--colour-on-main) !important;
+	box-shadow: #00000038 0px 6px 10px 0px;
+}
+
+.button.disabled {
+	opacity: 0.5;
+	pointer-events: none;
+}

@@ -81,6 +81,13 @@ model Item {
   auctionEnd     String? @db.Text
   auctionEndDate String? @db.Text
 
+  hasBids       Boolean  @default(false)
+  isSold        Boolean  @default(false)
+  isEnded       Boolean  @default(false)
+  itemType      ItemType @default(GAME)
+  currentBid    Int?
+  highestBidder String?
+
   lastSeen Int     @default(0)
   deleted  Boolean @default(false)
 }
@@ -133,4 +140,10 @@ enum JobResult {
   FAILURE
   SUCCESS
   RUNNING
+}
+
+enum ItemType {
+  GAME
+  PROMO
+  OTHER
 }

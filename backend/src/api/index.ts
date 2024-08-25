@@ -1,7 +1,7 @@
-import auctions from "./auctions";
 import fairs from "./fairs";
+import auctions from "./items";
 
 export default [
 	{ path: "/fairs", object: fairs },
-	{ path: "/auctions", object: auctions },
+	{ path: "/items", object: auctions },
 ];

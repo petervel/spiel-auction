@@ -3,7 +3,7 @@ import prisma from "../../prismaClient";
 
 const router = express.Router();
 
-const MAX_RESULTS = 3;
+const MAX_RESULTS = 100;
 
 router.get("/", (_, res) => {
 	return res.status(400).json({ error: "No listId parameter provided." });

@@ -1,0 +1,30 @@
+.price {
+	border: 1px solid #e2d5d5;
+	background-color: #f6f0ed;
+	color: #6c4b4c;
+	border-radius: 20%;
+	line-height: 40px;
+	text-decoration: none !important;
+	font-size: 11pt;
+	width: 40px;
+	text-align: center;
+	font-weight: 500;
+}
+
+.has-bids {
+	border: 1px solid #e09600;
+	background-color: #ffad0a;
+	color: #fff;
+}
+
+body.dark .price {
+	border: 1px solid #926049;
+	background-color: #6c4b4c;
+	color: #f6f0ed;
+}
+
+body.dark .has-bids {
+	border: 1px solid #f5a300;
+	background-color: #cc8800;
+	color: #f6f0ed;
+}

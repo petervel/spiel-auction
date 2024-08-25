@@ -1,0 +1,42 @@
+.container {
+	border-top: 1px solid #eee;
+}
+
+.info {
+	cursor: pointer;
+	flex: 1;
+	padding: 10px 0px;
+	overflow: hidden;
+}
+
+.auctionItem {
+	min-height: 60px;
+}
+
+.ended {
+	opacity: 0.5;
+}
+
+.ended .info {
+	text-decoration: line-through;
+}
+
+.name {
+	font-weight: 400;
+}
+
+.details {
+	font-size: 0.7em;
+	opacity: 0.5;
+}
+
+.hideOverflow {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.skeleton {
+	padding: 5px 10px;
+	height: 55px;
+}

@@ -1,49 +1,59 @@
-import { useAuth0 } from "@auth0/auth0-react";
-import "./App.css";
-import LoginButton from "./LoginButton";
-import LogoutButton from "./LogoutButton";
-import Profile from "./Profile";
+import { ThemeProvider, createTheme } from '@mui/material';
+import { useMemo } from 'react';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Route, Routes } from 'react-router-dom';
+import NavBar from './components/NavBar/NavBar';
+import { ColorModeContext } from './contexts/ColorModeContext';
+import { useDarkMode } from './hooks/useDarkMode';
+import Latest from './pages/Latest';
 
 function App() {
-  const { isAuthenticated } = useAuth0();
+	const { mode, toggleDarkMode } = useDarkMode();
 
-  // const [fairs, setFairs] = useState<
-  //   Record<string, string | number | null | undefined>[]
-  // >([]);
+	const theme = useMemo(() => {
+		return createTheme({
+			palette: {
+				mode,
+			},
+		});
+	}, [mode]);
 
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     const response = await fetch(`/api/fairs`);
-  //     if (response.status == 200) {
-  //       const data = await response.json();
-  //       setFairs(data);
-  //     } else {
-  //       console.error("Failed to fetch data:", response.statusText);
-  //     }
-  //   }
-  //   fetchData();
-  // }, [isAuthenticated]);
+	const queryClient = new QueryClient();
 
-  return (
-    <>
-      {!isAuthenticated && (
-        <div>
-          <LoginButton />
-        </div>
-      )}
-      {isAuthenticated && (
-        <>
-          <div>
-            <Profile />
-          </div>
-          <div>
-            <LogoutButton />
-          </div>
-          {/* <div>{JSON.stringify(fairs)}</div> */}
-        </>
-      )}
-    </>
-  );
+	return (
+		<QueryClientProvider client={queryClient}>
+			<ColorModeContext.Provider value={{ mode, toggleDarkMode }}>
+				<ThemeProvider theme={theme}>
+					<NavBar />
+					<div className="content-max-width">
+						<Routes>
+							<Route path="/" element={<Latest />} />
+							{/* <Route
+								path="/object/:objectId"
+								element={<Object />}
+							/>
+							<Route path="/selling" element={<Selling />} />
+							<Route
+								path="/selling/:username"
+								element={<Selling />}
+							/>
+							<Route path="/buying" element={<Buying />} />
+							<Route
+								path="/buying/:username"
+								element={<Buying />}
+							/>
+							<Route
+								path="/sorted/:letter"
+								element={<Sorted />}
+							/> */}
+							{/* <Route path="/settings" element={<Settings />} /> */}
+							{/* <Route path="/duplicates" element={<Duplicates />} /> */}
+						</Routes>
+					</div>
+				</ThemeProvider>
+			</ColorModeContext.Provider>
+		</QueryClientProvider>
+	);
 }
 
 export default App;

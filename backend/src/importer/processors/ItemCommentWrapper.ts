@@ -27,7 +27,7 @@ export class ItemCommentWrapper {
 		if (text.length != 0) {
 			let stripped = removeStrikethrough(text);
 			stripped = removeQuoted(stripped);
-			is_bin = !!extractString(stripped, /\b(bin)\b/i);
+			is_bin = !!extractString(stripped, /\b(bin)\b[^?]/i);
 			bid = ItemCommentWrapper.findBidNumber(stripped);
 		}
 

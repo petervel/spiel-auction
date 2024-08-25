@@ -90,8 +90,10 @@ export function parseEndDateString(end: string | null | undefined) {
 
 	end = end.replace(/(,?\s*random time\.?)?/gi, "");
 
-	if (!end.endsWith("2022")) {
-		end += " 2022";
+	const currentYear = `${new Date().getFullYear()}`;
+
+	if (!end.endsWith(currentYear)) {
+		end += ` ${currentYear}`;
 	}
 
 	const ms = Date.parse(end);

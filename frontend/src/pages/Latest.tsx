@@ -1,6 +1,7 @@
 import AuctionItem from '../components/AuctionItem/AuctionItem';
 import useItems from '../hooks/useItems';
 import { Item } from '../model/Item';
+import css from './Latest.module.css';
 
 const Latest = () => {
 	const { data, isLoading, error } = useItems();
@@ -13,7 +14,7 @@ const Latest = () => {
 
 	return (
 		<div>
-			<ul>
+			<ul className={css.items}>
 				{data.map((item: Item) => (
 					<AuctionItem key={item.id} item={item} />
 				))}

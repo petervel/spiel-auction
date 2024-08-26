@@ -11,8 +11,8 @@ const fetchItems = async () => {
 
 export const useItems = () => {
 	return useQuery('Items', fetchItems, {
-		// retry: 3,
-		// refetchInterval: 60 * 1000, // once per minute
+		retry: 3,
+		refetchInterval: 60 * 1000, // once per minute
 	});
 };
 export default useItems;

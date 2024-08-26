@@ -23,6 +23,7 @@ model Fair {
   startedAt   Int        @default(0)
   list        List?      @relation(fields: [listId], references: [id])
   listId      Int?       @unique
+  latestFile  String?
 }
 
 model List {

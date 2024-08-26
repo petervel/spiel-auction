@@ -35,6 +35,8 @@ services:
       interval: 5s
       timeout: 30s
       retries: 5
+    volumes:
+      - xml-data:/app/xml-data
     networks:
       - internal
       - default
@@ -73,6 +75,17 @@ services:
       - backend
     restart: unless-stopped
 
+  xml-fetcher:
+    build: ./xml-fetcher
+    volumes:
+      - xml-data:/app/data
+    networks:
+      - internal
+    restart: unless-stopped
+
 networks:
   internal:
     driver: bridge
+
+volumes:
+  xml-data:

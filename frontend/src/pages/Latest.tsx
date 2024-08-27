@@ -1,4 +1,5 @@
 import AuctionItem from '../components/AuctionItem/AuctionItem';
+import Spinner from '../components/Spinner/Spinner';
 import useItems from '../hooks/useItems';
 import { Item } from '../model/Item';
 import css from './Latest.module.css';
@@ -6,7 +7,7 @@ import css from './Latest.module.css';
 const Latest = () => {
 	const { data, isLoading, error } = useItems();
 
-	if (isLoading) return <div>Loading...</div>;
+	if (isLoading) return <Spinner />;
 	if (error) {
 		const typedError = error as Error;
 		return <div>Error: {typedError.message}</div>;

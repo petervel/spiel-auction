@@ -1,0 +1,12 @@
+.bgg-text {
+	font-size: 0.8em;
+	margin-top: 10px;
+	margin-bottom: 15px;
+	border-top: 1px solid #eee;
+	opacity: 0.8;
+	padding: 10px;
+}
+
+.bgg-text a {
+	color: var(--colour-active);
+}

@@ -8,7 +8,9 @@ import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import AuctionPrice from '../AuctionPrice/AuctionPrice';
 import css from './AuctionItem.module.css';
 // import { useAuctionId } from '../../hooks/useAuctionId';
+import { useAuctionId } from '../../hooks/useAuctionId';
 import { usePageId } from '../../hooks/usePageId';
+import AuctionItemDetails from '../AuctionItemDetails/AuctionItemDetails';
 interface Props {
 	item: Item;
 }
@@ -20,7 +22,7 @@ const AuctionItem = ({ item }: Props) => {
 
 	const toggleExpanded = () => setExpanded((val) => !val);
 
-	const auctionId = 339779; // useAuctionId();
+	const auctionId = useAuctionId();
 
 	return (
 		<div className={css.container}>
@@ -64,7 +66,7 @@ const AuctionItem = ({ item }: Props) => {
 				</AuctionItemButton>
 			</Stack>
 			<Collapse in={expanded}>
-				{/* <AuctionItemDetails itemId={item.id} /> */}
+				<AuctionItemDetails item={item} />
 			</Collapse>
 		</div>
 	);

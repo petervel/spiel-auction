@@ -23,6 +23,8 @@ services:
       DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
       ADMIN_PASSWORD: ${SITE_ADMIN_PASSWORD}
       ENVIRONMENT_MODE: ${ENVIRONMENT_MODE}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     expose:
       - "3000"
     ports: # temp for dev
@@ -82,6 +84,11 @@ services:
     networks:
       - internal
     restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
 
 networks:
   internal:

@@ -1,5 +1,6 @@
 import express from "express";
 import prisma from "../../prismaClient";
+import { redisClient } from "../redisClient";
 
 const router = express.Router();
 
@@ -18,6 +19,13 @@ router.get("/:listId", async (req, res) => {
 		return res.status(400).json({
 			error: `Invalid listId provided (must be a number): ${req.params.listId}`,
 		});
+	}
+
+	const cacheKey = `api:items:${listId}`;
+	const cache = await redisClient.get(cacheKey);
+	if (cache) {
+		console.log("GOT FROM REDIS: " + cacheKey);
+		return res.status(200).json(JSON.parse(cache));
 	}
 
 	const list = await prisma.list.findUnique({ where: { id: listId } });
@@ -42,6 +50,9 @@ router.get("/:listId", async (req, res) => {
 	if (hasMore) {
 		items = items.slice(0, MAX_RESULTS);
 	}
+	await redisClient.set(cacheKey, JSON.stringify(items));
+	await redisClient.expire(cacheKey, 30);
+
 	res.status(200).json(items);
 });
 

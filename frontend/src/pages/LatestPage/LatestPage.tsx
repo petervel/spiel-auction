@@ -1,8 +1,8 @@
-import AuctionItem from '../components/AuctionItem/AuctionItem';
-import Spinner from '../components/Spinner/Spinner';
-import useItems from '../hooks/useItems';
-import { Item } from '../model/Item';
-import css from './Latest.module.css';
+import AuctionItem from '../../components/AuctionItem/AuctionItem';
+import Spinner from '../../components/Spinner/Spinner';
+import useItems from '../../hooks/useItems';
+import { Item } from '../../model/Item';
+import css from './LatestPage.module.css';
 
 const Latest = () => {
 	const { data, isLoading, error } = useItems();

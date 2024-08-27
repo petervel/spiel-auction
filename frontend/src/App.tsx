@@ -5,7 +5,8 @@ import { Route, Routes } from 'react-router-dom';
 import NavBar from './components/NavBar/NavBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
-import Latest from './pages/Latest';
+import LatestPage from './pages/LatestPage/LatestPage';
+import ObjectPage from './pages/ObjectPage/ObjectPage';
 
 function App() {
 	const { mode, toggleDarkMode } = useDarkMode();
@@ -27,12 +28,12 @@ function App() {
 					<NavBar />
 					<div className="content-max-width">
 						<Routes>
-							<Route path="/" element={<Latest />} />
-							{/* <Route
+							<Route path="/" element={<LatestPage />} />
+							<Route
 								path="/object/:objectId"
-								element={<Object />}
+								element={<ObjectPage />}
 							/>
-							<Route path="/selling" element={<Selling />} />
+							{/* <Route path="/selling" element={<Selling />} />
 							<Route
 								path="/selling/:username"
 								element={<Selling />}

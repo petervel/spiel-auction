@@ -24,7 +24,6 @@ router.get("/:listId", async (req, res) => {
 	const cacheKey = `api:items:${listId}`;
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
-		console.log("GOT FROM REDIS: " + cacheKey);
 		return res.status(200).json(JSON.parse(cache));
 	}
 

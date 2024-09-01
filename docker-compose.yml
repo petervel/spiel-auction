@@ -25,6 +25,7 @@ services:
       ENVIRONMENT_MODE: ${ENVIRONMENT_MODE}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      PAGE_SIZE: ${PAGE_SIZE}
     expose:
       - "3000"
     ports: # temp for dev

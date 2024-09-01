@@ -1,14 +1,22 @@
 import { Button } from '@mui/material';
 import AuctionItem from '../../components/AuctionItem/AuctionItem';
-import useItems from '../../hooks/useItems';
+import Spinner from '../../components/Spinner/Spinner';
+import useInfiniteItems from '../../hooks/useInfiniteItems';
 import { Item } from '../../model/Item';
 import css from './LatestPage.module.css';
 
 const Latest = () => {
-	const { data, fetchNextPage, hasNextPage, isFetchingNextPage, error } =
-		useItems();
+	const { data, hasNextPage, isFetchingNextPage, fetchNextPage, error } =
+		useInfiniteItems();
 
-	const items = data?.pages.flatMap((page) => page.items) || [];
+	console.log({
+		data,
+		hasNextPage,
+		isFetchingNextPage,
+		fetchNextPage,
+		error,
+	});
+	if (!data?.pages.length && isFetchingNextPage) return <Spinner />;
 
 	if (error) {
 		const typedError = error as Error;
@@ -18,11 +26,13 @@ const Latest = () => {
 	return (
 		<div>
 			<ul className={css.items}>
-				{items.map((item: Item) => (
-					<AuctionItem key={item.id} item={item} />
-				))}
+				{data?.pages.map((page) => {
+					return page.data.items.map((item: Item) => (
+						<AuctionItem key={item.id} item={item} />
+					));
+				})}
 			</ul>
-			{hasNextPage && !isFetchingNextPage && (
+			{hasNextPage && (
 				<div className={css.loadMore}>
 					<Button
 						disabled={isFetchingNextPage}

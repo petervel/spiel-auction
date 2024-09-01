@@ -6,8 +6,14 @@ import { Item } from '../../model/Item';
 import css from './LatestPage.module.css';
 
 const Latest = () => {
-	const { data, hasNextPage, isFetchingNextPage, fetchNextPage, error } =
-		useInfiniteItems();
+	const {
+		data,
+		hasNextPage,
+		isFetchingNextPage,
+		fetchNextPage,
+		error,
+		isLoading,
+	} = useInfiniteItems();
 
 	console.log({
 		data,
@@ -16,7 +22,7 @@ const Latest = () => {
 		fetchNextPage,
 		error,
 	});
-	if (!data?.pages.length && isFetchingNextPage) return <Spinner />;
+	if (isLoading) return <Spinner />;
 
 	if (error) {
 		const typedError = error as Error;
@@ -38,7 +44,13 @@ const Latest = () => {
 						disabled={isFetchingNextPage}
 						onClick={() => fetchNextPage()}
 					>
-						Load more
+						{isFetchingNextPage ? (
+							<span className={css.buttonIcon}>
+								<Spinner />
+							</span>
+						) : (
+							'Load more'
+						)}
 					</Button>
 				</div>
 			)}

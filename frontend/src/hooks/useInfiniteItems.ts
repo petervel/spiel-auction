@@ -13,12 +13,19 @@ interface PageParam {
 }
 
 const fetchItems = async (params: {
+	queryData: QueryData;
 	pageParam: PageParam | null;
 	listId: number;
 }) => {
-	const { pageParam = null, listId } = params;
+	const { queryData, pageParam = null, listId } = params;
 
 	const url = new URL(`/api/items/${listId}`, window.location.origin);
+
+	const filter: FilterData = queryData.filter ?? {};
+	for (const [k, v] of Object.entries(filter)) {
+		url.searchParams.append(k, v);
+	}
+
 	if (pageParam) {
 		url.searchParams.append('lastId', `${pageParam}`);
 	}
@@ -34,12 +41,22 @@ const fetchItems = async (params: {
 	return { data, nextCursor: data.lastId || null };
 };
 
-export const useInfiniteItems = (refetchInterval = 60000) => {
+interface FilterData {
+	buyer?: string;
+	seller?: string;
+}
+interface QueryData {
+	filter?: FilterData;
+}
+export const useInfiniteItems = (
+	queryData: QueryData = {},
+	refetchInterval = 60000
+) => {
 	const listId = useListId();
 
 	return useInfiniteQuery(
 		['infiniteItems', listId],
-		({ pageParam }) => fetchItems({ pageParam, listId }),
+		({ pageParam }) => fetchItems({ queryData, pageParam, listId }),
 		{
 			getNextPageParam: (lastPage) => lastPage.nextCursor,
 			refetchInterval,

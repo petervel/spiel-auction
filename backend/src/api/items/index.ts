@@ -30,12 +30,23 @@ router.get("/:listId", async (req, res) => {
 			});
 		}
 	}
+
+	let otherFiltersKey = "";
+	const otherFilters: Record<string, any> = {};
+	if (req.query.buyer) {
+		otherFilters.highestBidder = req.query.buyer;
+		otherFiltersKey += `&highestBidder=${otherFilters.highestBidder}`;
+	}
+
 	const lastIdKey = lastId ? "<" + lastId : "";
-	const cacheKey = `api:items:${listId}${lastIdKey}`;
+
+	const cacheKey = `api:items:${listId}${lastIdKey}${otherFiltersKey}`;
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
+		console.log(`got ${cacheKey} from cache`);
 		return res.status(200).json(JSON.parse(cache));
 	}
+	console.log(`fetching ${cacheKey} from db`);
 
 	const list = await prisma.list.findUnique({ where: { id: listId } });
 	if (!list) {
@@ -44,10 +55,17 @@ router.get("/:listId", async (req, res) => {
 			.json({ error: `No list found with id ${listId}` });
 	}
 
+	console.log({
+		listId: listId,
+		deleted: false,
+		...otherFilters,
+	});
+
 	let items = await prisma.item.findMany({
 		where: {
 			listId: listId,
 			deleted: false,
+			...otherFilters,
 		},
 		orderBy: { id: "desc" },
 		cursor: lastId ? { id: lastId } : undefined,

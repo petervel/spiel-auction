@@ -3,8 +3,10 @@ import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Route, Routes } from 'react-router-dom';
 import NavBar from './components/NavBar/NavBar';
+import TabBar from './components/TabBar/TabBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
+import BuyingPage from './pages/BuyingPage/BuyingPage';
 import LatestPage from './pages/LatestPage/LatestPage';
 import ObjectPage from './pages/ObjectPage/ObjectPage';
 
@@ -27,21 +29,22 @@ function App() {
 				<ThemeProvider theme={theme}>
 					<NavBar />
 					<div className="content-max-width">
+						<TabBar />
 						<Routes>
 							<Route path="/" element={<LatestPage />} />
 							<Route
 								path="/object/:objectId"
 								element={<ObjectPage />}
 							/>
+							<Route path="/buying" element={<BuyingPage />} />
+							<Route
+								path="/buying/:username"
+								element={<BuyingPage />}
+							/>
 							{/* <Route path="/selling" element={<Selling />} />
 							<Route
 								path="/selling/:username"
 								element={<Selling />}
-							/>
-							<Route path="/buying" element={<Buying />} />
-							<Route
-								path="/buying/:username"
-								element={<Buying />}
 							/>
 							<Route
 								path="/sorted/:letter"

@@ -1,4 +1,4 @@
-import { Home, Sell, ShoppingBasket, SortByAlpha } from '@mui/icons-material';
+import { Home, Sell, ShoppingBasket } from '@mui/icons-material';
 import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
 import { MouseEvent, ReactNode, useState } from 'react';
@@ -26,12 +26,6 @@ const TabBar = () => {
 			label: 'Latest',
 			renderIcon: () => <Home />,
 			url: '/',
-		},
-		{
-			id: 'sorted',
-			label: 'Sorted',
-			renderIcon: () => <SortByAlpha />,
-			url: `/sorted/a`,
 		},
 		{
 			id: 'selling',

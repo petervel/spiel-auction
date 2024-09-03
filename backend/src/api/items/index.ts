@@ -37,6 +37,10 @@ router.get("/:listId", async (req, res) => {
 		otherFilters.highestBidder = req.query.buyer;
 		otherFiltersKey += `&highestBidder=${otherFilters.highestBidder}`;
 	}
+	if (req.query.seller) {
+		otherFilters.username = req.query.seller;
+		otherFiltersKey += `&username=${otherFilters.username}`;
+	}
 
 	const lastIdKey = lastId ? "<" + lastId : "";
 

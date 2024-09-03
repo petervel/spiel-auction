@@ -6,9 +6,10 @@ import NavBar from './components/NavBar/NavBar';
 import TabBar from './components/TabBar/TabBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
-import BuyingPage from './pages/BuyingPage/BuyingPage';
-import LatestPage from './pages/LatestPage/LatestPage';
+import BuyingPage from './pages/BuyingPage';
+import LatestPage from './pages/LatestPage';
 import ObjectPage from './pages/ObjectPage/ObjectPage';
+import SellingPage from './pages/SellingPage';
 
 function App() {
 	const { mode, toggleDarkMode } = useDarkMode();
@@ -41,12 +42,12 @@ function App() {
 								path="/buying/:username"
 								element={<BuyingPage />}
 							/>
-							{/* <Route path="/selling" element={<Selling />} />
+							<Route path="/selling" element={<SellingPage />} />
 							<Route
 								path="/selling/:username"
-								element={<Selling />}
+								element={<SellingPage />}
 							/>
-							<Route
+							{/* <Route
 								path="/sorted/:letter"
 								element={<Sorted />}
 							/> */}

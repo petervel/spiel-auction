@@ -1,8 +1,9 @@
 import { Home, Sell, ShoppingBasket } from '@mui/icons-material';
 import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
-import { MouseEvent, ReactNode, useState } from 'react';
+import { MouseEvent, ReactNode } from 'react';
 import { useNavigate } from 'react-router';
+import { useBggUsername } from '../../hooks/useBggUsername';
 import { usePageId } from '../../hooks/usePageId';
 import css from './TabBar.module.css';
 
@@ -16,9 +17,7 @@ type PageData = {
 
 const TabBar = () => {
 	const pageId = usePageId();
-	const [page] = useState(pageId);
-	// const username = useBggUsername();
-	const username = 'petervel';
+	const username = useBggUsername();
 
 	const pages: PageData[] = [
 		{
@@ -73,7 +72,7 @@ const TabBar = () => {
 						key={pageData.id}
 						className={classNames(
 							css.button,
-							pageData.id == page ? css.active : ''
+							pageData.id == pageId ? css.active : ''
 						)}
 						aria-label={pageData.label}
 						href={pageData.url}

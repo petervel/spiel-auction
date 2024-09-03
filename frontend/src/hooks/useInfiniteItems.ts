@@ -37,7 +37,6 @@ const fetchItems = async (params: {
 	}
 
 	const data = await response.json();
-	console.log({ data, nextCursor: data[data.length - 1]?.id });
 	return { data, nextCursor: data.lastId || null };
 };
 

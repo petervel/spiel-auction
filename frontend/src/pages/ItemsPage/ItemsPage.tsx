@@ -3,9 +3,9 @@ import AuctionItem from '../../components/AuctionItem/AuctionItem';
 import Spinner from '../../components/Spinner/Spinner';
 import useInfiniteItems from '../../hooks/useInfiniteItems';
 import { Item } from '../../model/Item';
-import css from './LatestPage.module.css';
+import css from './ItemsPage.module.css';
 
-const Latest = () => {
+export const ItemsPage = (queryData = {}) => {
 	const {
 		data,
 		hasNextPage,
@@ -13,15 +13,8 @@ const Latest = () => {
 		fetchNextPage,
 		error,
 		isLoading,
-	} = useInfiniteItems();
+	} = useInfiniteItems(queryData);
 
-	console.log({
-		data,
-		hasNextPage,
-		isFetchingNextPage,
-		fetchNextPage,
-		error,
-	});
 	if (isLoading) return <Spinner />;
 
 	if (error) {
@@ -29,14 +22,23 @@ const Latest = () => {
 		return <div>Error: {typedError.message}</div>;
 	}
 
+	const totalItems = data?.pages.reduce(
+		(total, page) => (total += page.data.items.length),
+		0
+	);
+
 	return (
 		<div>
 			<ul className={css.items}>
-				{data?.pages.map((page) => {
-					return page.data.items.map((item: Item) => (
-						<AuctionItem key={item.id} item={item} />
-					));
-				})}
+				{totalItems ? (
+					data?.pages.map((page) => {
+						return page.data.items.map((item: Item) => (
+							<AuctionItem key={item.id} item={item} />
+						));
+					})
+				) : (
+					<>No items found.</>
+				)}
 			</ul>
 			{hasNextPage && (
 				<div className={css.loadMore}>
@@ -57,5 +59,3 @@ const Latest = () => {
 		</div>
 	);
 };
-
-export default Latest;

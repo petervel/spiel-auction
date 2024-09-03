@@ -3,13 +3,13 @@ import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Route, Routes } from 'react-router-dom';
 import NavBar from './components/NavBar/NavBar';
-import TabBar from './components/TabBar/TabBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import BuyingPage from './pages/BuyingPage';
 import LatestPage from './pages/LatestPage';
 import ObjectPage from './pages/ObjectPage/ObjectPage';
 import SellingPage from './pages/SellingPage';
+import SettingsPage from './pages/Settings';
 
 function App() {
 	const { mode, toggleDarkMode } = useDarkMode();
@@ -30,7 +30,6 @@ function App() {
 				<ThemeProvider theme={theme}>
 					<NavBar />
 					<div className="content-max-width">
-						<TabBar />
 						<Routes>
 							<Route path="/" element={<LatestPage />} />
 							<Route
@@ -47,11 +46,10 @@ function App() {
 								path="/selling/:username"
 								element={<SellingPage />}
 							/>
-							{/* <Route
-								path="/sorted/:letter"
-								element={<Sorted />}
-							/> */}
-							{/* <Route path="/settings" element={<Settings />} /> */}
+							<Route
+								path="/settings"
+								element={<SettingsPage />}
+							/>
 							{/* <Route path="/duplicates" element={<Duplicates />} /> */}
 						</Routes>
 					</div>

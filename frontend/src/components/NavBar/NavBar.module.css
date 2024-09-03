@@ -11,7 +11,7 @@
 	padding: 12px 24px !important;
 }
 
-.navbar button {
+.navbar button, .navbar .button {
 	color: var(--colour-on-main);
 }
 

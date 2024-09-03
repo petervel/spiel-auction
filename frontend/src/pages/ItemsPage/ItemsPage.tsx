@@ -1,6 +1,7 @@
 import { Button } from '@mui/material';
 import AuctionItem from '../../components/AuctionItem/AuctionItem';
 import Spinner from '../../components/Spinner/Spinner';
+import TabBar from '../../components/TabBar/TabBar';
 import useInfiniteItems from '../../hooks/useInfiniteItems';
 import { Item } from '../../model/Item';
 import css from './ItemsPage.module.css';
@@ -28,34 +29,38 @@ export const ItemsPage = (queryData = {}) => {
 	);
 
 	return (
-		<div>
-			<ul className={css.items}>
-				{totalItems ? (
-					data?.pages.map((page) => {
-						return page.data.items.map((item: Item) => (
-							<AuctionItem key={item.id} item={item} />
-						));
-					})
-				) : (
-					<>No items found.</>
+		<>
+			<TabBar />
+
+			<div>
+				<ul className={css.items}>
+					{totalItems ? (
+						data?.pages.map((page) => {
+							return page.data.items.map((item: Item) => (
+								<AuctionItem key={item.id} item={item} />
+							));
+						})
+					) : (
+						<>No items found.</>
+					)}
+				</ul>
+				{hasNextPage && (
+					<div className={css.loadMore}>
+						<Button
+							disabled={isFetchingNextPage}
+							onClick={() => fetchNextPage()}
+						>
+							{isFetchingNextPage ? (
+								<span className={css.buttonIcon}>
+									<Spinner />
+								</span>
+							) : (
+								'Load more'
+							)}
+						</Button>
+					</div>
 				)}
-			</ul>
-			{hasNextPage && (
-				<div className={css.loadMore}>
-					<Button
-						disabled={isFetchingNextPage}
-						onClick={() => fetchNextPage()}
-					>
-						{isFetchingNextPage ? (
-							<span className={css.buttonIcon}>
-								<Spinner />
-							</span>
-						) : (
-							'Load more'
-						)}
-					</Button>
-				</div>
-			)}
-		</div>
+			</div>
+		</>
 	);
 };

@@ -2,8 +2,6 @@ import { SettingsRounded, VolunteerActivismRounded } from '@mui/icons-material';
 import { ListItemIcon, Menu, MenuItem, MenuList } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 // import SwitchAuctionDialog from './SwitchAuctionDialog';
-import { useContext } from 'react';
-import { ColorModeContext } from '../../contexts/ColorModeContext';
 import css from './NavBar.module.css';
 
 type MenuProps = {
@@ -16,7 +14,7 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 	// 	setSwitchAuctionOpen(true);
 	// };
 
-	const { mode, toggleDarkMode } = useContext(ColorModeContext);
+	// const { mode, toggleDarkMode } = useContext(ColorModeContext);
 
 	const openDonatePage = () => {
 		const url =

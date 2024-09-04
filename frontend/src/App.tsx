@@ -5,10 +5,10 @@ import { Route, Routes } from 'react-router-dom';
 import NavBar from './components/NavBar/NavBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
-import BuyingPage from './pages/BuyingPage';
-import LatestPage from './pages/LatestPage';
-import ObjectPage from './pages/ObjectPage/ObjectPage';
-import SellingPage from './pages/SellingPage';
+import { BuyingPage } from './pages/BidsPages/BuyingPage';
+import { SellingPage } from './pages/BidsPages/SellingPage';
+import { LatestPage } from './pages/LatestPage/LatestPage';
+import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import SettingsPage from './pages/Settings';
 
 function App() {

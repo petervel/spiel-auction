@@ -19,16 +19,6 @@ router.get("/:listId", async (req, res) => {
 		});
 	}
 
-	let lastId: number | null = null;
-	if (req.query.lastId) {
-		lastId = +req.query.lastId;
-		if (Number.isNaN(lastId)) {
-			return res.status(400).json({
-				error: `Invalid lastId provided (must be a number): ${req.params.listId}`,
-			});
-		}
-	}
-
 	let otherFiltersKey = "";
 	const otherFilters: Record<string, any> = {};
 	if (req.query.buyer) {
@@ -88,7 +78,6 @@ router.get("/:listId", async (req, res) => {
 	const result = {
 		items,
 		totalPrice,
-		lastId: items[items.length - 1]?.id,
 	};
 
 	await redisClient.set(cacheKey, JSON.stringify(result));

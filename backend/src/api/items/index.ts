@@ -83,26 +83,8 @@ router.get("/:listId", async (req, res) => {
 		items = items.slice(0, MAX_RESULTS);
 	}
 
-	let totalBids: number | undefined = undefined;
-	if (req.query.includeTotal) {
-		const result = await prisma.item.aggregate({
-			_sum: {
-				currentBid: true,
-			},
-			where: {
-				listId: listId,
-				deleted: false,
-				hasBids: true,
-				...otherFilters,
-			},
-		});
-
-		totalBids = result._sum.currentBid || 0;
-	}
-
 	const result = {
 		items,
-		totalBids,
 		hasMore,
 		lastId: items[items.length - 1]?.id,
 	};

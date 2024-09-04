@@ -1,10 +1,10 @@
 import { useNavigate, useParams } from 'react-router';
 import AuctionItem from '../../components/AuctionItem/AuctionItem';
-import Spinner from '../../components/Spinner/Spinner';
+import { Spinner } from '../../components/Spinner/Spinner';
 import { useObject } from '../../hooks/useObject';
 import { Item } from '../../model/Item';
 
-const Object = () => {
+export const ObjectPage = () => {
 	const { objectId } = useParams();
 	const navigate = useNavigate();
 
@@ -27,5 +27,3 @@ const Object = () => {
 		</div>
 	);
 };
-
-export default Object;

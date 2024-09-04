@@ -5,6 +5,7 @@ import useListId from './useListId';
 export interface ItemData {
 	items: Item[];
 	hasMore: boolean;
+	lastId: number;
 }
 
 interface PageParam {
@@ -36,7 +37,7 @@ const fetchItems = async (params: {
 		throw new Error('Network response was not ok.');
 	}
 
-	const data = await response.json();
+	const data: ItemData = await response.json();
 	return { data, nextCursor: data.lastId || null };
 };
 

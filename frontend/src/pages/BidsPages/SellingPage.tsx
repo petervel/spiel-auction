@@ -18,6 +18,7 @@ export const SellingPage = () => {
 		const typedError = error as Error;
 		return <div>Error: {typedError.message}</div>;
 	}
+
 	return (
 		<ItemsPage
 			title="Selling"

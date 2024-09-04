@@ -24,11 +24,11 @@ export const ItemsPage = ({ title, items, totalBids }: ItemsPageProps) => {
 						{title}
 					</Typography>
 				</Stack>
-				{totalBids && (
+				{totalBids && totalBids > 0 ? (
 					<div className={css.showTotal}>
 						<div className={css.total}>Total: €{totalBids}</div>
 					</div>
-				)}
+				) : null}
 
 				<ul className={css.items}>
 					{items.length ? (

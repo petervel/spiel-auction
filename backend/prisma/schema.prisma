@@ -89,6 +89,10 @@ model Item {
 
   lastSeen Int     @default(0)
   deleted  Boolean @default(false)
+
+  @@index([listId, deleted, id])
+  @@index([listId, deleted, username])
+  @@index([listId, deleted, highestBidder])
 }
 
 model ListComment {

@@ -36,9 +36,6 @@ export class ItemCommentWrapper {
 			bid = is_bin
 				? item.binPrice
 				: ItemCommentWrapper.findBidNumber(stripped);
-			if (item.id == 10981542) {
-				console.log({ text, stripped, is_bin, bid, item });
-			}
 		}
 
 		const dbObject = {

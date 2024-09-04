@@ -27,7 +27,6 @@ const fetchItems = async (params: {
 		url.searchParams.append(k, v);
 	}
 
-	console.log('Fetching ', pageParam);
 	if (pageParam) {
 		url.searchParams.append('lastId', `${pageParam}`);
 	}
@@ -39,7 +38,6 @@ const fetchItems = async (params: {
 	}
 
 	const data: ItemData = await response.json();
-	console.log('got', data.lastId || null);
 	return { data, nextCursor: data.lastId || null };
 };
 

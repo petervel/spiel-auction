@@ -22,3 +22,7 @@ ul.items {
   width: 20px !important;
   height: 20px !important;
 }
+
+.noItems {
+  text-align: center;
+}

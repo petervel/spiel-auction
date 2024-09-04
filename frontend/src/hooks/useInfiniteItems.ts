@@ -57,7 +57,7 @@ export const useInfiniteItems = (
 		['infiniteItems', listId],
 		({ pageParam }) => fetchItems({ queryData, pageParam, listId }),
 		{
-			getNextPageParam: (lastPage) => lastPage.nextCursor,
+			getNextPageParam: (lastPage) => lastPage.data.hasMore,
 			refetchInterval,
 			refetchIntervalInBackground: true,
 		}

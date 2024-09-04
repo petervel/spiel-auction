@@ -73,6 +73,9 @@ export function removeStrikethrough(text: string): string {
 export function removeQuoted(text: string): string {
 	return removeBetweenTags(text, "q");
 }
+export function removeAllBggTags(text: string): string {
+	return text.replace(/\[[^\]]*]/gi, "");
+}
 
 export function parseEndDateString(end: string | null | undefined) {
 	if (end == null || end == undefined) {

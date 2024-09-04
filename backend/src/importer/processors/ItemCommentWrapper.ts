@@ -1,8 +1,9 @@
-import { ItemComment, PrismaPromise } from "@prisma/client";
+import { Item, ItemComment, PrismaPromise } from "@prisma/client";
 import { decode } from "html-entities";
 import prisma from "../../prismaClient";
 import {
 	extractString,
+	removeAllBggTags,
 	removeQuoted,
 	removeStrikethrough,
 	toArray,
@@ -16,24 +17,33 @@ export class ItemCommentWrapper {
 	}
 
 	public static fromXml(
-		itemId: number,
+		item: Item,
 		source: Record<string, any>,
 		updateTime: number,
 	) {
 		const text = decode(`${source["#text"]}`); // force this to be a string, for parsing purposes.
 
+		const username = decode(source["@_username"]);
+
 		let is_bin = false;
 		let bid = null;
-		if (text.length != 0) {
+		if (text.length != 0 && username != item.username) {
 			let stripped = removeStrikethrough(text);
 			stripped = removeQuoted(stripped);
-			is_bin = !!extractString(stripped, /\b(bin)\b[^?]/i);
-			bid = ItemCommentWrapper.findBidNumber(stripped);
+			stripped = removeAllBggTags(stripped);
+			is_bin = !!extractString(stripped, /\bbin\b(?!\?)/i);
+
+			bid = is_bin
+				? item.binPrice
+				: ItemCommentWrapper.findBidNumber(stripped);
+			if (item.id == 10981542) {
+				console.log({ text, stripped, is_bin, bid, item });
+			}
 		}
 
 		const dbObject = {
-			itemId: itemId,
-			username: decode(source["@_username"]),
+			itemId: item.id,
+			username,
 			date: source["@_date"],
 			postDate: new Date(source["@_postdate"]),
 			postTimestamp: Number(
@@ -86,14 +96,14 @@ export class ItemCommentWrapper {
 	}
 
 	public static loadAll(
-		itemId: number,
+		item: Item,
 		source: String,
 		updateTime: number,
 	): ItemCommentWrapper[] {
 		if (!source) return [];
 
 		return toArray(source).map((commentData) =>
-			ItemCommentWrapper.fromXml(itemId, commentData, updateTime),
+			ItemCommentWrapper.fromXml(item, commentData, updateTime),
 		);
 	}
 

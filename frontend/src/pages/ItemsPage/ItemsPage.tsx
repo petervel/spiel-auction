@@ -32,6 +32,7 @@ export const ItemsPage = (queryData = {}) => {
 		<>
 			<TabBar />
 
+			<div></div>
 			<div>
 				<ul className={css.items}>
 					{totalItems ? (
@@ -41,7 +42,7 @@ export const ItemsPage = (queryData = {}) => {
 							));
 						})
 					) : (
-						<>No items found.</>
+						<div className={css.noItems}>No items found.</div>
 					)}
 				</ul>
 				{hasNextPage && (

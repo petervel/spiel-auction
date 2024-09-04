@@ -25,16 +25,8 @@ export class ItemWrapper {
 		source: Record<string, any>,
 		updateTime: number,
 	): ItemWrapper {
-		const itemId = Number(source["@_id"]);
-
-		const commentData = ItemCommentWrapper.loadAll(
-			itemId,
-			source["comment"],
-			updateTime,
-		);
-
-		const itemData: Item = {
-			id: itemId,
+		let itemData: Item = {
+			id: Number(source["@_id"]),
 			listId: listId,
 			objectType: source["@_objecttype"],
 			objectSubtype: source["@_subtype"],
@@ -64,6 +56,18 @@ export class ItemWrapper {
 			isEnded: false,
 			currentBid: null,
 			itemType: ItemType.GAME,
+			...this.getDerivedData(source["body"], [], true),
+			...this.getDerivedData(source["body"], [], false),
+		};
+
+		const commentData = ItemCommentWrapper.loadAll(
+			itemData,
+			source["comment"],
+			updateTime,
+		);
+
+		itemData = {
+			...itemData,
 			...this.getDerivedData(source["body"], commentData, true),
 			...this.getDerivedData(source["body"], commentData, false),
 		};

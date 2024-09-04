@@ -1,9 +1,11 @@
+import bids from "./bids";
 import fairs from "./fairs";
-import auctions from "./items";
+import items from "./items";
 import object from "./object";
 
 export default [
 	{ path: "/fairs", object: fairs },
-	{ path: "/items", object: auctions },
+	{ path: "/bids", object: bids },
+	{ path: "/items", object: items },
 	{ path: "/object", object: object },
 ];

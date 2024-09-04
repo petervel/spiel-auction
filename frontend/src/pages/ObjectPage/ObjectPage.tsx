@@ -8,7 +8,6 @@ const Object = () => {
 	const { objectId } = useParams();
 	const navigate = useNavigate();
 
-	console.log('....', objectId);
 	if (!objectId) {
 		navigate('/');
 	}

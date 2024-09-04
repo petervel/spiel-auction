@@ -21,14 +21,14 @@ const fetchXML = async (): Promise<string | null> => {
 };
 
 // Function to check if the XML contains the unwanted message
-const isValidXML = (xmlContent: string): boolean => {
+const isValidXML = (xmlContent: string): string | null => {
   const parser = new xml2js.Parser();
-  let isValid = true;
+  let errorString = null;
 
   parser.parseString(xmlContent, (err, result) => {
     if (err) {
-      console.error("Failed to parse XML:", err);
-      isValid = false;
+      errorString = `Failed to parse XML: ${err}`;
+      return;
     }
 
     if (
@@ -38,11 +38,11 @@ const isValidXML = (xmlContent: string): boolean => {
         "Your request for this geeklist has been accepted"
       )
     ) {
-      isValid = false;
+      errorString = "XML was not ready yet.";
     }
   });
 
-  return isValid;
+  return errorString;
 };
 
 // Function to save the XML to a file
@@ -58,17 +58,24 @@ const saveXML = (xmlContent: string) => {
 // Main function to fetch, validate, and store the XML
 const fetchAndStoreXML = async () => {
   const xmlContent = await fetchXML();
-  if (xmlContent && isValidXML(xmlContent)) {
-    const recentXML = getMostRecentXML();
-    if (recentXML !== xmlContent) {
-      saveXML(xmlContent);
-      cleanupOldFiles(); // Clean up after saving the new file
-    } else {
-      console.log("XML hasn't changed since last time, skipping.");
-    }
-  } else {
+  if (!xmlContent) {
     console.log("Invalid XML content, skipping save.");
+    return;
   }
+
+  const parseError = isValidXML(xmlContent);
+  if (parseError) {
+    console.log(parseError);
+    return;
+  }
+
+  if (xmlContent === getMostRecentXML()) {
+    console.log("XML hasn't changed since last time, skipping.");
+    return;
+  }
+
+  saveXML(xmlContent);
+  cleanupOldFiles(); // Clean up after saving the new file
 };
 
 // Function to get the most recent XML file content

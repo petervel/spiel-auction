@@ -4,8 +4,6 @@ import { redisClient } from "../redisClient";
 
 const router = express.Router();
 
-const MAX_RESULTS: number = +(process.env.PAGE_SIZE ?? 100);
-
 router.get("/", (_, res) => {
 	return res.status(400).json({ error: "No listId parameter provided." });
 });
@@ -36,15 +34,12 @@ router.get("/:listId", async (req, res) => {
 	if (req.query.buyer) {
 		otherFilters.highestBidder = req.query.buyer;
 		otherFiltersKey += `&highestBidder=${otherFilters.highestBidder}`;
-	}
-	if (req.query.seller) {
+	} else if (req.query.seller) {
 		otherFilters.username = req.query.seller;
 		otherFiltersKey += `&username=${otherFilters.username}`;
 	}
 
-	const lastIdKey = lastId ? "<" + lastId : "";
-
-	const cacheKey = `api:items:${listId}${lastIdKey}${otherFiltersKey}`;
+	const cacheKey = `api:bids:${listId}${otherFiltersKey}`;
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
 		// console.log(`got ${cacheKey} from cache`);
@@ -72,43 +67,32 @@ router.get("/:listId", async (req, res) => {
 			...otherFilters,
 		},
 		orderBy: { id: "desc" },
-		cursor: lastId ? { id: lastId } : undefined,
-		skip: lastId ? 1 : 0,
-		take: MAX_RESULTS + 1, // Just to see if there is any point to getting a next page
 	});
 
 	// console.log(`got ${items.length} of ${MAX_RESULTS} items`);
-	const hasMore = items.length > MAX_RESULTS;
-	if (hasMore) {
-		items = items.slice(0, MAX_RESULTS);
-	}
 
-	let totalBids: number | undefined = undefined;
-	if (req.query.includeTotal) {
-		const result = await prisma.item.aggregate({
-			_sum: {
-				currentBid: true,
-			},
-			where: {
-				listId: listId,
-				deleted: false,
-				hasBids: true,
-				...otherFilters,
-			},
-		});
+	const sumResult = await prisma.item.aggregate({
+		_sum: {
+			currentBid: true,
+		},
+		where: {
+			listId: listId,
+			deleted: false,
+			hasBids: true,
+			...otherFilters,
+		},
+	});
 
-		totalBids = result._sum.currentBid || 0;
-	}
+	const totalPrice = sumResult._sum.currentBid || 0;
 
 	const result = {
 		items,
-		totalBids,
-		hasMore,
+		totalPrice,
 		lastId: items[items.length - 1]?.id,
 	};
 
 	await redisClient.set(cacheKey, JSON.stringify(result));
-	await redisClient.expire(cacheKey, 30);
+	await redisClient.expire(cacheKey, 60);
 
 	res.status(200).json(result);
 });

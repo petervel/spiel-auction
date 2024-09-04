@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
-import BidsPage from './BidsPage';
+import { ItemsPage } from '../ItemsPage/ItemsPage';
 
 export const BuyingPage = () => {
 	const { username: pathUsername } = useParams();
@@ -19,9 +19,8 @@ export const BuyingPage = () => {
 		return <div>Error: {typedError.message}</div>;
 	}
 
-	console.log(data);
 	return (
-		<BidsPage
+		<ItemsPage
 			title="Buying"
 			items={data.items}
 			totalBids={data.totalPrice}

@@ -1,6 +1,5 @@
 import { Button } from '@mui/material';
 import { Spinner } from '../../components/Spinner/Spinner';
-import TabBar from '../../components/TabBar/TabBar';
 import useInfiniteItems from '../../hooks/useInfiniteItems';
 import { Item } from '../../model/Item';
 import { ItemsPage } from '../ItemsPage/ItemsPage';
@@ -28,9 +27,7 @@ export const LatestPage = () => {
 
 	return (
 		<>
-			<TabBar />
-
-			<ItemsPage items={allItems} />
+			<ItemsPage title="Latest" items={allItems} />
 			{hasNextPage && (
 				<div className={css.loadMore}>
 					<Button

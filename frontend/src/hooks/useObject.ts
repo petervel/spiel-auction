@@ -1,11 +1,13 @@
 import { useQuery } from 'react-query';
+import { Item } from '../model/Item';
 
 const fetchObject = async (objectId: number) => {
 	const response = await fetch(`/api/object/${objectId}`);
 	if (!response.ok) {
 		throw new Error('Error fetching items');
 	}
-	return response.json();
+	const items: Item[] = await response.json();
+	return items;
 };
 
 export const useObject = (objectId: number) => {

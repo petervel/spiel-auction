@@ -22,7 +22,7 @@ export const SellingPage = () => {
 		<ItemsPage
 			title="Selling"
 			items={data.items}
-			totalBids={data.totalBids}
+			totalBids={data.totalPrice}
 		/>
 	);
 };

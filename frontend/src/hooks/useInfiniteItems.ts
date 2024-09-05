@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useInfiniteQuery } from 'react-query';
 import { Item } from '../model/Item';
 import useListId from './useListId';
@@ -24,7 +25,9 @@ const fetchItems = async (params: {
 
 	const filter: FilterData = queryData.filter ?? {};
 	for (const [k, v] of Object.entries(filter)) {
-		url.searchParams.append(k, v);
+		if (v != undefined) {
+			url.searchParams.append(k, v);
+		}
 	}
 
 	if (pageParam) {
@@ -44,6 +47,7 @@ const fetchItems = async (params: {
 interface FilterData {
 	buyer?: string;
 	seller?: string;
+	search?: string;
 }
 interface QueryData {
 	filter?: FilterData;
@@ -53,16 +57,27 @@ export const useInfiniteItems = (
 	refetchInterval = 60000
 ) => {
 	const listId = useListId();
+	const [search, setSearch] = useState<string | undefined>();
 
-	return useInfiniteQuery(
-		['infiniteItems', listId],
-		({ pageParam }) => fetchItems({ queryData, pageParam, listId }),
-		{
-			getNextPageParam: (lastPage) => lastPage.nextCursor,
-			refetchInterval,
-			refetchIntervalInBackground: true,
-		}
-	);
+	return {
+		...useInfiniteQuery(
+			['infiniteItems', listId, queryData.filter, search],
+			({ pageParam }) =>
+				fetchItems({
+					queryData: { filter: { ...queryData.filter, search } },
+					pageParam,
+					listId,
+				}),
+			{
+				getNextPageParam: (lastPage) => lastPage.nextCursor,
+				refetchInterval,
+				refetchIntervalInBackground: true,
+				keepPreviousData: true,
+			}
+		),
+		search,
+		setSearch,
+	};
 };
 
 export default useInfiniteItems;

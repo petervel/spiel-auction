@@ -25,6 +25,9 @@ router.get("/:listId", async (req, res) => {
 		where: {
 			listId,
 			deleted: false,
+			NOT: {
+				objectId: 23953,
+			},
 		},
 		_count: {
 			id: true,
@@ -38,17 +41,26 @@ router.get("/:listId", async (req, res) => {
 		},
 	});
 
-	let result: Item[] = [];
+	const dict: Record<string, Item[]> = {};
 	for (const duplicate of duplicates) {
 		const items = await prisma.item.findMany({
 			where: {
 				listId: duplicate.listId,
 				username: duplicate.username,
 				objectId: duplicate.objectId,
+				deleted: false,
 			},
 		});
 
-		result = result.concat(items);
+		const maxId = Math.max(...items.map((item) => item.id));
+
+		dict[maxId] = items;
+	}
+
+	const sortedKeys = Object.keys(dict).sort().reverse();
+	let result: Item[] = [];
+	for (const key of sortedKeys) {
+		result = result.concat(dict[key]);
 	}
 
 	res.status(200).json(result);

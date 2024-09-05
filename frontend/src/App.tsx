@@ -7,6 +7,7 @@ import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BuyingPage } from './pages/BidsPages/BuyingPage';
 import { SellingPage } from './pages/BidsPages/SellingPage';
+import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import SettingsPage from './pages/Settings';
@@ -50,7 +51,10 @@ function App() {
 								path="/settings"
 								element={<SettingsPage />}
 							/>
-							{/* <Route path="/duplicates" element={<Duplicates />} /> */}
+							<Route
+								path="/duplicates"
+								element={<DuplicatesPage />}
+							/>
 						</Routes>
 					</div>
 				</ThemeProvider>

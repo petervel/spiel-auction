@@ -75,6 +75,7 @@ export const LatestPage = () => {
 
 				{showFilters && (
 					<Input
+						autoFocus={true}
 						className={css.searchBox}
 						value={searchTerm}
 						onChange={handleSearchChange}

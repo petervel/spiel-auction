@@ -42,9 +42,17 @@ router.get("/:listId", async (req, res) => {
 		otherFiltersKey += `&username=${otherFilters.username}`;
 	}
 
+	if (req.query.search) {
+		otherFilters.objectName = {
+			contains: req.query.search,
+		};
+		otherFiltersKey += `&search=${req.query.search}`;
+	}
+
 	const lastIdKey = lastId ? "<" + lastId : "";
 
 	const cacheKey = `api:items:${listId}${lastIdKey}${otherFiltersKey}`;
+
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
 		// console.log(`got ${cacheKey} from cache`);

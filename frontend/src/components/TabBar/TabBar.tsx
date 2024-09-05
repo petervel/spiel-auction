@@ -15,7 +15,7 @@ type PageData = {
 	disabled?: boolean;
 };
 
-const TabBar = () => {
+export const TabBar = () => {
 	const pageId = usePageId();
 	const username = useBggUsername();
 
@@ -87,5 +87,3 @@ const TabBar = () => {
 		</Stack>
 	);
 };
-
-export default TabBar;

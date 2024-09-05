@@ -1,8 +1,12 @@
 import { useParams } from 'react-router-dom';
+import { BidAmount } from '../../components/BidAmount/BidAmount';
+import { Container } from '../../components/Container/Container';
+import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Spinner } from '../../components/Spinner/Spinner';
+import { TabBar } from '../../components/TabBar/TabBar';
+import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
-import { ItemsPage } from '../ItemsPage/ItemsPage';
 
 export const SellingPage = () => {
 	const { username: pathUsername } = useParams();
@@ -20,10 +24,13 @@ export const SellingPage = () => {
 	}
 
 	return (
-		<ItemsPage
-			title="Selling"
-			items={data.items}
-			totalBids={data.totalPrice}
-		/>
+		<>
+			<TabBar />
+			<Container>
+				<Title title="Selling" />
+				<BidAmount amount={data.totalPrice} />
+				<ItemsList items={data.items} />
+			</Container>
+		</>
 	);
 };

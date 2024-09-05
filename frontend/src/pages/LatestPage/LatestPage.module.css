@@ -1,22 +1,32 @@
 .loadMore {
-  display: flex;
-  justify-content: center;
+	display: flex;
+	justify-content: center;
+	padding-block: 1rem 2rem;
 }
 
 .loadMore button {
-  display: flex;
+	display: flex;
 }
 
-
 .buttonIcon > * {
-  padding: 0 1rem;
+	padding: 0 1rem;
 }
 
 .buttonIcon > div > span {
-  width: 20px !important;
-  height: 20px !important;
+	width: 20px !important;
+	height: 20px !important;
 }
 
-.noItems {
-  text-align: center;
+.searchBox {
+	width: calc(100% - 2rem);
+	margin: 1rem;
+	box-sizing: border-box;
+}
+
+.items {
+	transition: filter 300ms ease;
+}
+
+.outdated {
+	filter: grayscale(0.7);
 }

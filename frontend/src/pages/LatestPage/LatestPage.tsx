@@ -1,13 +1,19 @@
 import { Button, Input } from '@mui/material';
 import { debounce } from 'lodash';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useState } from 'react';
+import { Container } from '../../components/Container/Container';
+import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Spinner } from '../../components/Spinner/Spinner';
+import { TabBar } from '../../components/TabBar/TabBar';
+import { Title } from '../../components/Title/Title';
 import useInfiniteItems from '../../hooks/useInfiniteItems';
 import { Item } from '../../model/Item';
-import { ItemsPage } from '../ItemsPage/ItemsPage';
+import FiltersToggle from './FiltersToggle';
 import css from './LatestPage.module.css';
 
 export const LatestPage = () => {
+	const queryInfo = useInfiniteItems();
+
 	const {
 		data,
 		hasNextPage,
@@ -17,28 +23,34 @@ export const LatestPage = () => {
 		isLoading,
 		search,
 		setSearch,
-	} = useInfiniteItems();
+		isPreviousData,
+	} = queryInfo;
 
 	const [showFilters, setFilters] = useState(false);
 	const [searchTerm, setSearchTerm] = useState(search || '');
 
-	useEffect(() => {
-		// Debounced search setter
-		const debouncedSetSearch = debounce((value: string) => {
+	// Debounce the search state update (setSearch) with useCallback to avoid re-creating debounce on every render
+	const debouncedSetSearch = useCallback(
+		debounce((value: string) => {
 			setSearch(value);
-		}, 300);
-
-		// Trigger debounce when searchTerm changes
-		debouncedSetSearch(searchTerm);
-
-		// Clean up debounce on unmount or before rerunning
-		return () => {
-			debouncedSetSearch.cancel();
-		};
-	}, [searchTerm, setSearch]);
+		}, 300),
+		[setSearch]
+	);
 
 	const handleSearchChange = (evt: ChangeEvent<HTMLInputElement>) => {
 		setSearchTerm(evt.target.value);
+		debouncedSetSearch(evt.target.value);
+	};
+
+	const toggleFilters = (evt: React.MouseEvent) => {
+		evt.stopPropagation();
+		setFilters((isActive) => {
+			if (isActive) {
+				setSearch(undefined);
+				setSearchTerm('');
+			}
+			return !isActive;
+		});
 	};
 
 	if (isLoading) return <Spinner />;
@@ -48,19 +60,36 @@ export const LatestPage = () => {
 		return <div>Error: {typedError.message}</div>;
 	}
 
-	const allItems: Item[] =
-		data?.pages.flatMap((page) => page.data.items) ?? [];
+	const items: Item[] = data?.pages.flatMap((page) => page.data.items) ?? [];
 
 	const title = `Latest${search ? ` '${search}'` : ''}`;
 
 	return (
 		<>
-			<Button onClick={() => setFilters((v) => !v)}>Filters</Button>
+			<TabBar />
+			<Container>
+				<Title
+					title={title}
+					left={<FiltersToggle toggleFilters={toggleFilters} />}
+				/>
 
-			{showFilters && (
-				<Input value={searchTerm} onChange={handleSearchChange} />
-			)}
-			<ItemsPage title={title} items={allItems} />
+				{showFilters && (
+					<Input
+						className={css.searchBox}
+						value={searchTerm}
+						onChange={handleSearchChange}
+					/>
+				)}
+
+				<div
+					className={
+						css.items + ' ' + (isPreviousData ? css.outdated : '')
+					}
+				>
+					<ItemsList items={items} />
+				</div>
+			</Container>
+
 			{hasNextPage && (
 				<div className={css.loadMore}>
 					<Button

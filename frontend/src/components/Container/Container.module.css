@@ -1,0 +1,12 @@
+.container {
+	margin: 10px auto 30px;
+	border-top: 1px solid #ccc;
+}
+
+@media screen and (min-width: 980px) {
+	.container {
+		border: 1px solid #ccc;
+		border-radius: 10px;
+		box-shadow: 0 3px 8px #0000004d;
+	}
+}

@@ -1,7 +1,10 @@
 import { useNavigate, useParams } from 'react-router';
+import { Container } from '../../components/Container/Container';
+import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Spinner } from '../../components/Spinner/Spinner';
+import { TabBar } from '../../components/TabBar/TabBar';
+import { Title } from '../../components/Title/Title';
 import { useObject } from '../../hooks/useObject';
-import { ItemsPage } from '../ItemsPage/ItemsPage';
 
 export const ObjectPage = () => {
 	const { objectId } = useParams();
@@ -25,5 +28,13 @@ export const ObjectPage = () => {
 
 	const title = data.length ? data[0].objectName : `Object #${objectId}`;
 
-	return <ItemsPage title={title} items={data} />;
+	return (
+		<>
+			<TabBar />
+			<Container>
+				<Title title={title} />
+				<ItemsList items={data} />
+			</Container>
+		</>
+	);
 };

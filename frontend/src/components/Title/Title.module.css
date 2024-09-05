@@ -1,0 +1,17 @@
+.header {
+	padding: 10px;
+}
+.title {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.title {
+	font-size: 18pt;
+}
+
+.extra {
+	position: absolute;
+}

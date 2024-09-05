@@ -15,7 +15,7 @@ interface Props {
 	item: Item;
 }
 
-const AuctionItem = ({ item }: Props) => {
+export const AuctionItem = ({ item }: Props) => {
 	const [expanded, setExpanded] = useState(false);
 	const pageId = usePageId();
 	const showCompare = pageId !== 'object'; // Already in compare view.
@@ -93,5 +93,3 @@ export const AuctionItemSkeleton = ({
 		</Stack>
 	);
 };
-
-export default AuctionItem;

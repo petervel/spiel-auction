@@ -12,6 +12,7 @@
 	font-size: 18pt;
 }
 
-.extra {
+.left,
+.right {
 	position: absolute;
 }

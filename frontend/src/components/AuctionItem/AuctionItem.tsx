@@ -8,7 +8,7 @@ import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import AuctionPrice from '../AuctionPrice/AuctionPrice';
 import css from './AuctionItem.module.css';
 // import { useAuctionId } from '../../hooks/useAuctionId';
-import { useAuctionId } from '../../hooks/useAuctionId';
+import useListId from '../../hooks/useListId';
 import { usePageId } from '../../hooks/usePageId';
 import AuctionItemDetails from '../AuctionItemDetails/AuctionItemDetails';
 interface Props {
@@ -22,7 +22,7 @@ export const AuctionItem = ({ item }: Props) => {
 
 	const toggleExpanded = () => setExpanded((val) => !val);
 
-	const auctionId = useAuctionId();
+	const listId = useListId();
 
 	return (
 		<div className={css.container}>
@@ -32,7 +32,7 @@ export const AuctionItem = ({ item }: Props) => {
 				className={item.isEnded ? css.ended : ''}
 			>
 				<AuctionItemButton
-					href={`https://boardgamegeek.com/geeklist/${auctionId}?itemid=${item.id}`}
+					href={`https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`}
 					newTab
 				>
 					<AuctionPrice item={item} />

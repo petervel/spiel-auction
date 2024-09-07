@@ -4,16 +4,31 @@ import prisma from "../../prismaClient";
 // import { checkAdmin } from "../../util";
 
 const router = express.Router();
+const LIST_ID = 339779;
+
+type UserDupes = Record<
+	string,
+	{
+		username: string;
+		maxId: number;
+		dupes: [
+			{
+				objectName: string;
+				items: Item[];
+			},
+		];
+	}
+>;
 
 router.get("/", (_, res) => {
 	return res.status(400).json({ error: "No listId parameter provided." });
 });
 
 router.get("/:listId", async (req, res) => {
-	if (!req.params.listId) {
+	const listId = +(req.params.listId ?? LIST_ID);
+	if (!listId) {
 		return res.status(400).json({ error: "No listId parameter provided." });
 	}
-	const listId = +req.params.listId;
 	if (Number.isNaN(listId)) {
 		return res.status(400).json({
 			error: `Invalid listId provided (must be a number): ${req.params.listId}`,
@@ -21,7 +36,7 @@ router.get("/:listId", async (req, res) => {
 	}
 
 	const duplicates = await prisma.item.groupBy({
-		by: ["listId", "username", "objectId"],
+		by: ["listId", "username", "objectId", "objectName"],
 		where: {
 			listId,
 			deleted: false,
@@ -41,7 +56,7 @@ router.get("/:listId", async (req, res) => {
 		},
 	});
 
-	const dict: Record<string, Item[]> = {};
+	let result: UserDupes = {};
 	for (const duplicate of duplicates) {
 		const items = await prisma.item.findMany({
 			where: {
@@ -54,16 +69,29 @@ router.get("/:listId", async (req, res) => {
 
 		const maxId = Math.max(...items.map((item) => item.id));
 
-		dict[maxId] = items;
+		if (!result[duplicate.username]) {
+			result[duplicate.username] = {
+				username: duplicate.username,
+				maxId,
+				dupes: [{ objectName: duplicate.objectName, items: items }],
+			};
+		} else {
+			const current = result[duplicate.username];
+			const newDupes = current.dupes;
+			newDupes.push({ objectName: duplicate.objectName, items: items });
+			result[duplicate.username] = {
+				...current,
+				maxId: Math.max(current.maxId, maxId),
+				dupes: newDupes,
+			};
+		}
 	}
 
-	const sortedKeys = Object.keys(dict).sort().reverse();
-	let result: Item[] = [];
-	for (const key of sortedKeys) {
-		result = result.concat(dict[key]);
-	}
-
-	res.status(200).json(result);
+	res.status(200).json(
+		Object.values(result)
+			.sort((userDupe) => userDupe.maxId)
+			.reverse(),
+	);
 });
 
 export default router;

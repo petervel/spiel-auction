@@ -31,7 +31,7 @@ export const BuyingPage = () => {
 		<>
 			<TabBar />
 			<Container>
-				<Title title="Selling" />
+				<Title title="Buying" />
 				{bggUsername == pathUsername && (
 					<BidAmount amount={data.totalPrice} />
 				)}

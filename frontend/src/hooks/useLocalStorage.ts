@@ -4,25 +4,35 @@ const useLocalStorage = <T>(
 	key: string,
 	defaultValue?: T,
 	fromJson = false
-): [T, (v: T | ((_: T) => T)) => void, () => void] => {
-	const storedValue = localStorage.getItem(key);
+): [
+	T | undefined,
+	(v: T | ((_: T | undefined) => T | undefined)) => void,
+	() => void
+] => {
+	const storedValue = localStorage.getItem(key) ?? undefined;
 
-	const getFromJson = (val: string | null) => {
+	const getFromJson = (val: string | undefined): T | undefined => {
 		try {
-			return JSON.parse(val ?? 'null');
+			if (val !== undefined) return JSON.parse(val);
 		} catch (e) {
 			console.log(e);
-			return null;
 		}
+		return undefined;
 	};
 
-	const initialValue = fromJson ? getFromJson(storedValue) : storedValue;
+	const initialValue: T | undefined = fromJson
+		? getFromJson(storedValue)
+		: (storedValue as T | undefined);
 
-	const [value, setVal] = useState<T>(initialValue ?? defaultValue);
+	const [value, setVal] = useState<T | undefined>(
+		initialValue ?? defaultValue
+	);
 
-	const setter = (val: T | ((_: T) => T)) => {
+	const setter = (val: T | ((_: T | undefined) => T | undefined)) => {
 		const v =
-			typeof val === 'function' ? (val as (_T: T) => T)(value) : val;
+			typeof val === 'function'
+				? (val as (_T: T | undefined) => T | undefined)(value)
+				: val;
 		localStorage.setItem(key, v as string);
 		setVal(v);
 	};

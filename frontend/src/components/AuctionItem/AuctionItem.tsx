@@ -1,4 +1,8 @@
-import { BarChartRounded } from '@mui/icons-material';
+import {
+	BarChartRounded,
+	Bookmark,
+	BookmarkAddOutlined,
+} from '@mui/icons-material';
 import { Collapse, Skeleton, Stack } from '@mui/material';
 import classNames from 'classnames';
 import { useState } from 'react';
@@ -13,9 +17,11 @@ import { usePageId } from '../../hooks/usePageId';
 import AuctionItemDetails from '../AuctionItemDetails/AuctionItemDetails';
 interface Props {
 	item: Item;
+	bookmark?: number;
+	setBookmark?: () => void;
 }
 
-export const AuctionItem = ({ item }: Props) => {
+export const AuctionItem = ({ item, bookmark, setBookmark }: Props) => {
 	const [expanded, setExpanded] = useState(false);
 	const pageId = usePageId();
 	const showCompare = pageId !== 'object'; // Already in compare view.
@@ -29,7 +35,10 @@ export const AuctionItem = ({ item }: Props) => {
 			<Stack
 				direction="row"
 				gap={1}
-				className={item.isEnded ? css.ended : ''}
+				className={classNames({
+					[css.ended]: item.isEnded,
+					[css.bookmarked]: bookmark == item.id,
+				})}
 			>
 				<AuctionItemButton
 					href={`https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`}
@@ -47,25 +56,23 @@ export const AuctionItem = ({ item }: Props) => {
 							.join(' · ')}
 					</div>
 				</div>
-				{showCompare && (
-					<AuctionItemButton
-						href={`/object/${item.objectId}`}
-						tooltip="Compare with other auctions"
-					>
-						<BarChartRounded
-							className="icon"
-							sx={{ fontSize: '30px' }}
-						/>
-					</AuctionItemButton>
-				)}
-				<AuctionItemButton
-					href={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
-					tooltip="Look up on BGG"
-				>
-					<img src={bggIcon} width="30" height="30" />
-				</AuctionItemButton>
+				<ItemButtons
+					item={item}
+					bookmark={bookmark}
+					showCompare={showCompare}
+					className={css.bigScreen}
+					setBookmark={setBookmark}
+				/>
 			</Stack>
 			<Collapse in={expanded}>
+				<ItemButtons
+					item={item}
+					bookmark={bookmark}
+					showCompare={showCompare}
+					className={css.smallScreen}
+					setBookmark={setBookmark}
+				/>
+
 				<AuctionItemDetails item={item} />
 			</Collapse>
 		</div>
@@ -90,6 +97,58 @@ export const AuctionItemSkeleton = ({
 				<Skeleton />
 				<Skeleton />
 			</Stack>
+		</Stack>
+	);
+};
+
+interface ItemButtonsProps {
+	item: Item;
+	bookmark?: number;
+	setBookmark?: () => void;
+	showCompare: boolean;
+	className: string;
+}
+
+const ItemButtons = ({
+	item,
+	bookmark,
+	setBookmark,
+	showCompare,
+	className,
+}: ItemButtonsProps) => {
+	return (
+		<Stack direction="row" className={className}>
+			{(bookmark ?? 0) <= item.id && (
+				<div className={classNames(css.bookmark)}>
+					<AuctionItemButton
+						tooltip="Remember this location"
+						onClick={() => setBookmark && setBookmark()}
+					>
+						{bookmark === item.id ? (
+							<Bookmark />
+						) : (
+							<BookmarkAddOutlined />
+						)}
+					</AuctionItemButton>
+				</div>
+			)}
+			{showCompare && (
+				<AuctionItemButton
+					href={`/object/${item.objectId}`}
+					tooltip="Compare with other auctions"
+				>
+					<BarChartRounded
+						className="icon"
+						sx={{ fontSize: '30px' }}
+					/>
+				</AuctionItemButton>
+			)}
+			<AuctionItemButton
+				href={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
+				tooltip="Look up on BGG"
+			>
+				<img src={bggIcon} width="30" height="30" />
+			</AuctionItemButton>
 		</Stack>
 	);
 };

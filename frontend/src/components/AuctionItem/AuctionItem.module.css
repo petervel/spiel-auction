@@ -52,3 +52,37 @@
 	flex: 1;
 	text-decoration: none;
 }
+
+.bookmarked {
+	border-top: 2px solid var(--colour-main);
+}
+
+@media screen and (max-width: 600px) {
+	.bigScreen {
+		display: none !important;
+	}
+}
+
+.bookmark {
+	transition: opacity 300ms ease;
+	display: flex;
+	opacity: 0;
+}
+
+.container::before {
+	content: "''";
+}
+
+.container:hover .bookmark {
+	opacity: 1;
+}
+
+.smallScreen {
+	display: flex;
+	justify-items: center;
+}
+@media screen and (min-width: 600px) {
+	.smallScreen > * {
+		display: none !important;
+	}
+}

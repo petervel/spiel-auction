@@ -63,7 +63,7 @@ export const SearchPage = () => {
 						</InputAdornment>
 					}
 				/>
-				<SearchResults data={data} />
+				<SearchResults data={data} search={search} />
 			</Container>
 		</>
 	);

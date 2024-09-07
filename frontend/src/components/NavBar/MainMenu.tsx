@@ -1,7 +1,17 @@
 import { SettingsRounded, VolunteerActivismRounded } from '@mui/icons-material';
-import { ListItemIcon, Menu, MenuItem, MenuList } from '@mui/material';
+import {
+	Checkbox,
+	Divider,
+	ListItemIcon,
+	Menu,
+	MenuItem,
+	MenuList,
+} from '@mui/material';
 import { NavLink } from 'react-router-dom';
 // import SwitchAuctionDialog from './SwitchAuctionDialog';
+import classNames from 'classnames';
+import { useContext } from 'react';
+import { ColorModeContext } from '../../contexts/ColorModeContext';
 import css from './NavBar.module.css';
 
 type MenuProps = {
@@ -14,7 +24,7 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 	// 	setSwitchAuctionOpen(true);
 	// };
 
-	// const { mode, toggleDarkMode } = useContext(ColorModeContext);
+	const { mode, toggleDarkMode } = useContext(ColorModeContext);
 
 	const openDonatePage = () => {
 		const url =
@@ -55,7 +65,7 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						</ListItemIcon>
 						Switch Auction
 					</MenuItem> */}
-					{/* <MenuItem
+					<MenuItem
 						className={classNames(css.menuItem, css.darkModeMenu)}
 						onClick={toggleDarkMode}
 					>
@@ -68,8 +78,8 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 							/>
 						</ListItemIcon>
 						Dark mode
-					</MenuItem> */}
-					{/* <Divider /> */}
+					</MenuItem>
+					<Divider />
 					<MenuItem
 						className={css.menuItem}
 						onClick={closeWith(openDonatePage)}

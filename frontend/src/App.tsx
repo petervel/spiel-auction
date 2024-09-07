@@ -2,7 +2,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Route, Routes } from 'react-router-dom';
-import NavBar from './components/NavBar/NavBar';
+import { NavBar } from './components/NavBar/NavBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BuyingPage } from './pages/BidsPages/BuyingPage';
@@ -11,7 +11,7 @@ import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
-import SettingsPage from './pages/Settings';
+import { SettingsPage } from './pages/SettingsPage/SettingsPage';
 
 function App() {
 	const { mode, toggleDarkMode } = useDarkMode();

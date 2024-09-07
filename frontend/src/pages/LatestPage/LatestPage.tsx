@@ -6,7 +6,7 @@ import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
-import useInfiniteItems from '../../hooks/useInfiniteItems';
+import { useInfiniteItems } from '../../hooks/useInfiniteItems';
 import { Item } from '../../model/Item';
 import FiltersToggle from './FiltersToggle';
 import css from './LatestPage.module.css';

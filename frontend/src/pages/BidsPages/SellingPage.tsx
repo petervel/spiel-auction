@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BidAmount } from '../../components/BidAmount/BidAmount';
 import { Container } from '../../components/Container/Container';
@@ -7,14 +8,17 @@ import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
+import { EditBggUserName } from './EditBggUserName';
 
 export const SellingPage = () => {
 	const { username: pathUsername } = useParams();
 	const bggUsername = useBggUsername();
 
-	const seller = pathUsername ?? bggUsername;
+	const [seller, setSeller] = useState(pathUsername ?? bggUsername);
 
-	const { data, error, isLoading } = useBids({ seller });
+	const { data, error, isLoading } = useBids({
+		seller: seller ?? 'this_is_just_some_nonexistent_user', // TODO: hackish fallback
+	});
 
 	if (isLoading) return <Spinner />;
 
@@ -28,8 +32,14 @@ export const SellingPage = () => {
 			<TabBar />
 			<Container>
 				<Title title="Selling" />
-				<BidAmount amount={data.totalPrice} />
-				<ItemsList items={data.items} />
+				{bggUsername == pathUsername && (
+					<BidAmount amount={data.totalPrice} />
+				)}
+				{seller ? (
+					<ItemsList items={data.items} />
+				) : (
+					<EditBggUserName onSave={setSeller} />
+				)}
 			</Container>
 		</>
 	);

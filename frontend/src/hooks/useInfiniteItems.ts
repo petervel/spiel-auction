@@ -79,5 +79,3 @@ export const useInfiniteItems = (
 		setSearch,
 	};
 };
-
-export default useInfiniteItems;

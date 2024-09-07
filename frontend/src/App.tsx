@@ -10,6 +10,7 @@ import { SellingPage } from './pages/BidsPages/SellingPage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
+import { SearchPage } from './pages/SearchPage/SearchPage';
 import SettingsPage from './pages/Settings';
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
 								path="/duplicates"
 								element={<DuplicatesPage />}
 							/>
+							<Route path="/search" element={<SearchPage />} />
 						</Routes>
 					</div>
 				</ThemeProvider>

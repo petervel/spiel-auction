@@ -25,6 +25,12 @@
 	font-weight: 400;
 }
 
+.objectName {
+	flex: 1;
+	display: flex;
+	align-items: center;
+}
+
 .details {
 	font-size: 0.7em;
 	opacity: 0.5;

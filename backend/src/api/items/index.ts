@@ -26,7 +26,7 @@ router.get("/:listId", async (req, res) => {
 		lastId = +req.query.lastId;
 		if (Number.isNaN(lastId)) {
 			return res.status(400).json({
-				error: `Invalid lastId provided (must be a number): ${req.params.listId}`,
+				error: `Invalid lastId provided (must be a number): ${req.query.lastId}`,
 			});
 		}
 	}

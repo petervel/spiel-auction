@@ -1,4 +1,4 @@
-import { Home, Sell, ShoppingBasket } from '@mui/icons-material';
+import { Schedule, Search, Sell, ShoppingBasket } from '@mui/icons-material';
 import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
 import { MouseEvent, ReactNode } from 'react';
@@ -8,7 +8,7 @@ import { usePageId } from '../../hooks/usePageId';
 import css from './TabBar.module.css';
 
 type PageData = {
-	id: 'latest' | 'sorted' | 'selling' | 'buying' | 'starred';
+	id: 'latest' | 'search' | 'selling' | 'buying' | 'starred';
 	label: string;
 	renderIcon: () => ReactNode;
 	url: string;
@@ -23,22 +23,26 @@ export const TabBar = () => {
 		{
 			id: 'latest',
 			label: 'Latest',
-			renderIcon: () => <Home />,
+			renderIcon: () => <Schedule />,
 			url: '/',
+		},
+		{
+			id: 'search',
+			label: 'Search',
+			renderIcon: () => <Search />,
+			url: `/search`,
 		},
 		{
 			id: 'selling',
 			label: 'Selling',
 			renderIcon: () => <Sell />,
-			url: `/selling/${username}`,
-			disabled: !username,
+			url: `/selling${username ? `/${username}` : ''}`,
 		},
 		{
 			id: 'buying',
 			label: 'Buying',
 			renderIcon: () => <ShoppingBasket />,
-			url: `/buying/${username}`,
-			disabled: !username,
+			url: `/buying${username ? `/${username}` : ''}`,
 		},
 	];
 

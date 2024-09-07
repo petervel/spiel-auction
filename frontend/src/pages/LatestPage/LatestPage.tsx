@@ -1,4 +1,4 @@
-import { Button, Input } from '@mui/material';
+import { Button, Stack, TextField } from '@mui/material';
 import { debounce } from 'lodash';
 import { ChangeEvent, useCallback, useState } from 'react';
 import { Container } from '../../components/Container/Container';
@@ -42,15 +42,16 @@ export const LatestPage = () => {
 		debouncedSetSearch(evt.target.value);
 	};
 
+	const hideFilters = () => {
+		setSearch(undefined);
+		setSearchTerm('');
+		setFilters(false);
+	};
+
 	const toggleFilters = (evt: React.MouseEvent) => {
 		evt.stopPropagation();
-		setFilters((isActive) => {
-			if (isActive) {
-				setSearch(undefined);
-				setSearchTerm('');
-			}
-			return !isActive;
-		});
+		if (showFilters) hideFilters();
+		else setFilters(true);
 	};
 
 	if (isLoading) return <Spinner />;
@@ -74,12 +75,20 @@ export const LatestPage = () => {
 				/>
 
 				{showFilters && (
-					<Input
-						autoFocus={true}
-						className={css.searchBox}
-						value={searchTerm}
-						onChange={handleSearchChange}
-					/>
+					<Stack my={2} gap={3}>
+						<Stack direction="row" px={2}>
+							<TextField
+								fullWidth
+								label="Filter"
+								autoFocus={true}
+								value={searchTerm}
+								onChange={handleSearchChange}
+							/>
+						</Stack>
+						<Stack direction="row" justifyContent="center">
+							<Button onClick={hideFilters}>Hide filters</Button>
+						</Stack>
+					</Stack>
 				)}
 
 				<div

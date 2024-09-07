@@ -29,12 +29,14 @@ router.get("/", async (req, res) => {
 		GROUP BY \`objectId\`, \`objectName\`, \`objectSubtype\`
 		ORDER BY
 			CASE
+				-- Perfect match
+				WHEN LOWER(\`objectName\`) = LOWER(${search}) THEN 0
 				-- Exact match at the start of the string
-				WHEN LOWER(\`objectName\`) LIKE CONCAT(LOWER(${search}), '%') THEN 0
+				WHEN LOWER(\`objectName\`) LIKE CONCAT(LOWER(${search}), '%') THEN 1
 				-- Match with space before the search term (anywhere within the string)
-				WHEN LOWER(\`objectName\`) LIKE CONCAT('% ', LOWER(${search}), '%') THEN 1
+				WHEN LOWER(\`objectName\`) LIKE CONCAT('% ', LOWER(${search}), '%') THEN 2
 				-- Substring found, but not at the beginning or after space
-				ELSE POSITION(LOWER(${search}) IN LOWER(\`objectName\`)) + 1
+				ELSE POSITION(LOWER(${search}) IN LOWER(\`objectName\`)) + 10
 			END ASC,
 			\`maxId\` DESC -- newest products first?
 		LIMIT ${MAX_RESULTS}`;

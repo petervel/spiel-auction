@@ -13,8 +13,8 @@ const fetchObject = async (search: string | undefined) => {
 	return await response.json();
 };
 
-export const useObjects = () => {
-	const [search, setSearch] = useState<string | undefined>();
+export const useObjects = (initialSearch: string | undefined) => {
+	const [search, setSearch] = useState<string | undefined>(initialSearch);
 
 	return {
 		...useQuery<BggObject[]>(

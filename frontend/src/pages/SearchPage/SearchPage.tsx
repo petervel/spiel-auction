@@ -1,6 +1,7 @@
 import { Search } from '@mui/icons-material';
 import { IconButton, Input, InputAdornment } from '@mui/material';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { TabBar } from '../../components/TabBar/TabBar';
@@ -10,12 +11,22 @@ import css from './SearchPage.module.css';
 import SearchResults from './SearchResults';
 
 export const SearchPage = () => {
-	const { data, error, isLoading, search, setSearch } = useObjects();
+	const [searchParams, setSearchParams] = useSearchParams();
+	const initialSearch = searchParams.get('search');
+
+	const { data, error, isLoading, search, setSearch } = useObjects(
+		initialSearch ?? undefined
+	);
 
 	const [searchTerm, setSearchTerm] = useState(search);
 
 	const handleSearch = () => {
-		setSearch(searchTerm?.trim() ?? '');
+		const newSearch = searchTerm?.trim() ?? '';
+		setSearch(newSearch);
+		setSearchParams((prevParams) => {
+			prevParams.set('search', newSearch);
+			return prevParams;
+		});
 	};
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

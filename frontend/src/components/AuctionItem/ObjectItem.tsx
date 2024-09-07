@@ -24,9 +24,16 @@ export const ObjectItem = ({ object }: ObjectItemProps) => {
 					/>
 				</AuctionItemButton>
 
-				<div className={classNames(css.objectName, css.hideOverflow)}>
-					{object.objectName}
-				</div>
+				<a
+					href={`/object/${object.objectId}`}
+					className={css.displayName}
+				>
+					<div
+						className={classNames(css.objectName, css.hideOverflow)}
+					>
+						{object.objectName}
+					</div>
+				</a>
 
 				<AuctionItemButton
 					href={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}

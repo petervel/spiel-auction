@@ -3,41 +3,49 @@ import { useState } from 'react';
 const useLocalStorage = <T>(
 	key: string,
 	defaultValue?: T,
-	fromJson = false
+	fromJson = true // Default true for parsing JSON
 ): [
 	T | undefined,
 	(v: T | ((_: T | undefined) => T | undefined)) => void,
 	() => void
 ] => {
-	const storedValue = localStorage.getItem(key) ?? undefined;
-
-	const getFromJson = (val: string | undefined): T | undefined => {
+	// Retrieve from localStorage and parse JSON if needed
+	const getStoredValue = (): T | undefined => {
+		const storedValue = localStorage.getItem(key);
+		if (storedValue === null) return undefined;
 		try {
-			if (val !== undefined) return JSON.parse(val);
+			return fromJson
+				? JSON.parse(storedValue)
+				: (storedValue as unknown as T);
 		} catch (e) {
-			console.log(e);
+			console.error('Error parsing localStorage value:', e);
+			return undefined;
 		}
-		return undefined;
 	};
-
-	const initialValue: T | undefined = fromJson
-		? getFromJson(storedValue)
-		: (storedValue as T | undefined);
 
 	const [value, setVal] = useState<T | undefined>(
-		initialValue ?? defaultValue
+		getStoredValue() ?? defaultValue
 	);
 
+	// Store as a JSON string in localStorage
 	const setter = (val: T | ((_: T | undefined) => T | undefined)) => {
-		const v =
+		const newValue =
 			typeof val === 'function'
-				? (val as (_T: T | undefined) => T | undefined)(value)
+				? (val as (_: T | undefined) => T | undefined)(value)
 				: val;
-		localStorage.setItem(key, v as string);
-		setVal(v);
+
+		if (newValue !== undefined) {
+			localStorage.setItem(key, JSON.stringify(newValue));
+		} else {
+			localStorage.removeItem(key);
+		}
+		setVal(newValue);
 	};
 
-	const remover = () => localStorage.removeItem(key);
+	const remover = () => {
+		localStorage.removeItem(key);
+		setVal(undefined);
+	};
 
 	return [value, setter, remover];
 };

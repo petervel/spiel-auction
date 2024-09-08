@@ -1,4 +1,3 @@
-import { Tooltip } from '@mui/material';
 import classnames from 'classnames';
 import { Item } from '../../model/Item';
 import './AuctionPrice.css';
@@ -23,12 +22,12 @@ const AuctionPrice = ({ item }: Props) => {
 	}
 
 	return (
-		<Tooltip title={tooltip}>
-			<div className={classes}>
-				€{item.currentBid}
-				{binOnly && '!'}
-			</div>
-		</Tooltip>
+		// <Tooltip title={tooltip} enterDelay={1000} enterNextDelay={1000}>
+		<div className={classes} title={tooltip}>
+			€{item.currentBid}
+			{binOnly && '!'}
+		</div>
+		// </Tooltip>
 	);
 };
 

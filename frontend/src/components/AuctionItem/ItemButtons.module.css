@@ -1,0 +1,19 @@
+@media screen and (max-width: 768px) {
+	.bigScreen {
+		display: none !important;
+	}
+}
+
+.bigScreen .bookmark {
+	display: flex;
+}
+
+.smallScreen {
+	display: flex;
+	justify-items: center;
+}
+@media screen and (min-width: 768px) {
+	.smallScreen > * {
+		display: none !important;
+	}
+}

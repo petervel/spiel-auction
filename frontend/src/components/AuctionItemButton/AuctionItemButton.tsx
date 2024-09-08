@@ -1,4 +1,4 @@
-import { Button, Tooltip } from '@mui/material';
+import { Button } from '@mui/material';
 import classNames from 'classnames';
 import { ReactNode } from 'react';
 import css from './AuctionItemButton.module.css';
@@ -21,17 +21,18 @@ const AuctionItemButton = ({
 	children,
 }: Props) => {
 	return (
-		<Tooltip title={tooltip} arrow>
-			<Button
-				className={classNames(className, css.button)}
-				href={href ?? '#'}
-				onClick={onClick}
-				rel="noreferrer"
-				target={newTab ? '_blank' : '_self'}
-			>
-				{children}
-			</Button>
-		</Tooltip>
+		// <Tooltip title={tooltip} arrow enterDelay={1000} enterNextDelay={1000}>
+		<Button
+			className={classNames(className, css.button)}
+			href={href ?? '#'}
+			onClick={onClick}
+			rel="noreferrer"
+			target={newTab ? '_blank' : '_self'}
+			title={tooltip}
+		>
+			{children}
+		</Button>
+		// </Tooltip>
 	);
 };
 

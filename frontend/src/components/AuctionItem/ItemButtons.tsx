@@ -11,6 +11,7 @@ interface ItemButtonsProps {
 	showCompare: boolean;
 	location: 'list' | 'details';
 	allowBookmarks?: boolean;
+	bookmarkClass?: string;
 }
 
 export const ItemButtons = ({
@@ -18,12 +19,16 @@ export const ItemButtons = ({
 	showCompare,
 	location = 'list',
 	allowBookmarks = false,
+	bookmarkClass = '',
 }: ItemButtonsProps) => {
 	return (
 		<Stack direction="row">
 			<div className={css.bookmark}>
 				{allowBookmarks && location == 'list' && (
-					<BookmarkButton itemId={item.id} />
+					<BookmarkButton
+						itemId={item.id}
+						className={bookmarkClass}
+					/>
 				)}
 			</div>
 			<div

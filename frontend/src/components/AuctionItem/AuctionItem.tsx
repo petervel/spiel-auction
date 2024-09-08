@@ -29,19 +29,22 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 	const listId = useListId();
 
 	return (
-		<div className={css.container}>
-			<Stack
-				direction="row"
-				gap={1}
-				className={classNames({
-					[css.ended]: item.isEnded,
-					[css.bookmarked]: bookmark == item.id,
-					[css.seen]: bookmark && item.id < bookmark,
-				})}
-			>
+		<div
+			className={classNames({
+				item: true,
+				[css.container]: true,
+				[css.ended]: item.isEnded,
+				[css.bookmarked]: allowBookmarks && bookmark == item.id,
+				[css.seen]: allowBookmarks && bookmark && item.id < bookmark,
+			})}
+		>
+			<Stack direction="row" gap={1}>
 				{allowBookmarks && (
 					<div className={css.sideBookmark}>
-						<BookmarkButton itemId={item.id} />
+						<BookmarkButton
+							itemId={item.id}
+							className={css.bookmark}
+						/>
 					</div>
 				)}
 				<AuctionItemButton
@@ -65,6 +68,7 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 					showCompare={showCompare}
 					location="list"
 					allowBookmarks={allowBookmarks}
+					bookmarkClass={css.bookmark}
 				/>
 			</Stack>
 			<Collapse in={expanded}>

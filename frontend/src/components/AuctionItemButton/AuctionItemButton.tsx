@@ -19,7 +19,6 @@ const AuctionItemButton = ({
 	children,
 }: Props) => {
 	// <Tooltip title={tooltip} arrow enterDelay={1000} enterNextDelay={1000}>
-	console.log({ link }, typeof link == 'string');
 	if (typeof link == 'string') {
 		return (
 			<Button

@@ -68,8 +68,8 @@
 	opacity: 1;
 }
 
-.seen button {
-	opacity: 0.1;
+.seen .bookmark {
+	display: none;
 }
 
 .sideBookmark {

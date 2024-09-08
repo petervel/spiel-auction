@@ -36,6 +36,7 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 				className={classNames({
 					[css.ended]: item.isEnded,
 					[css.bookmarked]: bookmark == item.id,
+					[css.seen]: bookmark && item.id < bookmark,
 				})}
 			>
 				{allowBookmarks && (

@@ -1,3 +1,6 @@
-.bookmark {
+.checked {
 	color: var(--colour-bookmark);
+}
+.unchecked {
+	color: var(--colour-inactive);
 }

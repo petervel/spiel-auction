@@ -1,4 +1,4 @@
-import { Bookmark, BookmarkAddOutlined } from '@mui/icons-material';
+import { Check } from '@mui/icons-material';
 import { Stack } from '@mui/material';
 import classNames from 'classnames';
 import { useBookmark } from '../../hooks/useBookmark';
@@ -27,17 +27,10 @@ const BookmarkButton = ({ itemId }: BookmarkButtonProps) => {
 				tooltip="Remember this location"
 				link={handleBookmark}
 			>
-				{isBookmarked ? (
-					<Bookmark
-						className={css.bookmark}
-						sx={{ fontSize: '30px' }}
-					/>
-				) : (
-					<BookmarkAddOutlined
-						className={css.bookmark}
-						sx={{ fontSize: '30px' }}
-					/>
-				)}
+				<Check
+					className={isBookmarked ? css.checked : css.unchecked}
+					sx={{ fontSize: '30px' }}
+				/>
 			</AuctionItemButton>
 		</Stack>
 	);

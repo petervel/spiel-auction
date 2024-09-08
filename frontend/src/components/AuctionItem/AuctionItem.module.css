@@ -68,6 +68,10 @@
 	opacity: 1;
 }
 
+.seen button {
+	opacity: 0.1;
+}
+
 .sideBookmark {
 	display: flex;
 	opacity: 0;

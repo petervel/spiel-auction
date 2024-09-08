@@ -33,7 +33,10 @@ export const SellingPage = () => {
 			<Container>
 				<Title title="Selling" />
 				{bggUsername == pathUsername && (
-					<BidAmount amount={data.totalPrice} />
+					<BidAmount
+						amount={data.totalPrice}
+						extraText={` (${data.items.length} items)`}
+					/>
 				)}
 				{seller ? (
 					<ItemsList items={data.items} />

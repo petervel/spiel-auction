@@ -3,6 +3,7 @@ import { Stack } from '@mui/material';
 import classNames from 'classnames';
 import { useBookmark } from '../../hooks/useBookmark';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
+import css from './BookmarkButton.module.css';
 
 type BookmarkButtonProps = {
 	itemId: number;
@@ -26,7 +27,17 @@ const BookmarkButton = ({ itemId }: BookmarkButtonProps) => {
 				tooltip="Remember this location"
 				link={handleBookmark}
 			>
-				{isBookmarked ? <Bookmark /> : <BookmarkAddOutlined />}
+				{isBookmarked ? (
+					<Bookmark
+						className={css.bookmark}
+						sx={{ fontSize: '30px' }}
+					/>
+				) : (
+					<BookmarkAddOutlined
+						className={css.bookmark}
+						sx={{ fontSize: '30px' }}
+					/>
+				)}
 			</AuctionItemButton>
 		</Stack>
 	);

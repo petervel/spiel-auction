@@ -17,3 +17,8 @@
 		display: none !important;
 	}
 }
+@media screen and (min-width: 1280px) {
+	.bookmark {
+		display: none;
+	}
+}

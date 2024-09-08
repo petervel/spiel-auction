@@ -20,30 +20,33 @@ export const ItemButtons = ({
 	allowBookmarks = false,
 }: ItemButtonsProps) => {
 	return (
-		<Stack
-			direction="row"
-			className={location == 'list' ? css.bigScreen : css.smallScreen}
-		>
-			{allowBookmarks && location == 'details' && (
-				<BookmarkButton itemId={item.id} />
-			)}
-			{showCompare && (
-				<AuctionItemButton
-					link={`/object/${item.objectId}`}
-					tooltip="Compare with other auctions"
-				>
-					<BarChartRounded
-						className="icon"
-						sx={{ fontSize: '30px' }}
-					/>
-				</AuctionItemButton>
-			)}
-			<AuctionItemButton
-				link={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
-				tooltip="Look up on BGG"
+		<Stack direction="row">
+			<div className={css.bookmark}>
+				{allowBookmarks && location == 'list' && (
+					<BookmarkButton itemId={item.id} />
+				)}
+			</div>
+			<div
+				className={location == 'list' ? css.bigScreen : css.smallScreen}
 			>
-				<img src={bggIcon} width="30" height="30" />
-			</AuctionItemButton>
+				{showCompare && (
+					<AuctionItemButton
+						link={`/object/${item.objectId}`}
+						tooltip="Compare with other auctions"
+					>
+						<BarChartRounded
+							className="icon"
+							sx={{ fontSize: '30px' }}
+						/>
+					</AuctionItemButton>
+				)}
+				<AuctionItemButton
+					link={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
+					tooltip="Look up on BGG"
+				>
+					<img src={bggIcon} width="30" height="30" />
+				</AuctionItemButton>
+			</div>
 		</Stack>
 	);
 };

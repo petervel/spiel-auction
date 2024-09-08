@@ -71,7 +71,7 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 					item={item}
 					showCompare={showCompare}
 					location="details"
-					allowBookmarks={true}
+					allowBookmarks={false}
 				/>
 
 				<AuctionItemDetails item={item} />

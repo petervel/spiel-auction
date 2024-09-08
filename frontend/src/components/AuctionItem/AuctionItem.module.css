@@ -80,7 +80,7 @@
 .container:hover .sideBookmark {
 	opacity: 1;
 }
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1280px) {
 	.sideBookmark {
 		display: none;
 	}

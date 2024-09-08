@@ -14,9 +14,10 @@ import BookmarkButton from './BookmarkButton';
 import { ItemButtons } from './ItemButtons';
 interface Props {
 	item: Item;
+	allowBookmarks?: boolean;
 }
 
-export const AuctionItem = ({ item }: Props) => {
+export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 	const [expanded, setExpanded] = useState(false);
 	const pageId = usePageId();
 	const showCompare = pageId !== 'object'; // Already in compare view.
@@ -37,9 +38,11 @@ export const AuctionItem = ({ item }: Props) => {
 					[css.bookmarked]: bookmark == item.id,
 				})}
 			>
-				<div className={css.sideBookmark}>
-					<BookmarkButton itemId={item.id} />
-				</div>
+				{allowBookmarks && (
+					<div className={css.sideBookmark}>
+						<BookmarkButton itemId={item.id} />
+					</div>
+				)}
 				<AuctionItemButton
 					href={`https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`}
 					newTab
@@ -59,15 +62,15 @@ export const AuctionItem = ({ item }: Props) => {
 				<ItemButtons
 					item={item}
 					showCompare={showCompare}
-					screenSize="big"
-					allowBookmarks={true}
+					location="list"
+					allowBookmarks={allowBookmarks}
 				/>
 			</Stack>
 			<Collapse in={expanded}>
 				<ItemButtons
 					item={item}
 					showCompare={showCompare}
-					screenSize="small"
+					location="details"
 					allowBookmarks={true}
 				/>
 

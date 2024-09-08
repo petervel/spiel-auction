@@ -4,14 +4,24 @@ import css from './ItemsList.module.css';
 
 type ItemsListProps = {
 	items: Item[];
+	allowBookmarks?: boolean;
 };
 
-export const ItemsList = ({ items }: ItemsListProps) => {
+export const ItemsList = ({
+	items,
+	allowBookmarks = false,
+}: ItemsListProps) => {
 	return (
 		<ul className={css.items}>
 			{items.length ? (
 				items.map((item) => {
-					return <AuctionItem key={item.id} item={item} />;
+					return (
+						<AuctionItem
+							key={item.id}
+							item={item}
+							allowBookmarks={allowBookmarks}
+						/>
+					);
 				})
 			) : (
 				<div className={css.noItems}>No items found.</div>

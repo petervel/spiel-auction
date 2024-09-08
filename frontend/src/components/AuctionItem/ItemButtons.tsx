@@ -9,22 +9,22 @@ import css from './ItemButtons.module.css';
 interface ItemButtonsProps {
 	item: Item;
 	showCompare: boolean;
-	screenSize: 'big' | 'small';
+	location: 'list' | 'details';
 	allowBookmarks?: boolean;
 }
 
 export const ItemButtons = ({
 	item,
 	showCompare,
-	screenSize = 'big',
+	location = 'list',
 	allowBookmarks = false,
 }: ItemButtonsProps) => {
 	return (
 		<Stack
 			direction="row"
-			className={screenSize == 'big' ? css.bigScreen : css.smallScreen}
+			className={location == 'list' ? css.bigScreen : css.smallScreen}
 		>
-			{allowBookmarks && screenSize == 'small' && (
+			{allowBookmarks && location == 'details' && (
 				<BookmarkButton itemId={item.id} />
 			)}
 			{showCompare && (

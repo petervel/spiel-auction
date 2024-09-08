@@ -15,7 +15,7 @@ export const ObjectItem = ({ object }: ObjectItemProps) => {
 		<div className={css.container}>
 			<Stack direction="row" gap={1}>
 				<AuctionItemButton
-					href={`/object/${object.objectId}`}
+					link={`/object/${object.objectId}`}
 					tooltip="Compare with other auctions"
 				>
 					<BarChartRounded
@@ -36,7 +36,7 @@ export const ObjectItem = ({ object }: ObjectItemProps) => {
 				</a>
 
 				<AuctionItemButton
-					href={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
+					link={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
 					tooltip="Look up on BGG"
 				>
 					<img src={bggIcon} width="30" height="30" />

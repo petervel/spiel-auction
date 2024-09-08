@@ -14,7 +14,7 @@ const SearchField = () => {
 		navigate({
 			pathname: '/search',
 			search: createSearchParams({
-				search,
+				search: search.trim(),
 			}).toString(),
 		});
 	};
@@ -28,7 +28,7 @@ const SearchField = () => {
 						[css.searchBox]: true,
 					})}
 					value={search}
-					onChange={(event) => setSearch(event.target.value.trim())}
+					onChange={(event) => setSearch(event.target.value)}
 					onKeyUp={(event) => {
 						if (event.key === 'Enter') {
 							handleSearch();

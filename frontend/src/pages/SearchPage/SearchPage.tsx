@@ -1,37 +1,24 @@
-import { Search } from '@mui/icons-material';
-import { IconButton, Input, InputAdornment } from '@mui/material';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useObjects } from '../../hooks/useObjects';
-import css from './SearchPage.module.css';
 import SearchResults from './SearchResults';
 
 export const SearchPage = () => {
-	const [searchParams, setSearchParams] = useSearchParams();
-	const initialSearch = searchParams.get('search');
+	const [searchParams] = useSearchParams();
+	const searchTerm = searchParams.get('search') ?? undefined;
 
-	const { data, error, isLoading, search, setSearch } = useObjects(
-		initialSearch ?? undefined
-	);
+	const { data, error, isLoading, search, setSearch } =
+		useObjects(searchTerm);
 
-	const [searchTerm, setSearchTerm] = useState(search);
-
-	const handleSearch = () => {
-		const newSearch = searchTerm?.trim() ?? '';
-		setSearch(newSearch);
-		setSearchParams((prevParams) => {
-			prevParams.set('search', newSearch);
-			return prevParams;
-		});
-	};
-
-	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearchTerm(event.target.value); // Update the search state
-	};
+	useEffect(() => {
+		if (searchTerm !== search) {
+			setSearch(searchTerm);
+		}
+	}, [searchTerm, search, setSearch]);
 
 	if (isLoading) return <Spinner />;
 
@@ -56,24 +43,6 @@ export const SearchPage = () => {
 			<TabBar />
 			<Container>
 				<Title title={title} />
-				<Input
-					autoFocus={true}
-					className={css.searchBox}
-					value={searchTerm}
-					onChange={handleSearchChange}
-					onKeyUp={(event) => {
-						if (event.key === 'Enter') {
-							handleSearch();
-						}
-					}}
-					endAdornment={
-						<InputAdornment position="end">
-							<IconButton onClick={handleSearch}>
-								<Search />
-							</IconButton>
-						</InputAdornment>
-					}
-				/>
 				<SearchResults data={data} search={search} />
 			</Container>
 		</>

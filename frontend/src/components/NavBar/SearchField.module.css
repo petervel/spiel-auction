@@ -1,0 +1,6 @@
+.searchBox {
+	margin: 1rem;
+	box-sizing: border-box;
+	color: var(--colour-on-main) !important;
+	flex: 1;
+}

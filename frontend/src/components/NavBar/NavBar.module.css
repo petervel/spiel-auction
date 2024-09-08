@@ -21,10 +21,10 @@
 }
 
 .navbar .title {
-	flex: 1;
 	display: flex;
 	align-items: center;
 	color: var(--colour-on-main);
+	flex: 1;
 }
 
 .navbar .content {

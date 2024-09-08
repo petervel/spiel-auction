@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from 'react-query';
 
-const fetchObject = async (search: string | undefined) => {
+const fetchObjects = async (search: string | undefined) => {
 	const url = new URL(`/api/object`, window.origin);
 	if (search) {
 		url.searchParams.append('search', search);
@@ -19,7 +19,7 @@ export const useObjects = (initialSearch: string | undefined) => {
 	return {
 		...useQuery<BggObject[]>(
 			`objects:${search}`,
-			() => fetchObject(search),
+			() => fetchObjects(search),
 			{
 				retry: 3,
 			}

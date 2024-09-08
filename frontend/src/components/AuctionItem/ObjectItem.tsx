@@ -26,13 +26,13 @@ export const ObjectItem = ({ object }: ObjectItemProps) => {
 
 				<a
 					href={`/object/${object.objectId}`}
-					className={css.displayName}
+					className={classNames(
+						css.objectName,
+						css.hideOverflow,
+						css.displayName
+					)}
 				>
-					<div
-						className={classNames(css.objectName, css.hideOverflow)}
-					>
-						{object.objectName}
-					</div>
+					{object.objectName}
 				</a>
 
 				<AuctionItemButton

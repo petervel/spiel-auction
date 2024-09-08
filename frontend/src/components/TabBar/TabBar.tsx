@@ -1,4 +1,4 @@
-import { Schedule, Search, Sell, ShoppingBasket } from '@mui/icons-material';
+import { Schedule, Sell, ShoppingBasket } from '@mui/icons-material';
 import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
 import { MouseEvent, ReactNode } from 'react';
@@ -26,12 +26,12 @@ export const TabBar = () => {
 			renderIcon: () => <Schedule />,
 			url: '/',
 		},
-		{
-			id: 'search',
-			label: 'Search',
-			renderIcon: () => <Search />,
-			url: `/search`,
-		},
+		// {
+		// 	id: 'search',
+		// 	label: 'Search',
+		// 	renderIcon: () => <Search />,
+		// 	url: `/search`,
+		// },
 		{
 			id: 'selling',
 			label: 'Selling',

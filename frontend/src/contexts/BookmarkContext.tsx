@@ -12,8 +12,10 @@ export const BookmarkContext = createContext<BookmarkContextProps | undefined>(
 );
 
 export const BookmarkProvider = ({ children }: { children: ReactNode }) => {
-	const [bookmark, setBookmark, clearBookmark] =
-		useLocalStorage<number>('bookmark');
+	const [bookmark, setBookmark, clearBookmark] = useLocalStorage<number>(
+		'bookmark',
+		0
+	);
 
 	const value: BookmarkContextProps = {
 		bookmark,

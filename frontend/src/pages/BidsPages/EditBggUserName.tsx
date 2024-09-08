@@ -7,8 +7,9 @@ type EditBggUserNameProps = {
 	onSave: (value: string | undefined) => void;
 };
 export const EditBggUserName = ({ onSave }: EditBggUserNameProps) => {
-	const [storedUsername, setUsername, removeUsername] =
-		useLocalStorage<string>('bgg_username');
+	const [storedUsername, setUsername, removeUsername] = useLocalStorage<
+		string | undefined
+	>('bgg_username', undefined);
 
 	const [editUsername, setEditUsername] = useState(storedUsername ?? '');
 

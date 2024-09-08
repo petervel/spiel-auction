@@ -5,8 +5,9 @@ import useLocalStorage from '../../hooks/useLocalStorage';
 
 export const SettingsPage = () => {
 	const nav = useNavigate();
-	const [storedUsername, setUsername, removeUsername] =
-		useLocalStorage<string>('bgg_username');
+	const [storedUsername, setUsername, removeUsername] = useLocalStorage<
+		string | undefined
+	>('bgg_username', undefined);
 
 	const [editUsername, setEditUsername] = useState(storedUsername ?? '');
 

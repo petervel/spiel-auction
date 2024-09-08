@@ -24,7 +24,7 @@ const BookmarkButton = ({ itemId }: BookmarkButtonProps) => {
 		<Stack className={classNames('bookmark')} justifyContent="center">
 			<AuctionItemButton
 				tooltip="Remember this location"
-				onClick={handleBookmark}
+				link={handleBookmark}
 			>
 				{isBookmarked ? <Bookmark /> : <BookmarkAddOutlined />}
 			</AuctionItemButton>

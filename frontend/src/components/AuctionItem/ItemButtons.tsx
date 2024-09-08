@@ -29,7 +29,7 @@ export const ItemButtons = ({
 			)}
 			{showCompare && (
 				<AuctionItemButton
-					href={`/object/${item.objectId}`}
+					link={`/object/${item.objectId}`}
 					tooltip="Compare with other auctions"
 				>
 					<BarChartRounded
@@ -39,7 +39,7 @@ export const ItemButtons = ({
 				</AuctionItemButton>
 			)}
 			<AuctionItemButton
-				href={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
+				link={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
 				tooltip="Look up on BGG"
 			>
 				<img src={bggIcon} width="30" height="30" />

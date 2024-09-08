@@ -44,7 +44,7 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 					</div>
 				)}
 				<AuctionItemButton
-					href={`https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`}
+					link={`https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`}
 					newTab
 				>
 					<AuctionPrice item={item} />

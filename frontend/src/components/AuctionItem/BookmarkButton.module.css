@@ -1,6 +1,6 @@
 .checked {
-	color: var(--colour-bookmark);
+	color: var(--colour-seen);
 }
 .unchecked {
-	color: var(--colour-inactive);
+	color: var(--colour-disabled);
 }

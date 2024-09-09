@@ -17,7 +17,9 @@ body {
 	--colour-active: var(--colour-main);
 	--colour-disabled: #ccc;
 	--colour-inactive: #666;
-	--colour-bookmark: #5ba967;
+	--colour-seen: #46aa55;
+	--colour-bookmark: var(--colour-icon);
+	--bookmark-thickness: 4px;
 
 	background-color: var(--colour-background);
 }
@@ -35,7 +37,9 @@ body.dark {
 	--colour-active: #fff;
 	--colour-disabled: #444;
 	--colour-inactive: #888;
-	--colour-bookmark: #82ba8a;
+	--colour-seen: #52d064;
+	--colour-bookmark: var(--colour-icon);
+	--bookmark-thickness: 5px;
 }
 
 .icon {

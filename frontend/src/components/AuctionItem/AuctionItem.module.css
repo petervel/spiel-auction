@@ -55,7 +55,7 @@
 }
 
 .bookmarked {
-	border-top: 2px solid var(--colour-active);
+	border-top: var(--bookmark-thickness) solid var(--colour-bookmark);
 }
 
 .bigScreen .bookmark {

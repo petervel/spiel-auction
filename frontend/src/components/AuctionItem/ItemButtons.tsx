@@ -47,6 +47,7 @@ export const ItemButtons = ({
 				)}
 				<AuctionItemButton
 					link={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
+					newTab
 					tooltip="Look up on BGG"
 				>
 					<img src={bggIcon} width="30" height="30" />

@@ -1,6 +1,7 @@
 import { Button, Stack, TextField } from '@mui/material';
 import { debounce } from 'lodash';
-import { ChangeEvent, useCallback, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { Container } from '../../components/Container/Container';
 import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Spinner } from '../../components/Spinner/Spinner';
@@ -25,6 +26,18 @@ export const LatestPage = () => {
 		setSearch,
 		isPreviousData,
 	} = queryInfo;
+
+	const [ref, inView] = useInView({
+		triggerOnce: false, // Allows multiple triggers
+		threshold: 0.1, // Trigger when 10% of the button is visible
+	});
+
+	// Load more when the "load more" button comes into view
+	useEffect(() => {
+		if (inView && hasNextPage && !isFetchingNextPage) {
+			fetchNextPage();
+		}
+	}, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 	const [showFilters, setFilters] = useState(false);
 	const [searchTerm, setSearchTerm] = useState(search || '');
@@ -101,19 +114,14 @@ export const LatestPage = () => {
 			</Container>
 
 			{hasNextPage && (
-				<div className={css.loadMore}>
-					<Button
-						disabled={isFetchingNextPage}
-						onClick={() => fetchNextPage()}
-					>
-						{isFetchingNextPage ? (
-							<span className={css.buttonIcon}>
-								<Spinner />
-							</span>
-						) : (
-							'Load more'
-						)}
-					</Button>
+				<div ref={ref} className={css.loadMore}>
+					{isFetchingNextPage ? (
+						<span className={css.buttonIcon}>
+							<Spinner />
+						</span>
+					) : (
+						<span>Loading more...</span>
+					)}
 				</div>
 			)}
 		</>

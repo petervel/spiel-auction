@@ -35,7 +35,11 @@ export const NavBar = () => {
 				)}
 				{showSearch && <SearchField />}
 				<IconButton
-					sx={{ marginInlineStart: 'auto', justifyContent: 'end' }}
+					sx={{
+						marginInlineStart: 'auto',
+						borderRadius: '4px',
+						minWidth: '64px',
+					}}
 					onClick={() => setSearch((v) => !v)}
 				>
 					<Search />

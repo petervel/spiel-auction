@@ -172,7 +172,7 @@ const markDeleted = async (listId: number, now: number) => {
 		where: {
 			listId,
 			lastSeen: { lt: hourAgo },
-			deleted: true,
+			deleted: false,
 		},
 		data: { deleted: true },
 	});

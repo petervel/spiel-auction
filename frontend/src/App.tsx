@@ -8,6 +8,7 @@ import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BuyingPage } from './pages/BidsPages/BuyingPage';
 import { SellingPage } from './pages/BidsPages/SellingPage';
+import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
@@ -63,6 +64,11 @@ function App() {
 									path="/duplicates"
 									element={<DuplicatesPage />}
 								/>
+								<Route
+									path="/deleted"
+									element={<DeletedPage />}
+								/>
+
 								<Route
 									path="/search"
 									element={<SearchPage />}

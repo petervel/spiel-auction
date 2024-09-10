@@ -41,7 +41,7 @@ router.get("/:listId", async (req, res) => {
 			listId,
 			deleted: false,
 			NOT: {
-				objectId: 23953,
+				objectId: 23953, // Outside scope of BGG
 			},
 		},
 		_count: {

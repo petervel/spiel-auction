@@ -1,0 +1,21 @@
+.datetime {
+	margin-inline-start: 20px;
+	opacity: 0.6;
+	font-size: 0.8em;
+}
+
+.username {
+	font-weight: bold;
+}
+
+.listItem {
+	padding-top: 1rem;
+}
+
+.listItem > * {
+	padding-top: 0.2rem;
+}
+
+.auctionId {
+	font-style: italic;
+}

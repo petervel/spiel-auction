@@ -93,6 +93,7 @@ model Item {
   @@index([listId, deleted, id])
   @@index([listId, deleted, username])
   @@index([listId, deleted, highestBidder])
+  @@index([deleted])
 }
 
 model ListComment {
@@ -114,6 +115,7 @@ model ListComment {
 }
 
 model ItemComment {
+  listId        Int
   item          Item     @relation(fields: [itemId], references: [id])
   itemId        Int
   username      String
@@ -131,6 +133,8 @@ model ItemComment {
   deleted  Boolean @default(false)
 
   @@unique([itemId, username, postTimestamp])
+  @@index([listId])
+  @@index([deleted])
 }
 
 enum FairStatus {

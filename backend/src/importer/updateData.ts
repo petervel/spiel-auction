@@ -39,6 +39,7 @@ export const updateData = async () => {
 			);
 			return false;
 		}
+		markDeleted(fair.id, now);
 	}
 	return true;
 };
@@ -150,4 +151,26 @@ const parseXml = (
 		return err("failed");
 	}
 	return ok(obj["geeklist"]);
+};
+
+const markDeleted = async (listId: number, now: number) => {
+	const hourAgo = now - 3600;
+
+	await prisma.item.updateMany({
+		where: {
+			listId,
+			lastSeen: { lt: hourAgo },
+			deleted: false,
+		},
+		data: { deleted: true },
+	});
+
+	await prisma.itemComment.updateMany({
+		where: {
+			listId,
+			lastSeen: { lt: hourAgo },
+			deleted: true,
+		},
+		data: { deleted: true },
+	});
 };

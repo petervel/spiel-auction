@@ -1,4 +1,5 @@
 import bids from "./bids";
+import deleted from "./deleted";
 import duplicates from "./duplicates";
 import fairs from "./fairs";
 import items from "./items";
@@ -10,4 +11,5 @@ export default [
 	{ path: "/items", object: items },
 	{ path: "/object", object: object },
 	{ path: "/duplicates", object: duplicates },
+	{ path: "/deleted", object: deleted },
 ];

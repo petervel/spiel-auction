@@ -39,6 +39,7 @@ export class ItemCommentWrapper {
 		}
 
 		const dbObject = {
+			listId: item.listId,
 			itemId: item.id,
 			username,
 			date: source["@_date"],

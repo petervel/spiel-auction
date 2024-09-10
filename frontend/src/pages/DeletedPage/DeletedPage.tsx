@@ -22,18 +22,28 @@ export const DeletedPage = () => {
 		return <div>Error: failed to load data.</div>;
 	}
 
+	const getLatestLastSeen = (items: Item[]) =>
+		Math.max(...items.map((item) => item.lastSeen));
+
 	return (
 		<>
 			<TabBar />
 			<Container>
 				<Title title="Deleted items" />
 				<ul>
-					{Object.keys(data.items).map((username) => (
-						<UserDeletedItems
-							username={username}
-							items={data.items[username]}
-						/>
-					))}
+					{Object.keys(data.items)
+						.sort((username) =>
+							getLatestLastSeen(data.items[username])
+						)
+						.map((username) => (
+							<UserDeletedItems
+								username={username}
+								latestTimestamp={getLatestLastSeen(
+									data.items[username]
+								)}
+								items={data.items[username]}
+							/>
+						))}
 				</ul>
 			</Container>
 
@@ -54,11 +64,14 @@ export const DeletedPage = () => {
 
 type UserDeletedItemsProps = {
 	username: string;
+	latestTimestamp: number;
 	items: Item[];
 };
-const UserDeletedItems = ({ username, items }: UserDeletedItemsProps) => {
-	const latestTimestamp = Math.max(...items.map((item) => item.lastSeen));
-
+const UserDeletedItems = ({
+	username,
+	items,
+	latestTimestamp,
+}: UserDeletedItemsProps) => {
 	const formatTimestamp = (timestamp: number) =>
 		new Date(1000 * timestamp).toLocaleString();
 

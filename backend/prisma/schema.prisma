@@ -115,7 +115,7 @@ model ListComment {
 }
 
 model ItemComment {
-  listId        Int
+  listId        Int      @default(339779)
   item          Item     @relation(fields: [itemId], references: [id])
   itemId        Int
   username      String

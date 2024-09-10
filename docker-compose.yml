@@ -94,6 +94,7 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
 networks:
   internal:

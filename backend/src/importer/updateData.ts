@@ -35,17 +35,20 @@ export const updateData = async () => {
 			});
 
 			console.log(
-				`Processing fair ${fair.id} unsuccessful: ${result.error}`,
+				`Processing fair ${fair.geeklistId} unsuccessful: ${result.error}`,
 			);
 			return false;
 		}
+
+		console.log(`${fair.geeklistId} Marking deleted items...`);
 		markDeleted(fair.id, now);
+		console.log(`${fair.listId} Done.`);
 	}
 	return true;
 };
 
 export async function update(fair: Fair, updateTime: number) {
-	console.info(`${fair.id}: Fetching XML... ${fair.geeklistId}`);
+	console.info(`${fair.geeklistId}: Fetching XML... ${fair.geeklistId}`);
 	const fileResult = getLatestXmlFilename(fair.geeklistId);
 	if (fileResult.isErr()) return fileResult;
 
@@ -59,21 +62,21 @@ export async function update(fair: Fair, updateTime: number) {
 	if (loadResult.isErr()) return loadResult;
 	const xmlString = loadResult.value;
 
-	console.info(`${fair.id}: Parsing XML...`);
+	console.info(`${fair.geeklistId}: Parsing XML...`);
 	const parseResult = parseXml(fair.id, xmlString);
 	if (parseResult.isErr()) return parseResult;
 	const object = parseResult.value;
 
-	console.info(`${fair.id}: Loading auction list object...`);
+	console.info(`${fair.geeklistId}: Loading auction list object...`);
 	const listWrapper = await ListWrapper.fromXml(fair.id, object, updateTime);
 
-	console.info(`${fair.id}: Data loaded. Saving...`);
+	console.info(`${fair.geeklistId}: Data loaded. Saving...`);
 	const upsertResult = await listWrapper.save();
 
 	if (upsertResult.isErr()) return upsertResult;
 
 	console.info(
-		`${fair.id}: ${upsertResult.value} upserted successfully from ${latestFile}.`,
+		`${fair.geeklistId}: ${upsertResult.value} upserted successfully from ${latestFile}.`,
 	);
 	fair.listId = fair.geeklistId;
 

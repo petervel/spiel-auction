@@ -41,7 +41,7 @@ export const updateData = async () => {
 		}
 
 		console.log(`${fair.geeklistId} Marking deleted items...`);
-		markDeleted(fair.id, now);
+		markDeleted(fair.geeklistId, now);
 		console.log(`${fair.listId} Done.`);
 	}
 	return true;

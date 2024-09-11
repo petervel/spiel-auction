@@ -111,16 +111,14 @@ const UserDeletedItems = ({
 									target="_blank"
 								>
 									{item.objectName}
-									<div className={css.datetime}>
-										posted:{' '}
-										{formatTimestamp(item.postTimestamp)})
-									</div>
-									<div className={css.datetime}>
-										removed:{' '}
-										{formatTimestamp(item.lastSeen)}
-									</div>
-									<div className={css.datetime}></div>
 								</a>
+								<div className={css.datetime}>
+									posted:{' '}
+									{formatTimestamp(item.postTimestamp)}
+								</div>
+								<div className={css.datetime}>
+									removed: {formatTimestamp(item.lastSeen)}
+								</div>
 							</li>
 						);
 					})}

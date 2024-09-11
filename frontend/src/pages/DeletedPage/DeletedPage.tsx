@@ -53,8 +53,8 @@ export const DeletedPage = () => {
 					{Object.keys(data.comments)
 						.sort(
 							(username1, username2) =>
-								getLatestLastSeen(data.items[username2]) -
-								getLatestLastSeen(data.items[username1])
+								getLatestLastSeen(data.comments[username2]) -
+								getLatestLastSeen(data.comments[username1])
 						)
 						.map((username) => (
 							<UserDeletedComments

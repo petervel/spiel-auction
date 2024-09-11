@@ -98,7 +98,7 @@ const UserDeletedItems = ({
 				{username}
 			</a>
 			<span className={css.datetime}>
-				({formatTimestamp(latestTimestamp)})
+				{formatTimestamp(latestTimestamp)}
 			</span>
 			<ul>
 				{items
@@ -152,7 +152,7 @@ const UserDeletedComments = ({
 				{username}
 			</a>
 			<span className={css.datetime}>
-				({formatTimestamp(latestTimestamp)})
+				{formatTimestamp(latestTimestamp)}
 			</span>
 			<ul>
 				{comments
@@ -168,10 +168,14 @@ const UserDeletedComments = ({
 									target="_blank"
 								>
 									{comment.text}
-									<span className={css.datetime}>
-										{formatTimestamp(comment.lastSeen)}
-									</span>
 								</a>
+								<span className={css.datetime}>
+									posted:{' '}
+									{formatTimestamp(comment.postTimestamp)}
+								</span>
+								<span className={css.datetime}>
+									removed: {formatTimestamp(comment.lastSeen)}
+								</span>
 							</li>
 						);
 					})}

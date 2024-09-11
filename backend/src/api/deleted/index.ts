@@ -18,8 +18,9 @@ router.get("/:listId", async (req, res) => {
 		where: { listId, deleted: true },
 		orderBy: { username: "asc" },
 	});
+
 	const deletedItemComments = await prisma.itemComment.findMany({
-		where: { listId, deleted: true },
+		where: { listId, deleted: true, item: { deleted: false } },
 		orderBy: { username: "asc" },
 	});
 

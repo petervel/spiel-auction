@@ -22,9 +22,6 @@ export const DeletedPage = () => {
 		return <div>Error: failed to load data.</div>;
 	}
 
-	const getLatestLastSeen = (items: Item[]) =>
-		Math.max(...items.map((item) => item.lastSeen));
-
 	return (
 		<>
 			<TabBar />
@@ -32,11 +29,14 @@ export const DeletedPage = () => {
 				<Title title="Deleted items" />
 				<ul>
 					{Object.keys(data.items)
-						.sort((username) =>
-							getLatestLastSeen(data.items[username])
+						.sort(
+							(username1, username2) =>
+								getLatestLastSeen(data.items[username2]) -
+								getLatestLastSeen(data.items[username1])
 						)
 						.map((username) => (
 							<UserDeletedItems
+								key={username}
 								username={username}
 								latestTimestamp={getLatestLastSeen(
 									data.items[username]
@@ -50,17 +50,30 @@ export const DeletedPage = () => {
 			<Container>
 				<Title title="Deleted comments" />
 				<ul>
-					{Object.keys(data.comments).map((username) => (
-						<UserDeletedComments
-							username={username}
-							comments={data.comments[username]}
-						/>
-					))}
+					{Object.keys(data.comments)
+						.sort(
+							(username1, username2) =>
+								getLatestLastSeen(data.items[username2]) -
+								getLatestLastSeen(data.items[username1])
+						)
+						.map((username) => (
+							<UserDeletedComments
+								key={username}
+								username={username}
+								latestTimestamp={getLatestLastSeen(
+									data.comments[username]
+								)}
+								comments={data.comments[username]}
+							/>
+						))}
 				</ul>
 			</Container>
 		</>
 	);
 };
+
+const getLatestLastSeen = (items: Item[] | ItemComment[]) =>
+	Math.max(...items.map((item) => item.lastSeen));
 
 type UserDeletedItemsProps = {
 	username: string;
@@ -88,21 +101,23 @@ const UserDeletedItems = ({
 				({formatTimestamp(latestTimestamp)})
 			</span>
 			<ul>
-				{items.map((item) => {
-					return (
-						<li>
-							<a
-								href={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
-								target="_blank"
-							>
-								{item.objectName}
-								<span className={css.datetime}>
-									{formatTimestamp(item.lastSeen)}
-								</span>
-							</a>
-						</li>
-					);
-				})}
+				{items
+					.sort((item1, item2) => item2.lastSeen - item1.lastSeen)
+					.map((item) => {
+						return (
+							<li key={item.id}>
+								<a
+									href={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
+									target="_blank"
+								>
+									{item.objectName}
+									<span className={css.datetime}>
+										{formatTimestamp(item.lastSeen)}
+									</span>
+								</a>
+							</li>
+						);
+					})}
 			</ul>
 		</li>
 	);
@@ -110,15 +125,15 @@ const UserDeletedItems = ({
 
 type UserDeletedCommentsProps = {
 	username: string;
+	latestTimestamp: number;
 	comments: ItemComment[];
 };
 const UserDeletedComments = ({
 	username,
+	latestTimestamp,
 	comments,
 }: UserDeletedCommentsProps) => {
 	const listId = useListId();
-
-	const latestTimestamp = Math.max(...comments.map((item) => item.lastSeen));
 
 	const formatTimestamp = (timestamp: number) =>
 		new Date(1000 * timestamp).toLocaleString();
@@ -136,21 +151,26 @@ const UserDeletedComments = ({
 				({formatTimestamp(latestTimestamp)})
 			</span>
 			<ul>
-				{comments.map((comment) => {
-					return (
-						<li>
-							<a
-								href={`https://boardgamegeek.com/geeklist/${listId}?itemid=${comment.itemId}`}
-								target="_blank"
-							>
-								{comment.text}
-								<span className={css.datetime}>
-									{formatTimestamp(comment.lastSeen)}
-								</span>
-							</a>
-						</li>
-					);
-				})}
+				{comments
+					.sort(
+						(comment1, comment2) =>
+							comment2.lastSeen - comment1.lastSeen
+					)
+					.map((comment, idx) => {
+						return (
+							<li key={idx}>
+								<a
+									href={`https://boardgamegeek.com/geeklist/${listId}?itemid=${comment.itemId}`}
+									target="_blank"
+								>
+									{comment.text}
+									<span className={css.datetime}>
+										{formatTimestamp(comment.lastSeen)}
+									</span>
+								</a>
+							</li>
+						);
+					})}
 			</ul>
 		</li>
 	);

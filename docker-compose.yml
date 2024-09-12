@@ -9,6 +9,7 @@ services:
       MYSQL_LOG_BIN: 0
     volumes: 
       - ./data:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "--silent"]
       interval: 10s

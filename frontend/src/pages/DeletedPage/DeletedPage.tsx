@@ -169,13 +169,13 @@ const UserDeletedComments = ({
 								>
 									{comment.text}
 								</a>
-								<span className={css.datetime}>
+								<div className={css.datetime}>
 									posted:{' '}
 									{formatTimestamp(comment.postTimestamp)}
-								</span>
-								<span className={css.datetime}>
+								</div>
+								<div className={css.datetime}>
 									removed: {formatTimestamp(comment.lastSeen)}
-								</span>
+								</div>
 							</li>
 						);
 					})}

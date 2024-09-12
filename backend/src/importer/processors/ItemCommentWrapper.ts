@@ -31,7 +31,8 @@ export class ItemCommentWrapper {
 			let stripped = removeStrikethrough(text);
 			stripped = removeQuoted(stripped);
 			stripped = removeAllBggTags(stripped);
-			is_bin = !!extractString(stripped, /\bbin\b(?!\?)/i);
+			const retracted = !!extractString(stripped, /\bretracted\b/i);
+			is_bin = !retracted && !!extractString(stripped, /\bbin\b(?!\?)/i);
 
 			bid = is_bin
 				? item.binPrice

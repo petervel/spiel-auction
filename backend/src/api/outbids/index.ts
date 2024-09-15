@@ -36,6 +36,7 @@ router.get("/:listId", async (req, res) => {
 
 	const items = await prisma.item.findMany({
 		where: {
+			listId: listId,
 			deleted: false,
 			isEnded: false,
 			isSold: false,

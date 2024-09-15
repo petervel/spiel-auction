@@ -135,6 +135,7 @@ model ItemComment {
   @@unique([itemId, username, postTimestamp])
   @@index([listId])
   @@index([deleted])
+  @@index([username, deleted])
 }
 
 enum FairStatus {

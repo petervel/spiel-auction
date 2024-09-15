@@ -45,6 +45,7 @@ router.get("/:listId", async (req, res) => {
 						not: null,
 					},
 					username: bidder,
+					deleted: false,
 				},
 			},
 		},

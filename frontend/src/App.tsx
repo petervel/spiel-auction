@@ -7,6 +7,7 @@ import { BookmarkProvider } from './contexts/BookmarkContext';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BuyingPage } from './pages/BidsPages/BuyingPage';
+import { OutbidsPage } from './pages/BidsPages/OutbidsPage';
 import { SellingPage } from './pages/BidsPages/SellingPage';
 import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
@@ -47,6 +48,14 @@ function App() {
 								<Route
 									path="/buying/:username"
 									element={<BuyingPage />}
+								/>
+								<Route
+									path="/outbids"
+									element={<OutbidsPage />}
+								/>
+								<Route
+									path="/outbids/:username"
+									element={<OutbidsPage />}
 								/>
 								<Route
 									path="/selling"

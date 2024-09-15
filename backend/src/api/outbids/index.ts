@@ -54,9 +54,6 @@ router.get("/:listId", async (req, res) => {
 	});
 
 	const result = items.filter((item) => {
-		console.log(
-			`[${item.objectName}] Comparing ${item.highestBidder} with ${bidder}`,
-		);
 		return item.highestBidder != bidder;
 	});
 

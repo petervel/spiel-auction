@@ -85,7 +85,10 @@ export class ItemCommentWrapper {
 		);
 		if (bid) return bid;
 
-		bid = extractString(text, /(?:\b[E]\s*(\d+))|(?:(\d+)\s*[E]\b)/i);
+		bid = extractString(
+			text,
+			/(?:\b[E]\s*(\d+))|(?:(\d+)\s*[E]\b)|(?:EUR?(\d+)\b)/i,
+		);
 		if (bid) return bid;
 
 		bid = extractString(text, /(?:\b(\d+)\b)/);

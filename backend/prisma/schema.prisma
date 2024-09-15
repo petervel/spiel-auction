@@ -128,6 +128,7 @@ model ItemComment {
   text          String   @db.Text
   isBin         Boolean  @default(false)
   bid           Int?
+  oldBid        Int?
 
   lastSeen Int     @default(0)
   deleted  Boolean @default(false)

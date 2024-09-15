@@ -21,7 +21,7 @@ router.get("/:listId", async (req, res) => {
 
 	const bidder = req.query.bidder as string;
 
-	const cacheKey = `api:outid:${listId}:${bidder}`;
+	const cacheKey = `api:outbid:${listId}:${bidder}`;
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
 		return res.status(200).json(JSON.parse(cache));
@@ -42,7 +42,7 @@ router.get("/:listId", async (req, res) => {
 			isSold: false,
 			comments: {
 				some: {
-					bid: {
+					oldBid: {
 						not: null,
 					},
 					username: bidder,
@@ -56,7 +56,7 @@ router.get("/:listId", async (req, res) => {
 	});
 
 	const result = items.filter((item) => {
-		return item.highestBidder != bidder;
+		return item.highestBidder?.toLowerCase() != bidder.toLowerCase();
 	});
 
 	await redisClient.set(cacheKey, JSON.stringify(result));

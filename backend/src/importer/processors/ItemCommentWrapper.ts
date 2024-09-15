@@ -25,20 +25,22 @@ export class ItemCommentWrapper {
 
 		const username = decode(source["@_username"]);
 
-		let is_bin = false;
+		let isBin = false;
 		let bid = null;
+		let oldBid = null;
 		if (text.length != 0 && username != item.username) {
 			let stripped = removeStrikethrough(text);
 			stripped = removeQuoted(stripped);
 			stripped = removeAllBggTags(stripped);
 			const retracted = !!extractString(stripped, /\bretracted\b/i);
 			if (!retracted) {
-				is_bin = !!extractString(stripped, /\bbin\b(?!\?)/i);
+				isBin = !!extractString(stripped, /\bbin\b(?!\?)/i);
 
-				bid = is_bin
+				bid = isBin
 					? item.binPrice
-					: (ItemCommentWrapper.findBidNumber(stripped) ??
-						ItemCommentWrapper.findBidNumber(text));
+					: ItemCommentWrapper.findBidNumber(stripped);
+
+				oldBid = bid ?? ItemCommentWrapper.findBidNumber(text);
 			}
 		}
 
@@ -56,9 +58,10 @@ export class ItemCommentWrapper {
 				Math.floor(Date.parse(source["@_editdate"]) / 1000),
 			),
 			thumbs: Number(source["@_thumbs"]),
-			text: text,
-			isBin: is_bin,
-			bid: bid,
+			text,
+			isBin,
+			bid,
+			oldBid,
 			lastSeen: updateTime,
 			deleted: false,
 		};

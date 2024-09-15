@@ -32,12 +32,14 @@ export class ItemCommentWrapper {
 			stripped = removeQuoted(stripped);
 			stripped = removeAllBggTags(stripped);
 			const retracted = !!extractString(stripped, /\bretracted\b/i);
-			is_bin = !retracted && !!extractString(stripped, /\bbin\b(?!\?)/i);
+			if (!retracted) {
+				is_bin = !!extractString(stripped, /\bbin\b(?!\?)/i);
 
-			bid = is_bin
-				? item.binPrice
-				: (ItemCommentWrapper.findBidNumber(stripped) ??
-					ItemCommentWrapper.findBidNumber(text));
+				bid = is_bin
+					? item.binPrice
+					: (ItemCommentWrapper.findBidNumber(stripped) ??
+						ItemCommentWrapper.findBidNumber(text));
+			}
 		}
 
 		const dbObject = {
@@ -88,7 +90,7 @@ export class ItemCommentWrapper {
 
 		bid = extractString(
 			text,
-			/(?:\b[E]\s*(\d+))|(?:(\d+)\s*[E]\b)|(?:EUR?(\d+)\b)/i,
+			/\b(?:e|eu|eur|euro)\s*(\d+)\b|\b(\d+)\s*(?:e|eu|eur|euro)\b/i,
 		);
 		if (bid) return bid;
 

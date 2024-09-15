@@ -36,7 +36,8 @@ export class ItemCommentWrapper {
 
 			bid = is_bin
 				? item.binPrice
-				: ItemCommentWrapper.findBidNumber(stripped);
+				: (ItemCommentWrapper.findBidNumber(stripped) ??
+					ItemCommentWrapper.findBidNumber(text));
 		}
 
 		const dbObject = {

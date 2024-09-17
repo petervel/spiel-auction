@@ -8,6 +8,7 @@ import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
+import { Item } from '../../model/Item';
 import { EditBggUserName } from './EditBggUserName';
 
 export const SellingPage = () => {
@@ -27,6 +28,8 @@ export const SellingPage = () => {
 		return <div>Error: {typedError.message}</div>;
 	}
 
+	const soldCount = data.items.filter((item: Item) => item.hasBids).length;
+
 	return (
 		<>
 			<TabBar />
@@ -35,7 +38,7 @@ export const SellingPage = () => {
 				{bggUsername == pathUsername && (
 					<BidAmount
 						amount={data.totalPrice}
-						extraText={` (${data.items.length} items)`}
+						extraText={` (${soldCount} of ${data.items.length} sold)`}
 					/>
 				)}
 				{seller ? (

@@ -140,6 +140,7 @@ export class ItemCommentWrapper {
 			const bid = comment.dbObject.bid as number;
 			if (
 				!Number.isNaN(bid) &&
+				bid !== null &&
 				(highestBid == null || bid > highestBid)
 			) {
 				highestBid = bid;

@@ -135,10 +135,13 @@ export class ItemCommentWrapper {
 
 	public static getHighestBid(comments: ItemCommentWrapper[]) {
 		let highestBidder = null;
-		let highestBid = 0;
+		let highestBid: number | null = null;
 		for (const comment of comments) {
 			const bid = comment.dbObject.bid as number;
-			if (!Number.isNaN(bid) && bid > highestBid) {
+			if (
+				!Number.isNaN(bid) &&
+				(highestBid == null || bid > highestBid)
+			) {
 				highestBid = bid;
 				highestBidder = comment.dbObject.username;
 			}

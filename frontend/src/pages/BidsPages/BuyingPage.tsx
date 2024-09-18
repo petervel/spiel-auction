@@ -8,6 +8,7 @@ import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
+import { sortItems } from '../../util';
 import { EditBggUserName } from './EditBggUserName';
 
 export const BuyingPage = () => {
@@ -27,6 +28,8 @@ export const BuyingPage = () => {
 		return <div>Error: {typedError.message}</div>;
 	}
 
+	const items = sortItems(data.items);
+
 	return (
 		<>
 			<TabBar />
@@ -35,11 +38,11 @@ export const BuyingPage = () => {
 				{bggUsername == pathUsername && (
 					<BidAmount
 						amount={data.totalPrice}
-						extraText={` (${data.items.length} items)`}
+						extraText={` (${items.length} items)`}
 					/>
 				)}
 				{buyer ? (
-					<ItemsList items={data.items} />
+					<ItemsList items={items} />
 				) : (
 					<EditBggUserName onSave={setBuyer} />
 				)}

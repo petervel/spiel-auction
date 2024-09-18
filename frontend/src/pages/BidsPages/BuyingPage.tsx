@@ -9,6 +9,7 @@ import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
 import { sortItems } from '../../util';
+import css from './BuyingPage.module.css';
 import { EditBggUserName } from './EditBggUserName';
 
 export const BuyingPage = () => {
@@ -47,6 +48,10 @@ export const BuyingPage = () => {
 					<EditBggUserName onSave={setBuyer} />
 				)}
 			</Container>
+			<div className={css.hint}>
+				Psst.. Do you want to see the items you were{' '}
+				<a href="/outbids">outbid</a> on?
+			</div>
 		</>
 	);
 };

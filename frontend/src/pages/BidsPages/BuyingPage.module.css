@@ -11,4 +11,9 @@
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
+	color: var(--colour-inactive);
+}
+
+.button.active {
+	color: var(--colour-active);
 }

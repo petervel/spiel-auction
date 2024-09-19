@@ -1,5 +1,6 @@
 import { Euro, SortByAlpha, Timer } from '@mui/icons-material';
 import { Stack } from '@mui/material';
+import classNames from 'classnames';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BidAmount } from '../../components/BidAmount/BidAmount';
@@ -21,7 +22,7 @@ export const BuyingPage = () => {
 
 	const [buyer, setBuyer] = useState(pathUsername ?? bggUsername);
 
-	const [sorting, setSorting] = useState<SORTING>();
+	const [sorting, setSorting] = useState<SORTING>(SORTING.END_DATE);
 
 	const [showSort, setShowSort] = useState(false);
 	const toggleSort = (evt: React.MouseEvent) => {
@@ -41,6 +42,21 @@ export const BuyingPage = () => {
 	}
 
 	const items = sortItems(data.items, sorting);
+
+	const buttons = [
+		{
+			setting: SORTING.END_DATE,
+			icon: <Timer />,
+		},
+		{
+			setting: SORTING.NAME,
+			icon: <SortByAlpha />,
+		},
+		{
+			setting: SORTING.PRICE,
+			icon: <Euro />,
+		},
+	];
 
 	return (
 		<>
@@ -66,28 +82,20 @@ export const BuyingPage = () => {
 									my={2}
 									gap={5}
 								>
-									<div
-										className={css.button}
-										onClick={() =>
-											setSorting(SORTING.END_DATE)
-										}
-									>
-										<Timer />
-									</div>
-									<div
-										className={css.button}
-										onClick={() => setSorting(SORTING.NAME)}
-									>
-										<SortByAlpha />
-									</div>
-									<div
-										className={css.button}
-										onClick={() =>
-											setSorting(SORTING.PRICE)
-										}
-									>
-										<Euro />
-									</div>
+									{buttons.map((button) => (
+										<div
+											className={classNames({
+												[css.button]: true,
+												[css.active]:
+													button.setting == sorting,
+											})}
+											onClick={() =>
+												setSorting(button.setting)
+											}
+										>
+											{button.icon}
+										</div>
+									))}
 								</Stack>
 							</Stack>
 						)}

@@ -7,6 +7,7 @@ import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useOutbids } from '../../hooks/useOutbids';
+import { sortItems } from '../../util';
 import { EditBggUserName } from './EditBggUserName';
 
 export const OutbidsPage = () => {
@@ -26,13 +27,15 @@ export const OutbidsPage = () => {
 		return <div>Error: {typedError.message}</div>;
 	}
 
+	const items = sortItems(data);
+
 	return (
 		<>
 			<TabBar />
 			<Container>
 				<Title title="Outbid items" />
 				{bidder ? (
-					<ItemsList items={data} />
+					<ItemsList items={items} />
 				) : (
 					<EditBggUserName onSave={setBidder} />
 				)}

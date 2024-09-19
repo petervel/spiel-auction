@@ -1,5 +1,6 @@
 .header {
 	padding: 10px;
+	position: relative;
 }
 .title {
 	flex: 1;
@@ -15,4 +16,8 @@
 .left,
 .right {
 	position: absolute;
+}
+
+.right {
+	right: 0;
 }

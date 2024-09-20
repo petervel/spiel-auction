@@ -11,6 +11,7 @@ import { OutbidsPage } from './pages/BidsPages/OutbidsPage';
 import { SellingPage } from './pages/BidsPages/SellingPage';
 import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
+import ExportPage from './pages/ExportPage/ExportPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
@@ -81,6 +82,11 @@ function App() {
 								<Route
 									path="/search"
 									element={<SearchPage />}
+								/>
+
+								<Route
+									path="/export"
+									element={<ExportPage />}
 								/>
 							</Routes>
 						</div>

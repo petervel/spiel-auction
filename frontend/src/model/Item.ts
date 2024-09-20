@@ -32,7 +32,6 @@ export interface Item {
 	hardReserve: number;
 	binPrice: number;
 
-	highestBid?: number;
 	hasBids: boolean;
 	isSold: boolean;
 	isEnded: boolean;

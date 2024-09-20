@@ -1,4 +1,8 @@
-import { SettingsRounded, VolunteerActivismRounded } from '@mui/icons-material';
+import {
+	Save,
+	SettingsRounded,
+	VolunteerActivismRounded,
+} from '@mui/icons-material';
 import {
 	Checkbox,
 	Divider,
@@ -56,6 +60,18 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						</ListItemIcon>
 						Settings
 					</MenuItem>
+					<MenuItem
+						className={css.menuItem}
+						component={NavLink}
+						onClick={close}
+						to="/export"
+					>
+						<ListItemIcon>
+							<Save className={css.menuIcon} />
+						</ListItemIcon>
+						Export
+					</MenuItem>
+
 					{/* <MenuItem
 						className={css.menuItem}
 						onClick={closeWith(openSwitchAuction)}

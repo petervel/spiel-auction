@@ -62,7 +62,7 @@ const exportExcel = (excelFile: XLSX.WorkBook) => {
 	const blob = new Blob([wbOut], { type: 'application/octet-stream' });
 	const link = document.createElement('a');
 	link.href = URL.createObjectURL(blob);
-	link.download = 'lists.xlsx';
+	link.download = 'Spiel2024.xlsx';
 	link.click();
 };
 

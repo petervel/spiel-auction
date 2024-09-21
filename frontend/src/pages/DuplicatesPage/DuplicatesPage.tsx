@@ -3,7 +3,7 @@ import { Spinner } from '../../components/Spinner/Spinner';
 import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { UserDupes, useDuplicates } from '../../hooks/useDuplicates';
-import useListId from '../../hooks/useListId';
+import { useListId } from '../../hooks/useListId';
 import css from './DuplicatesPage.module.css';
 
 export const DuplicatesPage = () => {

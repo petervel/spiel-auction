@@ -1,7 +1,7 @@
 import { useQuery } from 'react-query';
 import { Item } from '../model/Item';
 import { ItemComment } from '../model/ItemComment';
-import useListId from './useListId';
+import { useListId } from './useListId';
 
 type Deleted = {
 	items: Item[];

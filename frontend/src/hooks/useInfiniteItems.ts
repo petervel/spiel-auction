@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useInfiniteQuery } from 'react-query';
 import { Item } from '../model/Item';
-import useListId from './useListId';
+import { useListId } from './useListId';
 
 export interface ItemData {
 	items: Item[];

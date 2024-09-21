@@ -3,7 +3,7 @@ import { Spinner } from '../../components/Spinner/Spinner';
 import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useDeleted } from '../../hooks/useDeleted';
-import useListId from '../../hooks/useListId';
+import { useListId } from '../../hooks/useListId';
 import { Item } from '../../model/Item';
 import { ItemComment } from '../../model/ItemComment';
 import css from './DeletedPage.module.css';

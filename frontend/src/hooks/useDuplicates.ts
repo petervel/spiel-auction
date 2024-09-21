@@ -1,6 +1,6 @@
 import { useQuery } from 'react-query';
 import { Item } from '../model/Item';
-import useListId from './useListId';
+import { useListId } from './useListId';
 
 export type UserDupes = {
 	username: string;

@@ -1,12 +1,13 @@
 import { Button, Stack } from '@mui/material';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
 import { useListId } from '../../hooks/useListId';
 import { Item } from '../../model/Item';
 
-const ExportPage = () => {
+export const ExportPage = () => {
 	const bggUsername = useBggUsername();
 	const listId = useListId();
 
@@ -32,27 +33,20 @@ const ExportPage = () => {
 		return <div>Error: {typedError.message}</div>;
 	}
 
-	const buyingSheet = createSheetFromData(
-		listId,
-		buyingData.items as Item[],
-		true
-	);
-	const sellingSheet = createSheetFromData(
-		listId,
-		(sellingData.items as Item[]).filter((item: Item) => item.hasBids),
-		false
-	);
+	const workbook = new ExcelJS.Workbook();
+	createSheet(listId, workbook, buyingData.items, true);
 
-	const excelFile = XLSX.utils.book_new();
-	XLSX.utils.book_append_sheet(excelFile, buyingSheet, 'Buying');
-	XLSX.utils.book_append_sheet(excelFile, sellingSheet, 'Selling');
+	const filteredSales = (sellingData.items as Item[]).filter(
+		(item: Item) => item.hasBids
+	);
+	createSheet(listId, workbook, filteredSales, false);
 
 	return (
 		<Stack alignItems="center" my={5}>
 			<div>
 				<Button
 					variant="contained"
-					onClick={() => triggerDownload(excelFile)}
+					onClick={() => triggerDownload(workbook)}
 				>
 					Export to XLSX
 				</Button>
@@ -61,18 +55,99 @@ const ExportPage = () => {
 	);
 };
 
-const styleHeader = (sheet: XLSX.WorkSheet) => {
-	const range = XLSX.utils.decode_range(sheet['!ref'] as string);
-
-	for (let column = range.s.c; column <= range.e.c; ++column) {
-		const cell_address = XLSX.utils.encode_cell({ r: 0, c: column });
-		if (!sheet[cell_address]) continue;
-
-		sheet[cell_address].s = {
-			font: { bold: true }, // Make the text bold
-			alignment: { horizontal: 'center' }, // Center align the text
+const linkAuctions = (
+	listId: number,
+	sheet: ExcelJS.Worksheet,
+	items: Item[]
+) => {
+	items.forEach((item, index) => {
+		const row = sheet.getRow(index + 2);
+		row.getCell('name').value = {
+			text: item.objectName,
+			hyperlink: `https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`,
+			tooltip: 'View auction',
 		};
+	});
+};
+
+const linkUserNames = (
+	sheet: ExcelJS.Worksheet,
+	items: Item[],
+	isBuying: boolean
+) => {
+	items.forEach((item, index) => {
+		const username = getUsername(item, isBuying) ?? '';
+		const row = sheet.getRow(index + 2);
+		row.getCell('username').value = {
+			text: username,
+			hyperlink: `https://boardgamegeek.com/user/${username}`,
+			tooltip: 'View on BGG',
+		};
+	});
+};
+
+const getUsername = (item: Item, isBuying: boolean) =>
+	isBuying ? item.username : item.highestBidder;
+
+const triggerDownload = async (workbook: ExcelJS.Workbook) => {
+	const buffer = await workbook.xlsx.writeBuffer();
+
+	const blob = new Blob([buffer], {
+		type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+	});
+
+	saveAs(blob, 'Spiel2024.xlsx');
+};
+
+const createSheet = (
+	listId: number,
+	workbook: ExcelJS.Workbook,
+	items: Item[],
+	isBuying: boolean
+) => {
+	const sheet = workbook.addWorksheet(isBuying ? 'Buying' : 'Selling');
+	sheet.columns = [
+		{ header: '☑', key: 'done', width: 8 },
+		{ header: 'Name', key: 'name', width: 30 },
+		{ header: 'Price', key: 'price', width: 10 },
+		{ header: 'Username', key: 'username', width: 20 },
+		{ header: 'Date', key: 'date', width: 10 },
+		{ header: 'Time', key: 'time', width: 10 },
+		{ header: 'Place', key: 'place', width: 10 },
+		{ header: 'Notes', key: 'notes', width: 50 },
+	];
+
+	const sortedItems = items.sort((a, b) =>
+		compareStrings(getUsername(a, isBuying), getUsername(b, isBuying))
+	);
+
+	sheet.addRows(
+		sortedItems.map((item) => ({
+			done: '',
+			name: item.objectName,
+			price: item.currentBid,
+			username: getUsername(item, isBuying),
+			date: '',
+			time: '',
+			place: '',
+			notes: '',
+		}))
+	);
+
+	const headerRow = sheet.getRow(1);
+	headerRow.font = { bold: true };
+	headerRow.alignment = { horizontal: 'center' };
+
+	const priceColumn = sheet.getColumn('price');
+	priceColumn.alignment = { horizontal: 'right' };
+	priceColumn.numFmt = '€0';
+
+	for (const id of ['username', 'date', 'time', 'place']) {
+		sheet.getColumn(id).alignment = { horizontal: 'center' };
 	}
+
+	linkAuctions(listId, sheet, sortedItems);
+	linkUserNames(sheet, sortedItems, isBuying);
 };
 
 const compareStrings = (a?: string, b?: string) => {
@@ -85,75 +160,3 @@ const compareStrings = (a?: string, b?: string) => {
 	if (a > b) return 1;
 	return 0;
 };
-
-const linkAuction = (listId: number, sheet: XLSX.WorkSheet, items: Item[]) => {
-	items.forEach((item, index) => {
-		sheet[`A${index + 2}`] = {
-			v: item.objectName,
-			l: {
-				Target: `https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`,
-				Tooltip: 'View auction',
-			},
-		};
-	});
-};
-
-const linkUserNames = (
-	sheet: XLSX.WorkSheet,
-	items: Item[],
-	isBuying: boolean
-) => {
-	items.forEach((item, index) => {
-		const username = getUsername(item, isBuying);
-		sheet[`C${index + 2}`] = {
-			v: username,
-			l: {
-				Target: `https://boardgamegeek.com/user/${username}`,
-				Tooltip: 'View on BGG',
-			},
-		};
-	});
-};
-
-const getUsername = (item: Item, isBuying: boolean) =>
-	isBuying ? item.username : item.highestBidder;
-
-const triggerDownload = (excelFile: XLSX.WorkBook) => {
-	const wbOut = XLSX.write(excelFile, { bookType: 'xlsx', type: 'array' });
-
-	const blob = new Blob([wbOut], { type: 'application/octet-stream' });
-	const link = document.createElement('a');
-	link.href = URL.createObjectURL(blob);
-	link.download = 'Spiel2024.xlsx';
-	link.click();
-};
-
-const createStructure = (items: Item[], isBuying = true) =>
-	items.map((item) => ({
-		Name: item.objectName,
-		Price: `€${item.currentBid}`,
-		Username: getUsername(item, isBuying),
-		Date: '',
-		Time: '',
-		Place: '',
-		Notes: '',
-	}));
-
-const createSheetFromData = (
-	listId: number,
-	items: Item[],
-	isBuying: boolean
-): XLSX.WorkSheet => {
-	const sortedItems = items.sort((a, b) =>
-		compareStrings(getUsername(a, isBuying), getUsername(b, isBuying))
-	);
-	const structure = createStructure(sortedItems);
-	const sheet = XLSX.utils.json_to_sheet(structure);
-
-	styleHeader(sheet);
-	linkAuction(listId, sheet, sortedItems);
-	linkUserNames(sheet, sortedItems, isBuying);
-	return sheet;
-};
-
-export default ExportPage;

@@ -78,7 +78,9 @@ export function removeAllBggTags(text: string): string {
 }
 
 export function removeKnownContexts(text: string): string {
-	return text.replace(/\b(\d+)\ssec(onds|s)?/i, "");
+	text = text.replace(/\b(\d+)\s*sec(onds|s)?/i, "");
+	text = text.replace(/\b(\d+)\s*%/i, "");
+	return text;
 }
 
 export function parseEndDateString(end: string | null | undefined) {

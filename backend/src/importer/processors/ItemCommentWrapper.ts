@@ -4,6 +4,7 @@ import prisma from "../../prismaClient";
 import {
 	extractString,
 	removeAllBggTags,
+	removeKnownContexts,
 	removeQuoted,
 	removeStrikethrough,
 	toArray,
@@ -32,6 +33,7 @@ export class ItemCommentWrapper {
 			let stripped = removeStrikethrough(text);
 			stripped = removeQuoted(stripped);
 			stripped = removeAllBggTags(stripped);
+			stripped = removeKnownContexts(stripped);
 			const retracted = !!extractString(stripped, /\bretracted\b/i);
 			if (!retracted) {
 				isBin = !!extractString(stripped, /\bbin\b(?!\?)/i);

@@ -91,10 +91,10 @@ export class ItemCommentWrapper {
 		);
 		if (bid) return bid;
 
-		bid = extractString(
-			text,
-			/\b(?:e|eu|eur|euro)\s*(\d+)\b|\b(\d+)\s*(?:e|eu|eur|euro)\b/i,
-		);
+		bid = extractString(text, /\b(?:e|eu|eur|euro)\s*(\d+)\b/i);
+		if (bid) return bid;
+
+		bid = extractString(text, /\b(\d+)\s*(?:e|eu|eur|euro)\b/i);
 		if (bid) return bid;
 
 		bid = extractString(text, /(?:\b(\d+)\b)/);

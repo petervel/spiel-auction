@@ -60,6 +60,9 @@ export class ItemWrapper {
 			...this.getDerivedData(source["body"], [], false),
 		};
 
+		if (source["body"].toLowerCase().includes("auction ended")) {
+			itemData.isEnded = true;
+		}
 		const commentData = ItemCommentWrapper.loadAll(
 			itemData,
 			source["comment"],

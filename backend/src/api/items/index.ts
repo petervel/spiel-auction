@@ -4,7 +4,7 @@ import { redisClient } from "../redisClient";
 
 const router = express.Router();
 
-const MAX_RESULTS: number = +(process.env.PAGE_SIZE ?? 100);
+const MAX_RESULTS: number = +(process.env.PAGE_SIZE ?? 3);
 
 router.get("/", (_, res) => {
 	return res.status(400).json({ error: "No listId parameter provided." });

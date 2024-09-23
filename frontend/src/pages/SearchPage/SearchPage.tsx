@@ -1,24 +1,33 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Container } from '../../components/Container/Container';
+import { LoadMore } from '../../components/LoadMore/LoadMore';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
-import { useObjects } from '../../hooks/useObjects';
+import { BggObject, useInfiniteObjects } from '../../hooks/useInfiniteObjects';
 import SearchResults from './SearchResults';
 
 export const SearchPage = () => {
 	const [searchParams] = useSearchParams();
 	const searchTerm = searchParams.get('search') ?? undefined;
 
-	const { data, error, isLoading, search, setSearch } =
-		useObjects(searchTerm);
+	const {
+		data,
+		error,
+		isLoading,
+		hasNextPage,
+		fetchNextPage,
+		isFetchingNextPage,
+		filters,
+		setFilters,
+	} = useInfiniteObjects(searchTerm);
 
 	useEffect(() => {
-		if (searchTerm !== search) {
-			setSearch(searchTerm);
+		if (searchTerm !== filters.search) {
+			setFilters((filters) => ({ ...filters, search: searchTerm }));
 		}
-	}, [searchTerm, search, setSearch]);
+	}, [searchTerm, filters, setFilters]);
 
 	if (isLoading) return <Spinner />;
 
@@ -31,19 +40,25 @@ export const SearchPage = () => {
 		return <div>Error: failed to load data.</div>;
 	}
 
+	const objects: BggObject[] =
+		data?.pages.flatMap((page) => page.objects) ?? [];
+
 	const title =
-		data.length === 100
-			? `Best 100 results for "${search}"`
-			: data.length > 0
-			? `Results for "${search}"`
-			: 'Search';
+		objects.length > 0 ? `Results for "${filters.search}"` : 'Search';
 
 	return (
 		<>
 			<TabBar />
 			<Container>
 				<Title title={title} />
-				<SearchResults data={data} search={search} />
+				<SearchResults data={objects} search={filters.search} />
+				{hasNextPage && (
+					<LoadMore
+						isLoading={isFetchingNextPage}
+						hasMore={hasNextPage ?? false}
+						loadMore={fetchNextPage}
+					/>
+				)}
 			</Container>
 		</>
 	);

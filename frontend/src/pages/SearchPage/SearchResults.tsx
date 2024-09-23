@@ -1,5 +1,5 @@
 import { ObjectsList } from '../../components/ItemsList/ObjectsList';
-import { BggObject } from '../../hooks/useObjects';
+import { BggObject } from '../../hooks/useInfiniteObjects';
 
 type SearchResultsProps = {
 	data: BggObject[];

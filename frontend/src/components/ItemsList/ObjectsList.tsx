@@ -1,4 +1,4 @@
-import { BggObject } from '../../hooks/useObjects';
+import { BggObject } from '../../hooks/useInfiniteObjects';
 import { ObjectItem } from '../AuctionItem/ObjectItem';
 import css from './ItemsList.module.css';
 

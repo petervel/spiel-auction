@@ -2,7 +2,7 @@ import { BarChartRounded } from '@mui/icons-material';
 import { Stack } from '@mui/material';
 import classNames from 'classnames';
 import bggIcon from '../../assets/bgg.svg';
-import { BggObject } from '../../hooks/useObjects';
+import { BggObject } from '../../hooks/useInfiniteObjects';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import css from './AuctionItem.module.css';
 

@@ -52,19 +52,24 @@ interface FilterData {
 interface QueryData {
 	filter?: FilterData;
 }
+
+export type SearchFilters = {
+	search?: string;
+};
+
 export const useInfiniteItems = (
 	queryData: QueryData = {},
 	refetchInterval = 60000
 ) => {
 	const listId = useListId();
-	const [search, setSearch] = useState<string | undefined>();
+	const [filters, setFilters] = useState<SearchFilters>({});
 
 	return {
 		...useInfiniteQuery(
-			['infiniteItems', listId, queryData.filter, search],
+			['infiniteItems', listId, queryData.filter, filters],
 			({ pageParam }) =>
 				fetchItems({
-					queryData: { filter: { ...queryData.filter, search } },
+					queryData: { filter: { ...queryData.filter, ...filters } },
 					pageParam,
 					listId,
 				}),
@@ -75,7 +80,7 @@ export const useInfiniteItems = (
 				keepPreviousData: true,
 			}
 		),
-		search,
-		setSearch,
+		filters,
+		setFilters,
 	};
 };

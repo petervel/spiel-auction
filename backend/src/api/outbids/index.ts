@@ -38,8 +38,6 @@ router.get("/:listId", async (req, res) => {
 		where: {
 			listId: listId,
 			deleted: false,
-			isEnded: false,
-			isSold: false,
 			comments: {
 				some: {
 					oldBid: {

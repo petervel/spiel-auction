@@ -38,7 +38,7 @@ body.dark {
 	--colour-disabled: #444;
 	--colour-inactive: #888;
 	--colour-seen: #52d064;
-	--colour-bookmark: var(--colour-icon);
+	--colour-bookmark: #88c2fc;
 	--bookmark-thickness: 5px;
 }
 

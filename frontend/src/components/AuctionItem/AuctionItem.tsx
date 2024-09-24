@@ -39,7 +39,12 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 		>
 			<Stack direction="row" gap={1}>
 				{allowBookmarks && (
-					<div className={css.sideBookmark}>
+					<div
+						className={classNames({
+							[css.sideBookmark]: true,
+							[css.activeBookmark]: bookmark == item.id,
+						})}
+					>
 						<BookmarkButton
 							itemId={item.id}
 							className={css.bookmark}

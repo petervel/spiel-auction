@@ -1,5 +1,5 @@
-import { Check } from '@mui/icons-material';
 import { Stack } from '@mui/material';
+import classNames from 'classnames';
 import { useBookmark } from '../../hooks/useBookmark';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import css from './BookmarkButton.module.css';
@@ -26,9 +26,11 @@ const BookmarkButton = ({ itemId, className = '' }: BookmarkButtonProps) => {
 				tooltip="Remember this location"
 				link={handleBookmark}
 			>
-				<Check
-					className={isBookmarked ? css.checked : css.unchecked}
-					sx={{ fontSize: '30px' }}
+				<div
+					className={classNames(
+						css.iconContainer,
+						isBookmarked ? css.checked : css.unchecked
+					)}
 				/>
 			</AuctionItemButton>
 		</Stack>

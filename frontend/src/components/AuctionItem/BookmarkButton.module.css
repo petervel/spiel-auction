@@ -1,6 +1,17 @@
-.checked {
-	color: var(--colour-seen);
+.iconContainer {
+	font-family: 'Material Icons';
+	font-size: 30px; /* Set icon size */
+	text-transform: none;
 }
-.unchecked {
+
+.iconContainer::before {
+	content: 'bookmark'; /* Icon name goes here */
+}
+
+.checked {
+	color: var(--colour-bookmark);
+}
+.unchecked::before {
 	color: var(--colour-disabled);
+	content: 'bookmark_border';
 }

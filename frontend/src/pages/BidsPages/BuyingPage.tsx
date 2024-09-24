@@ -5,7 +5,6 @@ import { Spinner } from '../../components/Spinner/Spinner';
 import { TabBar } from '../../components/TabBar/TabBar';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
-import css from './BuyingPage.module.css';
 import { ItemsPage } from './ItemsPage';
 
 export const BuyingPage = () => {
@@ -42,10 +41,10 @@ export const BuyingPage = () => {
 					)
 				}
 			/>
-			<div className={css.hint}>
+			{/* <div className={css.hint}>
 				Psst.. Do you want to see the items you were{' '}
 				<a href="/outbids">outbid</a> on?
-			</div>
+			</div> */}
 		</>
 	);
 };

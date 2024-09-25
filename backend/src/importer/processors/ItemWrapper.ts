@@ -157,9 +157,10 @@ export class ItemWrapper {
 		const hasBids = !!highestBidder;
 
 		const stripped = removeStrikethrough(text);
+
 		let isEnded =
 			isSold ||
-			(stripped.length < 100 &&
+			(stripped.length < 150 &&
 				(stripped.length == 0 || text.length / stripped.length > 4)) ||
 			(!!auctionEndDate && auctionEndDate < formatTimeToDate());
 

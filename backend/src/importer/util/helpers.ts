@@ -78,13 +78,13 @@ export function removeAllBggTags(text: string): string {
 }
 
 export function removeKnownContexts(text: string): string {
-	text = text.replace(/\b(\d+)\s*sec(onds|s)?/i, ""); // 12 seconds
-	text = text.replace(/\b(\d+)\s*days?/i, ""); // 12 days
-	text = text.replace(/\b(\d+)\s*games?/i, ""); // 12 games
-	text = text.replace(/\b(\d+)\s*%/i, ""); // 12%
-	text = text.replace(/\b(\d+)\.?\s*(aug|sept|oct|okt)/i, ""); // 12 sept, 12. Okt
-	text = text.replace(/\b(\d+)-(\d+)/i, ""); // 12-9
-	text = text.replace(/\b(\d+)(th|st|nd)/i, ""); // 12th
+	text = text.replace(/\b(\d+)\s*sec(onds|s)?/gi, ""); // 12 seconds
+	text = text.replace(/\b(\d+)\s*days?/gi, ""); // 12 days
+	text = text.replace(/\b(\d+)\s*games?/gi, ""); // 12 games
+	text = text.replace(/\b(\d+)\s*%/gi, ""); // 12%
+	text = text.replace(/\b(\d+)\.?\s*(aug|sept|oct|okt)/gi, ""); // 12 sept, 12. Okt
+	text = text.replace(/\b(\d+)-(\d+)/gi, ""); // 12-9
+	text = text.replace(/\b(\d+)(th|st|nd)/gi, ""); // 12th
 	return text;
 }
 

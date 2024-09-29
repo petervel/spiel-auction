@@ -79,6 +79,7 @@ export function removeAllBggTags(text: string): string {
 
 export function removeKnownContexts(text: string): string {
 	text = text.replace(/\b(\d+)\s*sec(onds|s)?/i, "");
+	text = text.replace(/\b(\d+)\s*games?/i, "");
 	text = text.replace(/\b(\d+)\s*%/i, "");
 	return text;
 }

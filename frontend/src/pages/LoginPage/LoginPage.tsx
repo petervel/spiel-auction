@@ -1,20 +1,43 @@
-import { CredentialResponse, GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
+import {
+	googleLogout,
+	TokenResponse,
+	useGoogleLogin,
+} from '@react-oauth/google';
+import { useState } from 'react';
 
 export const LoginPage = () => {
-	const onSuccess = (response: CredentialResponse) => {
-		console.log(response);
-		if (response.credential) {
-			const decoded = jwtDecode(response.credential);
-			console.log(decoded);
-		}
+	const [userToken, setUserToken] = useState<string | null>(null);
+
+	const onSuccess = (token: TokenResponse) => {
+		setUserToken(token.access_token);
 	};
 
 	const onError = () => {
-		console.log('Error');
+		console.log('Error logging in');
 	};
 
-	return <GoogleLogin onSuccess={onSuccess} onError={onError} />;
+	const logIn = useGoogleLogin({
+		onSuccess,
+		onError,
+	});
+
+	const logOut = () => {
+		googleLogout();
+		setUserToken(null);
+	};
+
+	return (
+		<div>
+			{userToken}
+			<div>
+				{userToken ? (
+					<button onClick={() => logOut()}>Log out</button>
+				) : (
+					<button onClick={() => logIn()}>Log in</button>
+				)}
+			</div>
+		</div>
+	);
 };
 
 export default LoginPage;

@@ -13,6 +13,7 @@ import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { ExportPage } from './pages/ExportPage/ExportPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
+import { LoginPage } from './pages/LoginPage/LoginPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
@@ -88,6 +89,7 @@ function App() {
 									path="/export"
 									element={<ExportPage />}
 								/>
+								<Route path="/login" element={<LoginPage />} />
 							</Routes>
 						</div>
 					</BookmarkProvider>

@@ -10,4 +10,9 @@ export default defineConfig({
 		host: '0.0.0.0',
 		port: 5173,
 	},
+	define: {
+		'import.meta.env.VITE_DEFAULT_GEEKLIST_ID': JSON.stringify(
+			process.env.VITE_DEFAULT_GEEKLIST_ID
+		),
+	},
 });

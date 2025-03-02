@@ -12,7 +12,8 @@ router.get(
 		const cacheKey = "api:fairs";
 		const cache = await redisClient.get(cacheKey);
 		if (cache) {
-			return res.status(200).json(JSON.parse(cache));
+			res.status(200).json(JSON.parse(cache));
+			return;
 		}
 		const fairs = await prisma.fair.findMany();
 		await redisClient.set(cacheKey, JSON.stringify(fairs));

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as xml2js from "xml2js";
 
-const listId = 339779; // TODO: TEMP HARDCODED
+const listId = process.env.DEFAULT_GEEKLIST_ID; // TODO: Move this to DB so it can be set in web UI
 const XML_URL = `https://boardgamegeek.com/xmlapi/geeklist/${listId}?comments=1`;
 const xmlDir = "/app/data";
 

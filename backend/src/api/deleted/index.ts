@@ -1,18 +1,20 @@
 import express from "express";
 import prisma from "../../prismaClient";
-
+import { useListId } from "../useListId";
 const router = express.Router();
-const LIST_ID = 339779;
+const LIST_ID = useListId();
 
 router.get("/:listId", async (req, res) => {
 	const listId = +(req.params.listId ?? LIST_ID);
 	if (!listId) {
-		return res.status(400).json({ error: "No listId parameter provided." });
+		res.status(400).json({ error: "No listId parameter provided." });
+		return;
 	}
 	if (Number.isNaN(listId)) {
-		return res.status(400).json({
+		res.status(400).json({
 			error: `Invalid listId provided (must be a number): ${req.params.listId}`,
 		});
+		return;
 	}
 	const deletedItems = await prisma.item.findMany({
 		where: { listId, deleted: true },

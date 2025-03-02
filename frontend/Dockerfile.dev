@@ -1,5 +1,5 @@
 # Stage 1: Setup the development environment with Vite
-FROM node:20-alpine AS dev
+FROM node:alpine3.21 AS dev
 
 # Set the working directory
 WORKDIR /app

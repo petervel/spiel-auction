@@ -1,1 +1,1 @@
-export const useListId = () => 339779;
+export const useListId = () => +import.meta.env.VITE_DEFAULT_GEEKLIST_ID!;

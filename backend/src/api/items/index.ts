@@ -7,27 +7,30 @@ const router = express.Router();
 const MAX_RESULTS: number = +(process.env.PAGE_SIZE ?? 3);
 
 router.get("/", (_, res) => {
-	return res.status(400).json({ error: "No listId parameter provided." });
+	res.status(400).json({ error: "No listId parameter provided." });
 });
 
 router.get("/:listId", async (req, res) => {
 	if (!req.params.listId) {
-		return res.status(400).json({ error: "No listId parameter provided." });
+		res.status(400).json({ error: "No listId parameter provided." });
+		return;
 	}
 	const listId = +req.params.listId;
 	if (Number.isNaN(listId)) {
-		return res.status(400).json({
+		res.status(400).json({
 			error: `Invalid listId provided (must be a number): ${req.params.listId}`,
 		});
+		return;
 	}
 
 	let lastId: number | null = null;
 	if (req.query.lastId) {
 		lastId = +req.query.lastId;
 		if (Number.isNaN(lastId)) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: `Invalid lastId provided (must be a number): ${req.query.lastId}`,
 			});
+			return;
 		}
 	}
 
@@ -56,15 +59,15 @@ router.get("/:listId", async (req, res) => {
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
 		// console.log(`got ${cacheKey} from cache`);
-		return res.status(200).json(JSON.parse(cache));
+		res.status(200).json(JSON.parse(cache));
+		return;
 	}
 	// console.log(`fetching ${cacheKey} from db`);
 
 	const list = await prisma.list.findUnique({ where: { id: listId } });
 	if (!list) {
-		return res
-			.status(404)
-			.json({ error: `No list found with id ${listId}` });
+		res.status(404).json({ error: `No list found with id ${listId}` });
+		return;
 	}
 
 	// console.log({

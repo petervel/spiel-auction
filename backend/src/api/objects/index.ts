@@ -1,9 +1,10 @@
 import express from "express";
 import prisma from "../../prismaClient";
 import { redisClient } from "../redisClient";
+import { useListId } from "../useListId";
 
 const MAX_RESULTS = 100;
-const LIST_ID = 339779;
+const LIST_ID = useListId();
 
 const router = express.Router();
 type BggObject = {
@@ -20,7 +21,8 @@ router.get("/:listId", async (req, res) => {
 
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
-		return res.status(200).json(JSON.parse(cache));
+		res.status(200).json(JSON.parse(cache));
+		return;
 	}
 
 	let objects = await prisma.$queryRaw<BggObject[]>`

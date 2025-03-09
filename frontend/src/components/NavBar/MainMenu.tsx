@@ -1,4 +1,6 @@
 import {
+	LoginRounded,
+	LogoutRounded,
 	Save,
 	SettingsRounded,
 	VolunteerActivismRounded,
@@ -12,6 +14,7 @@ import {
 	MenuList,
 } from '@mui/material';
 import { NavLink } from 'react-router-dom';
+import { useUser } from '../../hooks/useUser';
 // import SwitchAuctionDialog from './SwitchAuctionDialog';
 import classNames from 'classnames';
 import { useContext } from 'react';
@@ -40,6 +43,8 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 		close();
 		func();
 	};
+
+	const { user, login, logout } = useUser();
 
 	return (
 		<>
@@ -95,6 +100,28 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						</ListItemIcon>
 						Dark mode
 					</MenuItem>
+					<Divider />
+					{!user ? (
+						<MenuItem
+							className={css.menuItem}
+							onClick={closeWith(login)}
+						>
+							<ListItemIcon>
+								<LoginRounded className={css.menuIcon} />
+							</ListItemIcon>
+							Login
+						</MenuItem>
+					) : (
+						<MenuItem
+							className={css.menuItem}
+							onClick={closeWith(logout)}
+						>
+							<ListItemIcon>
+								<LogoutRounded className={css.menuIcon} />
+							</ListItemIcon>
+							Logout
+						</MenuItem>
+					)}
 					<Divider />
 					<MenuItem
 						className={css.menuItem}

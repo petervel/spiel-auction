@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Route, Routes } from 'react-router-dom';
 import { NavBar } from './components/NavBar/NavBar';
-import { BookmarkProvider } from './contexts/BookmarkContext';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BuyingPage } from './pages/BidsPages/BuyingPage';
@@ -17,6 +16,7 @@ import { LoginPage } from './pages/LoginPage/LoginPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
+import { BookmarkProvider } from './providers/BookmarkProvider';
 
 function App() {
 	const { mode, toggleDarkMode } = useDarkMode();

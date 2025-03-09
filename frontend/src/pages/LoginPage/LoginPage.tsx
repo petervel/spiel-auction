@@ -1,39 +1,16 @@
-import {
-	googleLogout,
-	TokenResponse,
-	useGoogleLogin,
-} from '@react-oauth/google';
-import { useState } from 'react';
+import { useUser } from '../../hooks/useUser';
 
 export const LoginPage = () => {
-	const [userToken, setUserToken] = useState<string | null>(null);
-
-	const onSuccess = (token: TokenResponse) => {
-		setUserToken(token.access_token);
-	};
-
-	const onError = () => {
-		console.log('Error logging in');
-	};
-
-	const logIn = useGoogleLogin({
-		onSuccess,
-		onError,
-	});
-
-	const logOut = () => {
-		googleLogout();
-		setUserToken(null);
-	};
+	const { user, login, logout } = useUser();
 
 	return (
 		<div>
-			{userToken}
+			{user?.name}
 			<div>
-				{userToken ? (
-					<button onClick={() => logOut()}>Log out</button>
+				{user ? (
+					<button onClick={() => logout()}>Log out</button>
 				) : (
-					<button onClick={() => logIn()}>Log in</button>
+					<button onClick={() => login()}>Log in</button>
 				)}
 			</div>
 		</div>

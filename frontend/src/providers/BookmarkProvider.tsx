@@ -1,15 +1,9 @@
-import { ReactNode, createContext } from 'react';
+import React, { ReactNode } from 'react';
+import {
+	BookmarkContext,
+	BookmarkContextProps,
+} from '../contexts/BookmarkContext';
 import useLocalStorage from '../hooks/useLocalStorage';
-
-interface BookmarkContextProps {
-	bookmark: number | undefined;
-	setBookmark: (bookmark: number) => void;
-	clearBookmark: () => void;
-}
-
-export const BookmarkContext = createContext<BookmarkContextProps | undefined>(
-	undefined
-);
 
 export const BookmarkProvider = ({ children }: { children: ReactNode }) => {
 	const [bookmark, setBookmark, clearBookmark] = useLocalStorage<number>(

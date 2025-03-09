@@ -9,8 +9,17 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  id          Int         @id @default(autoincrement())
+  email       String      @unique
+  bggUsername String
+  accessLevel AccessLevel @default(NORMAL)
+  createdAt   DateTime    @default(now())
 }
 
 model Fair {
@@ -155,4 +164,10 @@ enum ItemType {
   GAME
   PROMO
   OTHER
+}
+
+enum AccessLevel {
+  ADMIN
+  MODERATOR
+  NORMAL
 }

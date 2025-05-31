@@ -1,3 +1,4 @@
+import auth from "./auth";
 import bids from "./bids";
 import deleted from "./deleted";
 import duplicates from "./duplicates";
@@ -16,4 +17,5 @@ export default [
 	{ path: "/duplicates", object: duplicates },
 	{ path: "/deleted", object: deleted },
 	{ path: "/outbids", object: outbids },
+	{ path: "/auth", object: auth },
 ];

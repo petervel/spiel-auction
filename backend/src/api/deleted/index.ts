@@ -1,10 +1,11 @@
 import express from "express";
+import { authenticateUser } from "../../../middleware/auth";
 import prisma from "../../prismaClient";
 import { useListId } from "../useListId";
 const router = express.Router();
 const LIST_ID = useListId();
 
-router.get("/:listId", async (req, res) => {
+router.get("/:listId", authenticateUser, async (req, res) => {
 	const listId = +(req.params.listId ?? LIST_ID);
 	if (!listId) {
 		res.status(400).json({ error: "No listId parameter provided." });

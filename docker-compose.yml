@@ -23,12 +23,15 @@ services:
     build: ./backend
     environment:
       DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+      SHADOW_DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/shadowdb
       ADMIN_PASSWORD: ${SITE_ADMIN_PASSWORD}
       ENVIRONMENT_MODE: ${ENVIRONMENT_MODE}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       PAGE_SIZE: ${PAGE_SIZE}
       DEFAULT_GEEKLIST_ID: ${DEFAULT_GEEKLIST_ID}
+      JWT_SHARED_SECRET: ${JWT_SHARED_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     expose:
       - "3000"
     ports: # temp for dev
@@ -43,6 +46,8 @@ services:
       retries: 5
     volumes:
       - xml-data:/app/xml-data
+      - ./backend/prisma:/app/prisma
+      - ./backend/node_modules:/app/node_modules
     networks:
       - internal
       - default

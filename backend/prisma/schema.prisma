@@ -16,10 +16,12 @@ datasource db {
 
 model User {
   id          Int         @id @default(autoincrement())
-  email       String      @unique
-  bggUsername String
+  name        String?
+  email       String?     @unique
+  bggUsername String?
   accessLevel AccessLevel @default(NORMAL)
   createdAt   DateTime    @default(now())
+  googleId    String?     @unique
 }
 
 model Fair {
@@ -168,6 +170,6 @@ enum ItemType {
 
 enum AccessLevel {
   ADMIN
-  MODERATOR
   NORMAL
+  MODERATOR
 }

@@ -12,30 +12,30 @@
 	"author": "Peter Vel",
 	"license": "ISC",
 	"dependencies": {
-		"@prisma/client": "^6.4.1",
+		"@prisma/client": "^6.8.2",
 		"@types/jsonwebtoken": "^9.0.9",
-		"axios": "^1.6.8",
+		"axios": "^1.9.0",
 		"cookie-parser": "^1.4.6",
-		"dotenv": "^16.4.5",
-		"express": "^4.19.2",
-		"fast-xml-parser": "^5.0.8",
+		"dotenv": "^16.5.0",
+		"express": "^5.1.0",
+		"fast-xml-parser": "^5.2.3",
 		"google-auth-library": "^9.15.1",
-		"html-entities": "^2.5.2",
-		"ioredis": "^5.4.1",
+		"html-entities": "^2.6.0",
+		"ioredis": "^5.6.1",
 		"jsonwebtoken": "^9.0.2",
 		"latinize": "2.0.0",
-		"mysql2": "^3.9.4",
-		"node-cron": "^3.0.3",
-		"prettier": "^3.3.3",
-		"prisma": "^6.4.1"
+		"mysql2": "^3.14.1",
+		"node-cron": "^4.1.0",
+		"prettier": "^3.5.3",
+		"prisma": "^6.8.2"
 	},
 	"devDependencies": {
 		"@types/cookie-parser": "^1.4.7",
-		"@types/express": "^5.0.0",
+		"@types/express": "^5.0.2",
 		"@types/latinize": "^0.2.18",
-		"@types/node": "^22.13.8",
+		"@types/node": "^22.15.29",
 		"@types/node-cron": "^3.0.11",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.4.5"
+		"typescript": "^5.8.3"
 	}
 }

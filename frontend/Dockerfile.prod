@@ -9,7 +9,6 @@ COPY package.json yarn.lock ./
 
 # Use the env variables during build
 ARG VITE_DEFAULT_GEEKLIST_ID
-ENV VITE_DEFAULT_GEEKLIST_ID=$VITE_DEFAULT_GEEKLIST_ID
 
 # Install dependencies using Yarn
 RUN yarn install
@@ -17,8 +16,8 @@ RUN yarn install
 # Copy the rest of the application files
 COPY . .
 
-# Build the application for production
-RUN yarn build
+# Build with the env var passed explicitly
+RUN VITE_DEFAULT_GEEKLIST_ID=$VITE_DEFAULT_GEEKLIST_ID yarn build
 
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine

@@ -7,6 +7,10 @@ WORKDIR /app
 # Copy package.json and yarn.lock
 COPY package.json yarn.lock ./
 
+# Use the env variables during build
+ARG VITE_DEFAULT_GEEKLIST_ID
+ENV VITE_DEFAULT_GEEKLIST_ID=$VITE_DEFAULT_GEEKLIST_ID
+
 # Install dependencies using Yarn
 RUN yarn install
 

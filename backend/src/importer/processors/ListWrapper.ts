@@ -42,13 +42,17 @@ export class ListWrapper {
 			ListCommentWrapper.getLatestEdit(commentsData),
 		);
 
+		const postDateTimestamp = Number(source["postdate"]);
+		const postDate =
+			postDateTimestamp >= 0 ? new Date(source["postdate"]) : new Date(0);
+
 		const listData = {
 			id: listId,
 			fair: { connect: { id: fairId } },
 			title: decode(source["title"]),
 			username: decode(source["username"]),
-			postDate: new Date(source["postdate"]),
-			postTimestamp: Number(source["postdate_timestamp"]),
+			postDate: postDate,
+			postTimestamp: postDateTimestamp,
 			editDate: new Date(source["editdate"]),
 			editTimestamp,
 			thumbs: Number(source["thumbs"]),

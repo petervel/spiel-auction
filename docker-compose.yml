@@ -60,14 +60,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
-        VITE_API_BASE_URL: http://backend:3000/api
         VITE_AUTH0_DOMAIN: ${AUTH0_DOMAIN}
         VITE_AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
         VITE_AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
         VITE_DEFAULT_GEEKLIST_ID: ${DEFAULT_GEEKLIST_ID}
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     environment:
-      VITE_API_BASE_URL: http://backend:3000/api
       VITE_AUTH0_DOMAIN: ${AUTH0_DOMAIN}
       VITE_AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
       VITE_AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
@@ -88,16 +86,29 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - frontend-build:/usr/share/nginx/html  # Mount the shared volume
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./certbot/www:/var/www/certbot
+      - ./letsencrypt:/etc/letsencrypt
     networks:
       - internal
       - default
     depends_on:
       - frontend
       - backend
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+        - ./certbot/www:/var/www/certbot
+        - ./letsencrypt:/etc/letsencrypt
+    networks:
+        - internal
+        - default
     restart: unless-stopped
 
   xml-fetcher:

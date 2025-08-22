@@ -42,7 +42,7 @@ export class ListWrapper {
 			ListCommentWrapper.getLatestEdit(commentsData),
 		);
 
-		const postDateTimestamp = Number(source["postdate"]);
+		const postDateTimestamp = Number(source["postdate_timestamp"]);
 		const postDate =
 			postDateTimestamp >= 0 ? new Date(source["postdate"]) : new Date(0);
 

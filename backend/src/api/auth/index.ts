@@ -6,28 +6,36 @@ import jwt from "jsonwebtoken";
 import { authenticateUser } from "../../../middleware/auth";
 
 const router = express.Router();
-const client = new OAuth2Client(process.env.AUTH0_CLIENT_ID);
+
+const client = new OAuth2Client({
+	clientId: process.env.GOOGLE_CLIENT_ID,
+	clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+	redirectUri: "postmessage",
+});
 
 router.post("/google", async (req, res) => {
-	const { token } = req.body;
-	if (!token) res.status(400).json({ error: "Token required" });
+	const { code } = req.body;
+	if (!code) return res.status(400).json({ error: "Auth code required" });
 
 	try {
-		// Verify Google Token
+		// Exchange code for tokens
+		const { tokens } = await client.getToken(code);
+
+		console.log("Tokens from Google:", tokens);
+
+		if (!tokens.id_token) {
+			return res.status(401).json({ error: "No ID token received" });
+		}
 		const ticket = await client.verifyIdToken({
-			idToken: token,
-			audience: process.env.AUTH0_CLIENT_ID,
+			idToken: tokens.id_token,
+			audience: process.env.GOOGLE_CLIENT_ID,
 		});
 
 		const payload = ticket.getPayload();
-		if (!payload) {
-			res.status(401).json({ error: "Invalid token" });
-			return;
-		}
+		if (!payload) return res.status(401).json({ error: "Invalid token" });
 
 		const { sub, email, name } = payload;
 
-		// Check if user exists, otherwise create one
 		let user = await prisma.user.findUnique({ where: { googleId: sub } });
 		if (!user) {
 			user = await prisma.user.create({
@@ -35,21 +43,21 @@ router.post("/google", async (req, res) => {
 			});
 		}
 
-		// Create a session token (JWT)
+		// Create session JWT
 		const sessionToken = jwt.sign(
 			{ userId: user.id },
 			process.env.JWT_SHARED_SECRET!,
-			{
-				expiresIn: "365d",
-			},
+			{ expiresIn: "365d" },
 		);
 
-		// Set HttpOnly cookie
-		res.cookie("session", sessionToken, { httpOnly: true, secure: true });
+		res.cookie("session", sessionToken, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+		});
 
-		res.json({ message: "Login successful" });
-	} catch (error) {
-		console.error("Google Auth Error:", error);
+		res.json({ message: "Login successful", user });
+	} catch (err) {
+		console.error("Google Auth Error:", err);
 		res.status(401).json({ error: "Authentication failed" });
 	}
 });

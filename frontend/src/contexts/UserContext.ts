@@ -1,10 +1,5 @@
 import { createContext } from 'react';
-
-interface User {
-	name: string;
-	email: string;
-	picture: string;
-}
+import { User } from '../model/user';
 
 export interface UserContextType {
 	user: User | null;

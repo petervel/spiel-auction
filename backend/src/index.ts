@@ -17,32 +17,6 @@ for (const apiRoute of apiRoutes) {
 	app.use("/api" + apiRoute.path, apiRoute.object);
 }
 
-app.post("/login", (req, res) => {
-	const { password } = req.body;
-	if (password == process.env.ADMIN_PASSWORD) {
-		res.cookie("isAdmin", "true", {
-			httpOnly: true,
-			secure: process.env.ENVIRONMENT_MODE != "development",
-			maxAge: 3600000,
-		});
-		res.status(200).json({ message: "Logged in as admin" });
-	} else {
-		res.status(401).json({
-			message:
-				"Unauthorized: Invalid credentials " +
-				password +
-				" : " +
-				process.env.ADMIN_PASSWORD,
-		});
-	}
-});
-
-app.post("/logout", (_, res) => {
-	console.log("Clearing admin cookie");
-	res.clearCookie("isAdmin");
-	res.status(200).json({ message: "Logged out" });
-});
-
 // Health check endpoint
 app.get("/health", (req, res) => {
 	res.status(200).json({ status: "ok" });

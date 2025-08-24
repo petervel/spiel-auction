@@ -2,9 +2,12 @@ import { Button, Stack, TextField, Typography } from '@mui/material';
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router';
 import useLocalStorage from '../../hooks/useLocalStorage';
+import { useUser } from '../../hooks/useUser';
 
 export const SettingsPage = () => {
 	const nav = useNavigate();
+
+	const user = useUser();
 	const [storedUsername, setUsername, removeUsername] = useLocalStorage<
 		string | undefined
 	>('bgg_username', undefined);
@@ -26,7 +29,7 @@ export const SettingsPage = () => {
 	return (
 		<Stack paddingInline="2rem">
 			<Typography variant="h4" component="h1">
-				Settings
+				Settings {JSON.stringify(user)}
 			</Typography>
 			<form onSubmit={save}>
 				<Stack gap={3} alignItems="start">

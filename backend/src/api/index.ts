@@ -8,16 +8,18 @@ import items from "./items";
 import object from "./object";
 import objects from "./objects";
 import outbids from "./outbids";
+import starred from "./starred";
 
 export default [
-	{ path: "/fairs", object: fairs },
+	{ path: "/auth", object: auth },
 	{ path: "/bids", object: bids },
-	{ path: "/user/bookmark", object: bookmark },
+	{ path: "/deleted", object: deleted },
+	{ path: "/duplicates", object: duplicates },
+	{ path: "/fairs", object: fairs },
 	{ path: "/items", object: items },
 	{ path: "/object", object: object },
 	{ path: "/objects", object: objects },
-	{ path: "/duplicates", object: duplicates },
-	{ path: "/deleted", object: deleted },
 	{ path: "/outbids", object: outbids },
-	{ path: "/auth", object: auth },
+	{ path: "/user/bookmark", object: bookmark },
+	{ path: "/user/starred", object: starred },
 ];

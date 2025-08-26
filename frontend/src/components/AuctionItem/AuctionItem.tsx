@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useBookmark } from '../../hooks/useBookmark';
 import { useListId } from '../../hooks/useListId';
 import { usePageId } from '../../hooks/usePageId';
+import { useUser } from '../../hooks/useUser';
 import { Item } from '../../model/Item';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import AuctionItemDetails from '../AuctionItemDetails/AuctionItemDetails';
@@ -21,12 +22,15 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 	const pageId = usePageId();
 	const showCompare = pageId !== 'object'; // Already in compare view.
 
+	const { user } = useUser();
+
 	const { bookmark } = useBookmark();
 
 	const toggleExpanded = () => setExpanded((val) => !val);
 
 	const listId = useListId();
 
+	console.log({ user });
 	return (
 		<div
 			className={classNames({
@@ -71,6 +75,7 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 				<ItemButtons
 					item={item}
 					showCompare={showCompare}
+					showStar={user !== null}
 					location="list"
 					allowBookmarks={allowBookmarks}
 					bookmarkClass={css.bookmark}
@@ -80,6 +85,7 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 				<ItemButtons
 					item={item}
 					showCompare={showCompare}
+					showStar={user !== null}
 					location="details"
 					allowBookmarks={false}
 				/>

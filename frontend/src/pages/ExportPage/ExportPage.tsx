@@ -95,8 +95,9 @@ const triggerDownload = async (workbook: ExcelJS.Workbook) => {
 	const blob = new Blob([buffer], {
 		type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 	});
+	const currentYear = new Date().getFullYear();
 
-	saveAs(blob, 'Spiel2024.xlsx');
+	saveAs(blob, `Spiel${currentYear}.xlsx`);
 };
 
 const createSheet = (

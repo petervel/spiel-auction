@@ -3,10 +3,7 @@ import prisma from "../../prismaClient";
 // import { checkAdmin } from "../../util";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
-import {
-	AuthenticatedRequest,
-	authenticateUser,
-} from "../../../middleware/auth";
+import { authenticateUser, tokenToUser } from "../../../middleware/auth";
 import { useListId } from "../useListId";
 
 const router = express.Router();
@@ -141,9 +138,13 @@ router.post("/refresh-token", async (req, res) => {
 	}
 });
 
-router.get("/me", authenticateUser, (req: AuthenticatedRequest, res) => {
-	// middleware already added req.user
-	res.json({ user: req.user });
+router.get("/me", (req, res) => {
+	const token = req.cookies.session;
+	if (!token) {
+		return res.json({ user: null });
+	}
+	const user = tokenToUser(token);
+	res.json({ user });
 });
 
 export default router;

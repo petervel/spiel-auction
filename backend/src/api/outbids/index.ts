@@ -35,6 +35,7 @@ router.get("/:listId", async (req, res) => {
 		res.status(404).json({ error: `No list found with id ${listId}` });
 		return;
 	}
+	console.log({ listId, bidder });
 
 	const items = await prisma.item.findMany({
 		where: {
@@ -55,10 +56,13 @@ router.get("/:listId", async (req, res) => {
 		},
 	});
 
-	const result = items.filter((item) => {
-		item.highestBidder?.toLowerCase() != bidder.toLowerCase();
-		return;
-	});
+	console.log("found:", { items });
+
+	const result = items.filter(
+		(item) => item.highestBidder?.toLowerCase() != bidder.toLowerCase(),
+	);
+
+	console.log("filtered:", { result });
 
 	await redisClient.set(cacheKey, JSON.stringify(result));
 	await redisClient.expire(cacheKey, 60);

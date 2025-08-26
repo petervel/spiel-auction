@@ -20,25 +20,29 @@ export const authenticateUser = async (
 	}
 
 	try {
-		const decoded = jwt.verify(token, process.env.JWT_SHARED_SECRET!) as {
-			userId: number;
-		};
-
-		req.userId = decoded.userId;
-
-		// 🔹 also fetch full user with fairs if you want it globally available
-		req.user = await prisma.user.findUnique({
-			where: { id: decoded.userId },
-			include: { currentUserFair: true, fairs: false },
-		});
+		req.user = await tokenToUser(token);
 
 		if (!req.user) {
 			res.status(401).json({ error: "User not found" });
 			return;
 		}
 
+		req.userId = req.user.id;
+
 		next();
 	} catch (error) {
 		res.status(401).json({ error: "Invalid session" });
 	}
+};
+
+export const tokenToUser = async (token: string) => {
+	const decoded = jwt.verify(token, process.env.JWT_SHARED_SECRET!) as {
+		userId: number;
+	};
+
+	// 🔹 also fetch full user with fairs if you want it globally available
+	return await prisma.user.findUnique({
+		where: { id: decoded.userId },
+		include: { currentUserFair: true, fairs: false },
+	});
 };

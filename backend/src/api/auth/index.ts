@@ -3,7 +3,11 @@ import prisma from "../../prismaClient";
 // import { checkAdmin } from "../../util";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
-import { authenticateUser } from "../../../middleware/auth";
+import {
+	AuthenticatedRequest,
+	authenticateUser,
+} from "../../../middleware/auth";
+import { useListId } from "../useListId";
 
 const router = express.Router();
 
@@ -36,11 +40,32 @@ router.post("/google", async (req, res) => {
 
 		const { sub, email, name } = payload;
 
-		let user = await prisma.user.findUnique({ where: { googleId: sub } });
+		let user = await prisma.user.findUnique({
+			where: { googleId: sub },
+		});
 		if (!user) {
 			user = await prisma.user.create({
 				data: { googleId: sub, email, name },
 			});
+		}
+
+		if (!user.currentUserFairId) {
+			const defaultFair = await prisma.fair.findFirst({
+				where: { geeklistId: useListId() },
+			});
+			console.log("Default fair:", defaultFair, useListId());
+			if (defaultFair) {
+				const userFair = await prisma.userFair.create({
+					data: {
+						userId: user.id,
+						fairId: defaultFair.id,
+					},
+				});
+				user = await prisma.user.update({
+					where: { id: user.id },
+					data: { currentUserFairId: userFair.id },
+				});
+			}
 		}
 
 		// Create session JWT
@@ -53,6 +78,14 @@ router.post("/google", async (req, res) => {
 		res.cookie("session", sessionToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === "production",
+		});
+
+		user = await prisma.user.findUnique({
+			where: { id: user.id },
+			include: {
+				currentUserFair: true,
+				fairs: true,
+			},
 		});
 
 		res.json({ message: "Login successful", user });
@@ -106,6 +139,11 @@ router.post("/refresh-token", async (req, res) => {
 	} catch (error) {
 		res.status(403).json({ error: "Invalid or expired refresh token" });
 	}
+});
+
+router.get("/me", authenticateUser, (req: AuthenticatedRequest, res) => {
+	// middleware already added req.user
+	res.json({ user: req.user });
 });
 
 export default router;

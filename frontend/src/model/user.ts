@@ -1,8 +1,16 @@
 export interface User {
-	uid: string;
+	id: number;
 	email: string;
-	register_time: number | object;
+	createdAt: string;
+	currentUserFair: UserFair | null;
 
-	access_level?: 'user' | 'admin';
-	bgg_username?: string;
+	accessLevel?: 'USER' | 'ADMIN' | 'MODERATOR';
+	bggUsername?: string;
+}
+
+export interface UserFair {
+	id: number;
+	userId: number;
+	fairId: number;
+	bookmark: number | null;
 }

@@ -1,10 +1,32 @@
 import { googleLogout, useGoogleLogin } from '@react-oauth/google';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { UserContext } from '../contexts/UserContext';
-import { User } from '../model/user';
+import { User } from '../model/User';
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null);
+
+	useEffect(() => {
+		const fetchCurrentUser = async () => {
+			try {
+				const res = await fetch('/api/auth/me', {
+					credentials: 'include',
+				}); // include cookie!
+				if (res.ok) {
+					const data = await res.json();
+					console.log('Fetched current user:', data);
+					setUser(data.user ?? null);
+				} else {
+					setUser(null);
+				}
+			} catch (err) {
+				console.error('Failed to fetch current user:', err);
+				setUser(null);
+			}
+		};
+
+		fetchCurrentUser(); // just run once on mount
+	}, []);
 
 	const login = useGoogleLogin({
 		flow: 'auth-code', // auth-code flow for backend verification
@@ -29,7 +51,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 				});
 
 				const backendData = await backendRes.json();
-				// console.log('Response from backend:', backendData);
+				console.log('Response from backend:', backendData);
 
 				setUser(backendData.user);
 			} catch (err) {

@@ -138,13 +138,19 @@ router.post("/refresh-token", async (req, res) => {
 	}
 });
 
-router.get("/me", (req, res) => {
+router.get("/me", async (req, res) => {
 	const token = req.cookies.session;
 	if (!token) {
 		return res.json({ user: null });
 	}
-	const user = tokenToUser(token);
-	res.json({ user });
+
+	try {
+		const user = await tokenToUser(token);
+		return res.json({ user });
+	} catch (err) {
+		console.error("Error in /me:", err);
+		return res.json({ user: null });
+	}
 });
 
 export default router;

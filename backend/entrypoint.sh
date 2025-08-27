@@ -1,17 +1,23 @@
-#!/bin/sh
-
 set -a
 [ -f .env ] && . ./.env
 set +a
 
-# Check if the migrations table exists to determine if this is the first deployment
-if npx prisma migrate status --schema ./prisma/schema.prisma | grep 'Database schema is up to date'; then
-  echo "Database schema is up to date. Applying migrations..."
-  npx prisma migrate deploy
+echo "Starting backend entrypoint..."
+
+#Check if migrations exist
+if [ -d "./prisma/migrations" ] && [ "$(ls -A ./prisma/migrations)" ]; then
+    echo "Migrations folder detected. Attempting migrate deploy..."
+    npx prisma migrate deploy || {
+        echo "Migration failed. Check database state and migrations."
+        exit 1
+    }
 else
-  echo "Database schema is not initialized. Pushing initial schema..."
-  npx prisma db push --accept-data-loss
+    echo "No migrations found. Pushing schema directly (db push)..."
+    npx prisma db push --accept-data-loss || {
+        echo "db push failed. Check database connection."
+        exit 1
+    }
 fi
 
-# Execute the provided command
+echo "Prisma setup complete. Starting backend..."
 exec "$@"

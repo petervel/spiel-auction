@@ -29,7 +29,7 @@ export const SettingsPage = () => {
 	return (
 		<Stack paddingInline="2rem">
 			<Typography variant="h4" component="h1">
-				Settings {JSON.stringify(user)}
+				Settings
 			</Typography>
 			<form onSubmit={save}>
 				<Stack gap={3} alignItems="start">

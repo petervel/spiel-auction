@@ -39,10 +39,15 @@ export const tokenToUser = async (token: string) => {
 	const decoded = jwt.verify(token, process.env.JWT_SHARED_SECRET!) as {
 		userId: number;
 	};
+	// console.log("Decoded token:", decoded);
 
 	// 🔹 also fetch full user with fairs if you want it globally available
-	return await prisma.user.findUnique({
+	const user = await prisma.user.findUnique({
 		where: { id: decoded.userId },
 		include: { currentUserFair: true, fairs: false },
 	});
+
+	// console.log("tokenToUser found user.name:", user?.name);
+
+	return user;
 };

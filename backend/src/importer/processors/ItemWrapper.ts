@@ -69,22 +69,33 @@ export class ItemWrapper {
 			updateTime,
 		);
 
+		const unstrikedData = this.getDerivedData(
+			source["body"],
+			commentData,
+			true,
+		);
+
+		const strikedData = this.getDerivedData(
+			source["body"],
+			commentData,
+			false,
+		);
+
 		itemData = {
 			...itemData,
-			...this.getDerivedData(
-				source["body"],
-				commentData,
-				true,
-				itemData.id,
-			),
-			...this.getDerivedData(
-				source["body"],
-				commentData,
-				false,
-				itemData.id,
-			),
+			...strikedData,
+			...unstrikedData,
 		};
 
+		if (itemData.objectName === "Outside the Scope of BGG") {
+			const alternateName =
+				extractString(
+					source["body"],
+					/\[size=\d+\]\[b\]\[color=#[0-9a-f]{6}\](.*?)\[\/color\]\[\/b\]\[\/size\]/i,
+					true,
+				)?.trim() ?? "";
+			itemData.objectName = alternateName ?? itemData.objectName;
+		}
 		return new ItemWrapper(itemData, commentData);
 	}
 
@@ -92,7 +103,6 @@ export class ItemWrapper {
 		text: string,
 		commentsData: ItemCommentWrapper[],
 		removeStrikeThrough: boolean = true,
-		itemId: number = 0,
 	) {
 		text = removeStrikeThrough ? removeStrikethrough(text) : text;
 
@@ -174,16 +184,7 @@ export class ItemWrapper {
 			(stripped.length < 150 &&
 				(stripped.length == 0 || text.length / stripped.length > 4)) ||
 			(!!auctionEndDate && auctionEndDate < formatTimeToDate());
-		if (itemId == 11059033) {
-			console.log({
-				isSold,
-				strippedLength: stripped.length,
-				textLength: text.length,
-				auctionEndDate,
-				nowDate: formatTimeToDate(),
-				isEnded,
-			});
-		}
+
 		const currentBid =
 			highestBid ??
 			startingBid ??

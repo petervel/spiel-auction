@@ -3,9 +3,13 @@ import latinize from "latinize";
 export function extractString(
 	source: string,
 	regex: RegExp,
+	first: boolean = false,
 ): string | undefined {
 	const matches = source.match(regex);
 	if (matches != null && matches.length > 0) {
+		if (first) {
+			return matches[1] as string;
+		}
 		return matches.pop() as string;
 	}
 	return undefined; // not found

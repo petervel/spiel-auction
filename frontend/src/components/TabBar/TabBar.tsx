@@ -22,7 +22,7 @@ type PageData = {
 
 export const TabBar = () => {
 	const pageId = usePageId();
-	const username = useBggUsername();
+	const { bggUsername } = useBggUsername();
 
 	const pages: PageData[] = [
 		{
@@ -41,19 +41,19 @@ export const TabBar = () => {
 			id: 'selling',
 			label: 'Selling',
 			renderIcon: () => <Sell />,
-			url: `/selling${username ? `/${username}` : ''}`,
+			url: `/selling${bggUsername ? `/${bggUsername}` : ''}`,
 		},
 		{
 			id: 'buying',
 			label: 'Buying',
 			renderIcon: () => <ShoppingBasket />,
-			url: `/buying${username ? `/${username}` : ''}`,
+			url: `/buying${bggUsername ? `/${bggUsername}` : ''}`,
 		},
 		{
 			id: 'outbids',
 			label: 'Outbid',
 			renderIcon: () => <SentimentDissatisfied />,
-			url: `/outbids${username ? `/${username}` : ''}`,
+			url: `/outbids${bggUsername ? `/${bggUsername}` : ''}`,
 		},
 	];
 

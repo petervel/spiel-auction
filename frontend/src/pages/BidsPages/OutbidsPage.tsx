@@ -8,7 +8,7 @@ import { ItemsPage } from './ItemsPage';
 
 export const OutbidsPage = () => {
 	const { username: pathUsername } = useParams();
-	const bggUsername = useBggUsername();
+	const { bggUsername } = useBggUsername();
 
 	const [bidder, setBidder] = useState(pathUsername ?? bggUsername);
 

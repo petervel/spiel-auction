@@ -8,7 +8,7 @@ import { useListId } from '../../hooks/useListId';
 import { Item } from '../../model/Item';
 
 export const ExportPage = () => {
-	const bggUsername = useBggUsername();
+	const { bggUsername } = useBggUsername();
 	const listId = useListId();
 
 	const {

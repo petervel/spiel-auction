@@ -10,7 +10,7 @@ import { ItemsPage } from './ItemsPage';
 
 export const SellingPage = () => {
 	const { username: pathUsername } = useParams();
-	const bggUsername = useBggUsername();
+	const { bggUsername } = useBggUsername();
 
 	const [seller, setSeller] = useState(pathUsername ?? bggUsername);
 

@@ -88,12 +88,11 @@ export class ItemWrapper {
 		};
 
 		if (itemData.objectName === "Outside the Scope of BGG") {
-			const alternateName =
-				extractString(
-					source["body"],
-					/\[size=\d+\]\[b\]\[color=#[0-9a-f]{6}\](.*?)\[\/color\]\[\/b\]\[\/size\]/i,
-					true,
-				)?.trim() ?? "";
+			const alternateName = extractString(
+				source["body"],
+				/\[size=\d+\]\[b\]\[color=#[0-9a-f]{6}\](.*?)\[\/color\]\[\/b\]\[\/size\]/i,
+				true,
+			)?.trim();
 			itemData.objectName = alternateName ?? itemData.objectName;
 		}
 		return new ItemWrapper(itemData, commentData);

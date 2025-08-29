@@ -103,6 +103,7 @@ export class ItemWrapper {
 		commentsData: ItemCommentWrapper[],
 		removeStrikeThrough: boolean = true,
 	) {
+		const originalText = text;
 		text = removeStrikeThrough ? removeStrikethrough(text) : text;
 
 		const auctionTypeString =
@@ -181,7 +182,8 @@ export class ItemWrapper {
 		let isEnded =
 			isSold ||
 			(stripped.length < 150 &&
-				(stripped.length == 0 || text.length / stripped.length > 4)) ||
+				(stripped.length == 0 ||
+					originalText.length / stripped.length > 4)) ||
 			(!!auctionEndDate && auctionEndDate < formatTimeToDate());
 
 		const currentBid =

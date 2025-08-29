@@ -36,18 +36,23 @@ export const authenticateUser = async (
 };
 
 export const tokenToUser = async (token: string) => {
-	const decoded = jwt.verify(token, process.env.JWT_SHARED_SECRET!) as {
-		userId: number;
-	};
-	// console.log("Decoded token:", decoded);
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SHARED_SECRET!) as {
+			userId: number;
+		};
+		// console.log("Decoded token:", decoded);
 
-	// 🔹 also fetch full user with fairs if you want it globally available
-	const user = await prisma.user.findUnique({
-		where: { id: decoded.userId },
-		include: { currentUserFair: true, fairs: false },
-	});
+		// 🔹 also fetch full user with fairs if you want it globally available
+		const user = await prisma.user.findUnique({
+			where: { id: decoded.userId },
+			include: { currentUserFair: true, fairs: false },
+		});
 
-	// console.log("tokenToUser found user.name:", user?.name);
+		// console.log("tokenToUser found user.name:", user?.name);
 
-	return user;
+		return user;
+	} catch (error) {
+		console.error("Error verifying token.");
+		return null;
+	}
 };

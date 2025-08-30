@@ -4,9 +4,9 @@ import {
 	StarRounded,
 } from '@mui/icons-material';
 import { Stack } from '@mui/material';
-import { useState } from 'react';
 import bggIcon from '../../assets/bgg.svg';
-import { useStarring } from '../../hooks/useStarring';
+import { useStarred } from '../../hooks/useStarred';
+import { useUser } from '../../hooks/useUser';
 import { Item } from '../../model/Item';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import BookmarkButton from './BookmarkButton';
@@ -25,22 +25,21 @@ export const ItemButtons = ({
 	item,
 	showCompare,
 	location = 'list',
-	showStar = true,
+	showStar = false,
 	allowBookmarks = false,
 	bookmarkClass = '',
 }: ItemButtonsProps) => {
-	const { starItem, unstarItem } = useStarring();
-	const [starred, setStarred] = useState(item.starred);
+	const { starItem, unstarItem, starred, isStarred } = useStarred();
 
-	const toggleStar = () => {
-		console.log('toggle star', starred);
-		if (starred === undefined) return;
-		if (starred) {
-			unstarItem(item.id);
-			setStarred(false);
+	const { user } = useUser();
+	console.log({ showStar, starred, user });
+	const toggleStar = (itemId: number) => {
+		if (!starred) return; // still loading
+
+		if (isStarred(itemId)) {
+			unstarItem(itemId);
 		} else {
-			starItem(item.id);
-			setStarred(true);
+			starItem(itemId);
 		}
 	};
 
@@ -59,10 +58,10 @@ export const ItemButtons = ({
 			>
 				{showStar && (
 					<AuctionItemButton
-						link={toggleStar}
+						link={() => toggleStar(item.id)}
 						tooltip="Add to starred items"
 					>
-						{starred ? (
+						{isStarred(item.id) ? (
 							<StarRounded
 								className="icon"
 								sx={{ fontSize: '30px' }}

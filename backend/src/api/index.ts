@@ -21,5 +21,5 @@ export default [
 	{ path: "/objects", object: objects },
 	{ path: "/outbids", object: outbids },
 	{ path: "/user/bookmark", object: bookmark },
-	{ path: "/user/starred", object: starred },
+	{ path: "/starred", object: starred },
 ];

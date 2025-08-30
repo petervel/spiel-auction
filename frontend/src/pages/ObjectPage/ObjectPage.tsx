@@ -33,7 +33,7 @@ export const ObjectPage = () => {
 			<TabBar />
 			<Container>
 				<Title title={title} />
-				<ItemsList items={data} />
+				<ItemsList items={data} allowStars={true} />
 			</Container>
 		</>
 	);

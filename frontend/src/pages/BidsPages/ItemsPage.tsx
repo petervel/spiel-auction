@@ -17,6 +17,7 @@ type ItemsPageProps = {
 	items: Item[];
 	subTitle?: ReactNode;
 	setUsername: (_: string | undefined) => void;
+	allowStars?: boolean;
 };
 
 export const ItemsPage = ({
@@ -25,6 +26,7 @@ export const ItemsPage = ({
 	items,
 	subTitle,
 	setUsername,
+	allowStars = false,
 }: ItemsPageProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.END_DATE);
 
@@ -72,7 +74,10 @@ export const ItemsPage = ({
 							</Stack>
 						)}
 
-						<ItemsList items={sortedItems} />
+						<ItemsList
+							items={sortedItems}
+							allowStars={allowStars}
+						/>
 					</>
 				) : (
 					<EditBggUserName onSave={setUsername} />

@@ -31,6 +31,7 @@ export const OutbidsPage = () => {
 				username={bidder}
 				items={data}
 				setUsername={setBidder}
+				allowStars={true}
 			/>
 		</>
 	);

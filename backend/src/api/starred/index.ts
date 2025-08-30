@@ -10,11 +10,6 @@ const router = express.Router();
 
 // 🔹 Get all starred items for logged in user
 router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
-	if (!req.userId) {
-		res.status(401).json({ error: "Unauthorized" });
-		return;
-	}
-
 	const userId = req.userId;
 	const cacheKey = `api:starred:${userId}`;
 
@@ -26,14 +21,42 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	}
 
 	const starredItems = await prisma.userStarredItem.findMany({
-		where: { userId },
+		where: { userId, fairId: req.user?.currentUserFairId },
 		include: { item: true },
 	});
 
-	const result = starredItems.map((star) => ({
-		...star.item,
-		starred: true,
-	}));
+	const result = starredItems.map((star) => star.item);
+
+	// Cache
+	await redisClient.set(cacheKey, JSON.stringify(result));
+	await redisClient.expire(cacheKey, 60);
+
+	res.status(200).json(result);
+});
+
+// 🔹 Get IDs of starred items for logged in user
+router.get("/ids", authenticateUser, async (req: AuthenticatedRequest, res) => {
+	if (!req.userId) {
+		res.status(401).json({ error: "Unauthorized" });
+		return;
+	}
+
+	const userId = req.userId;
+	const cacheKey = `api:starred:ids:${userId}`;
+
+	// Check cache
+	const cache = await redisClient.get(cacheKey);
+	if (cache) {
+		res.status(200).json(JSON.parse(cache));
+		return;
+	}
+
+	const items = await prisma.userStarredItem.findMany({
+		select: { itemId: true },
+		where: { userId },
+	});
+
+	const result = items.map((i) => i.itemId);
 
 	// Cache
 	await redisClient.set(cacheKey, JSON.stringify(result));

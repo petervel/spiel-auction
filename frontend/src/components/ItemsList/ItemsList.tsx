@@ -5,11 +5,13 @@ import css from './ItemsList.module.css';
 type ItemsListProps = {
 	items: Item[];
 	allowBookmarks?: boolean;
+	allowStars?: boolean;
 };
 
 export const ItemsList = ({
 	items,
 	allowBookmarks = false,
+	allowStars = false,
 }: ItemsListProps) => {
 	return (
 		<ul className={css.items}>
@@ -20,6 +22,7 @@ export const ItemsList = ({
 							key={item.id}
 							item={item}
 							allowBookmarks={allowBookmarks}
+							allowStars={allowStars}
 						/>
 					);
 				})

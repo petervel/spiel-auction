@@ -48,6 +48,8 @@ model UserStarredItem {
   id     Int  @id @default(autoincrement())
   user   User @relation(fields: [userId], references: [id])
   userId Int
+  fair   Fair @relation(fields: [fairId], references: [id])
+  fairId Int
   item   Item @relation(fields: [itemId], references: [id])
   itemId Int
 
@@ -65,7 +67,9 @@ model Fair {
   list        List?      @relation(fields: [listId], references: [id])
   listId      Int?       @unique
   latestFile  String?
-  UserFair    UserFair[]
+
+  UserFair        UserFair[]
+  UserStarredItem UserStarredItem[]
 }
 
 model List {

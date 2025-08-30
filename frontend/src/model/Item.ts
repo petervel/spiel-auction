@@ -44,6 +44,4 @@ export interface Item {
 
 	lastSeen: number;
 	deleted: boolean;
-
-	starred?: boolean;
 }

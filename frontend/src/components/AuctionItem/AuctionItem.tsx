@@ -15,9 +15,14 @@ import { ItemButtons } from './ItemButtons';
 interface Props {
 	item: Item;
 	allowBookmarks?: boolean;
+	allowStars?: boolean;
 }
 
-export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
+export const AuctionItem = ({
+	item,
+	allowBookmarks = false,
+	allowStars = false,
+}: Props) => {
 	const [expanded, setExpanded] = useState(false);
 	const pageId = usePageId();
 	const showCompare = pageId !== 'object'; // Already in compare view.
@@ -30,7 +35,6 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 
 	const listId = useListId();
 
-	console.log({ user });
 	return (
 		<div
 			className={classNames({
@@ -75,7 +79,7 @@ export const AuctionItem = ({ item, allowBookmarks = false }: Props) => {
 				<ItemButtons
 					item={item}
 					showCompare={showCompare}
-					showStar={user !== null}
+					showStar={allowStars && user !== null}
 					location="list"
 					allowBookmarks={allowBookmarks}
 					bookmarkClass={css.bookmark}

@@ -1,5 +1,4 @@
 import express from "express";
-import { tokenToUser } from "../../../middleware/auth";
 import prisma from "../../prismaClient";
 import { redisClient } from "../redisClient";
 
@@ -93,24 +92,6 @@ router.get("/:listId", async (req, res) => {
 	const hasMore = items.length > MAX_RESULTS;
 	if (hasMore) {
 		items = items.slice(0, MAX_RESULTS);
-	}
-
-	const token = req.cookies.session;
-	if (token) {
-		const user = await tokenToUser(token);
-		if (user) {
-			const starred = await prisma.userStarredItem.findMany({
-				where: { userId: user.id },
-				select: { itemId: true },
-			});
-
-			const starredIds = new Set(starred.map((s) => s.itemId));
-
-			items = items.map((item) => ({
-				...item,
-				starred: starredIds.has(item.id),
-			}));
-		}
 	}
 
 	const result = {

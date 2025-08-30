@@ -70,7 +70,11 @@ export const LatestPage = () => {
 						[css.outdated]: isPreviousData,
 					})}
 				>
-					<ItemsList items={items} allowBookmarks={true} />
+					<ItemsList
+						items={items}
+						allowBookmarks={true}
+						allowStars={true}
+					/>
 				</div>
 			</Container>
 

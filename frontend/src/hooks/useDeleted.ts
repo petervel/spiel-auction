@@ -13,10 +13,10 @@ const fetchObject = async (listId: number) => {
 		throw new Error('Error fetching items');
 	}
 	const result: Deleted = await response.json();
-	console.log({ result });
+	// console.log({ result });
 	const { items, itemComments } = result;
 
-	console.log({ items, itemComments });
+	// console.log({ items, itemComments });
 
 	const groupedItems: Record<string, Item[]> = {};
 	for (const item of items) {

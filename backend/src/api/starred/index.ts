@@ -13,6 +13,7 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	const userId = req.userId;
 	const cacheKey = `api:starred:${userId}`;
 
+	console.log("Fetching starred items for userId:", userId);
 	// Check cache
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
@@ -20,12 +21,27 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		return;
 	}
 
+	if (!req.user?.currentUserFairId) {
+		res.status(400).json({ error: "No fair selected" });
+		return;
+	}
+
+	if (!userId) {
+		res.status(401).json({ error: "Unauthorized" });
+		return;
+	}
+
 	const starredItems = await prisma.userStarredItem.findMany({
-		where: { userId, fairId: req.user?.currentUserFairId },
+		where: { userId, fairId: req.user?.currentUserFair?.fairId },
 		include: { item: true },
+		orderBy: { itemId: "desc" },
 	});
 
+	console.log("Found starred items:", starredItems.length);
+
 	const result = starredItems.map((star) => star.item);
+
+	console.log("Returning items:", result.length);
 
 	// Cache
 	await redisClient.set(cacheKey, JSON.stringify(result));
@@ -54,6 +70,7 @@ router.get("/ids", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	const items = await prisma.userStarredItem.findMany({
 		select: { itemId: true },
 		where: { userId },
+		orderBy: { itemId: "desc" },
 	});
 
 	const result = items.map((i) => i.itemId);
@@ -81,11 +98,20 @@ router.post(
 			return;
 		}
 
+		if (!req.user?.currentUserFairId) {
+			res.status(400).json({ error: "No fair selected" });
+			return;
+		}
+
 		try {
 			const star = await prisma.userStarredItem.upsert({
 				where: { userId_itemId: { userId: req.userId, itemId } },
 				update: {}, // nothing to update if it exists
-				create: { userId: req.userId, itemId },
+				create: {
+					userId: req.userId,
+					itemId,
+					fairId: req.user.currentUserFair.fairId,
+				},
 			});
 
 			// Bust cache

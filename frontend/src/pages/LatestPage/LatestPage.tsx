@@ -25,7 +25,7 @@ export const LatestPage = () => {
 		isPreviousData,
 	} = useInfiniteItems();
 
-	console.log({ filters });
+	// console.log({ filters });
 
 	const [showFilters, setShowFilters] = useState(false);
 

@@ -6,7 +6,6 @@ import {
 import { Stack } from '@mui/material';
 import bggIcon from '../../assets/bgg.svg';
 import { useStarred } from '../../hooks/useStarred';
-import { useUser } from '../../hooks/useUser';
 import { Item } from '../../model/Item';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import BookmarkButton from './BookmarkButton';
@@ -31,8 +30,6 @@ export const ItemButtons = ({
 }: ItemButtonsProps) => {
 	const { starItem, unstarItem, starred, isStarred } = useStarred();
 
-	const { user } = useUser();
-	console.log({ showStar, starred, user });
 	const toggleStar = (itemId: number) => {
 		if (!starred) return; // still loading
 

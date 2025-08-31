@@ -1,25 +1,23 @@
 import { Button, TextField } from '@mui/material';
 import { FormEvent, useState } from 'react';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { useBggUsername } from '../../hooks/useBggUsername';
 import css from './EditBggUserName.module.css';
 
 type EditBggUserNameProps = {
 	onSave: (value: string | undefined) => void;
 };
 export const EditBggUserName = ({ onSave }: EditBggUserNameProps) => {
-	const [storedUsername, setUsername, removeUsername] = useLocalStorage<
-		string | undefined
-	>('bgg_username', undefined);
+	const { bggUsername, setBggUsername, removeBggUsername } = useBggUsername();
 
-	const [editUsername, setEditUsername] = useState(storedUsername ?? '');
+	const [editUsername, setEditUsername] = useState(bggUsername ?? '');
 
 	const save = (evt: FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();
 		if (editUsername) {
-			setUsername(editUsername);
+			setBggUsername(editUsername);
 			onSave(editUsername);
 		} else {
-			removeUsername();
+			removeBggUsername();
 			onSave(undefined);
 		}
 	};
@@ -37,5 +35,4 @@ export const EditBggUserName = ({ onSave }: EditBggUserNameProps) => {
 			<Button type="submit">Save</Button>
 		</form>
 	);
-	return <div>EditBggUserName</div>;
 };

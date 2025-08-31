@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { Item } from '../model/Item';
+import { useUser } from './useUser';
 
 // 🔹 Fetch all starred items
 const fetchStarred = async (): Promise<Item[]> => {
@@ -12,7 +13,7 @@ const fetchStarred = async (): Promise<Item[]> => {
 
 // 🔹 Star an item
 const starItem = async (itemId: number) => {
-	const response = await fetch(`/api/user/starred/${itemId}`, {
+	const response = await fetch(`/api/starred/${itemId}`, {
 		method: 'POST',
 		credentials: 'include',
 	});
@@ -22,7 +23,7 @@ const starItem = async (itemId: number) => {
 
 // 🔹 Unstar an item
 const unstarItem = async (itemId: number) => {
-	const response = await fetch(`/api/user/starred/${itemId}`, {
+	const response = await fetch(`/api/starred/${itemId}`, {
 		method: 'DELETE',
 		credentials: 'include',
 	});
@@ -32,12 +33,20 @@ const unstarItem = async (itemId: number) => {
 
 export const useStarred = () => {
 	const queryClient = useQueryClient();
+	const { user, isLoading } = useUser();
 
 	// Get starred items
-	const starredQuery = useQuery<Item[]>(['starred'], fetchStarred, {
-		refetchInterval: 60000, // refresh every 60s
-		keepPreviousData: true,
-	});
+	const starredQuery = useQuery<Item[]>(
+		['starred'],
+		async () => {
+			if (!isLoading && !user) return []; // not logged in
+			return await fetchStarred();
+		},
+		{
+			refetchInterval: 60000, // refresh every 60s
+			keepPreviousData: true,
+		}
+	);
 
 	// Mutations
 	const starMutation = useMutation(starItem, {

@@ -72,7 +72,7 @@ router.post("/google", async (req, res) => {
 			{ expiresIn: "365d" },
 		);
 
-		res.cookie("session", sessionToken, {
+		res.cookie("session-id", sessionToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === "production",
 		});
@@ -93,7 +93,7 @@ router.post("/google", async (req, res) => {
 });
 
 router.post("/logout", authenticateUser, (_, res) => {
-	res.clearCookie("session", {
+	res.clearCookie("session-id", {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
 	}); // Clear the session cookie
@@ -102,6 +102,7 @@ router.post("/logout", authenticateUser, (_, res) => {
 });
 
 router.post("/refresh-token", async (req, res) => {
+	console.log("refresh-token called");
 	const refreshToken = req.cookies.refreshToken;
 
 	if (!refreshToken) {
@@ -139,7 +140,7 @@ router.post("/refresh-token", async (req, res) => {
 });
 
 router.get("/me", async (req, res) => {
-	const token = req.cookies.session;
+	const token = req.cookies["session-id"];
 	if (!token) {
 		return res.json({ user: null });
 	}

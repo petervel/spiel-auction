@@ -5,27 +5,35 @@ import { User } from '../model/User';
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null);
+	const [isLoading, setLoading] = useState(true);
 
-	useEffect(() => {
-		const fetchCurrentUser = async () => {
-			try {
-				const res = await fetch('/api/auth/me', {
-					credentials: 'include',
-				}); // include cookie!
-				if (res.ok) {
-					const data = await res.json();
-					console.log('Fetched current user:', data);
-					setUser(data.user ?? null);
-				} else {
-					setUser(null);
-				}
-			} catch (err) {
-				console.error('Failed to fetch current user:', err);
+	const fetchCurrentUser = async () => {
+		try {
+			const res = await fetch('/api/auth/me', {
+				credentials: 'include',
+			}); // include cookie!
+			if (res.ok) {
+				const data = await res.json();
+				// console.log('Fetched current user:', data);
+				setUser(data.user ?? null);
+			} else {
 				setUser(null);
 			}
-		};
+		} catch (err) {
+			console.error('Failed to fetch current user:', err);
+			setUser(null);
+		} finally {
+			setLoading(false);
+		}
+	};
 
-		fetchCurrentUser(); // just run once on mount
+	useEffect(() => {
+		// fetch once on mount
+		fetchCurrentUser();
+
+		// 🔄 periodic sync
+		const interval = setInterval(fetchCurrentUser, 60_000); // every 60s
+		return () => clearInterval(interval);
 	}, []);
 
 	const login = useGoogleLogin({
@@ -51,7 +59,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 				});
 
 				const backendData = await backendRes.json();
-				console.log('Response from backend:', backendData);
+				// console.log('Response from backend:', backendData);
 
 				setUser(backendData.user);
 			} catch (err) {
@@ -75,7 +83,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	return (
-		<UserContext.Provider value={{ user, login, logout }}>
+		<UserContext.Provider
+			value={{ user, setUser, login, logout, isLoading }}
+		>
 			{children}
 		</UserContext.Provider>
 	);

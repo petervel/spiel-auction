@@ -1,5 +1,6 @@
 .button {
 	color: var(--colour-inactive) !important;
+	margin-left: 3px;
 }
 
 .button.active {

@@ -1,25 +1,22 @@
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { useBggUsername } from '../../hooks/useBggUsername';
 // import { useUser } from '../../hooks/useUser';
 
 export const SettingsPage = () => {
 	const nav = useNavigate();
 
-	// const user = useUser();
-	const [storedUsername, setUsername, removeUsername] = useLocalStorage<
-		string | undefined
-	>('bgg_username', undefined);
+	const { bggUsername, setBggUsername, removeBggUsername } = useBggUsername();
 
-	const [editUsername, setEditUsername] = useState(storedUsername ?? '');
+	const [editUsername, setEditUsername] = useState(bggUsername ?? '');
 
 	const save = (evt: FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();
 		if (editUsername) {
-			setUsername(editUsername);
+			setBggUsername(editUsername);
 		} else {
-			removeUsername();
+			removeBggUsername();
 		}
 		nav('/');
 	};

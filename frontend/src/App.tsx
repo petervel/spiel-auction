@@ -12,6 +12,7 @@ import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { ExportPage } from './pages/ExportPage/ExportPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
+import { StarredPage } from './pages/LatestPage/StarredPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
@@ -87,6 +88,11 @@ function App() {
 								<Route
 									path="/export"
 									element={<ExportPage />}
+								/>
+
+								<Route
+									path="/starred"
+									element={<StarredPage />}
 								/>
 							</Routes>
 						</div>

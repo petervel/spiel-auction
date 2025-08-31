@@ -1,6 +1,5 @@
 import auth from "./auth";
 import bids from "./bids";
-import bookmark from "./bookmark";
 import deleted from "./deleted";
 import duplicates from "./duplicates";
 import fairs from "./fairs";
@@ -9,6 +8,7 @@ import object from "./object";
 import objects from "./objects";
 import outbids from "./outbids";
 import starred from "./starred";
+import user from "./user";
 
 export default [
 	{ path: "/auth", object: auth },
@@ -20,6 +20,6 @@ export default [
 	{ path: "/object", object: object },
 	{ path: "/objects", object: objects },
 	{ path: "/outbids", object: outbids },
-	{ path: "/user/bookmark", object: bookmark },
+	{ path: "/user", object: user },
 	{ path: "/starred", object: starred },
 ];

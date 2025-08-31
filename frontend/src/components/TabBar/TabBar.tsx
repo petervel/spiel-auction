@@ -3,6 +3,7 @@ import {
 	Sell,
 	SentimentDissatisfied,
 	ShoppingBasket,
+	StarOutlineRounded,
 } from '@mui/icons-material';
 import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
@@ -10,6 +11,7 @@ import { MouseEvent, ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { usePageId } from '../../hooks/usePageId';
+import { useUser } from '../../hooks/useUser';
 import css from './TabBar.module.css';
 
 type PageData = {
@@ -23,6 +25,7 @@ type PageData = {
 export const TabBar = () => {
 	const pageId = usePageId();
 	const { bggUsername } = useBggUsername();
+	const { user } = useUser();
 
 	const pages: PageData[] = [
 		{
@@ -57,6 +60,17 @@ export const TabBar = () => {
 		},
 	];
 
+	// console.log({ user });
+	if (user) {
+		pages.push({
+			id: 'starred',
+			label: 'Starred',
+			renderIcon: () => <StarOutlineRounded />,
+			url: `/starred`,
+		});
+		// console.log({ pages });
+	}
+
 	const navigate = useNavigate();
 	const gotoPage = (evt: MouseEvent, url: string) => {
 		navigate(url);
@@ -66,7 +80,7 @@ export const TabBar = () => {
 	return (
 		<Stack
 			direction="row"
-			spacing={3}
+			spacing={2}
 			marginTop={3}
 			marginBottom={3}
 			justifyContent="center"

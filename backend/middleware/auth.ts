@@ -13,7 +13,7 @@ export const authenticateUser = async (
 	res: Response,
 	next: NextFunction,
 ) => {
-	const token = req.cookies["session-id"];
+	const token = req.cookies["session"];
 	if (!token) {
 		res.status(401).json({ error: "Unauthorized" });
 		return;

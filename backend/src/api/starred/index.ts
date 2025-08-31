@@ -13,7 +13,7 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	const userId = req.userId;
 	const cacheKey = `api:starred:${userId}`;
 
-	console.log("Fetching starred items for userId:", userId);
+	// console.log("Fetching starred items for userId:", userId);
 	// Check cache
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
@@ -37,11 +37,11 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		orderBy: { itemId: "desc" },
 	});
 
-	console.log("Found starred items:", starredItems.length);
+	// console.log("Found starred items:", starredItems.length);
 
 	const result = starredItems.map((star) => star.item);
 
-	console.log("Returning items:", result.length);
+	// console.log("Returning items:", result.length);
 
 	// Cache
 	await redisClient.set(cacheKey, JSON.stringify(result));

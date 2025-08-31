@@ -22,7 +22,7 @@ router.post("/google", async (req, res) => {
 		// Exchange code for tokens
 		const { tokens } = await client.getToken(code);
 
-		console.log("Tokens from Google:", tokens);
+		// console.log("Tokens from Google:", tokens);
 
 		if (!tokens.id_token) {
 			return res.status(401).json({ error: "No ID token received" });
@@ -50,7 +50,7 @@ router.post("/google", async (req, res) => {
 			const defaultFair = await prisma.fair.findFirst({
 				where: { geeklistId: useListId() },
 			});
-			console.log("Default fair:", defaultFair, useListId());
+			// console.log("Default fair:", defaultFair, useListId());
 			if (defaultFair) {
 				const userFair = await prisma.userFair.create({
 					data: {
@@ -102,7 +102,7 @@ router.post("/logout", authenticateUser, (_, res) => {
 });
 
 router.post("/refresh-token", async (req, res) => {
-	console.log("refresh-token called");
+	// console.log("refresh-token called");
 	const refreshToken = req.cookies.refreshToken;
 
 	if (!refreshToken) {

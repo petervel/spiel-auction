@@ -1,5 +1,5 @@
 import { Button, Stack, TextField, Typography } from '@mui/material';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useBggUsername } from '../../hooks/useBggUsername';
 // import { useUser } from '../../hooks/useUser';
@@ -7,9 +7,15 @@ import { useBggUsername } from '../../hooks/useBggUsername';
 export const SettingsPage = () => {
 	const nav = useNavigate();
 
-	const { bggUsername, setBggUsername, removeBggUsername } = useBggUsername();
+	const { bggUsername, setBggUsername, removeBggUsername, saving } =
+		useBggUsername();
 
 	const [editUsername, setEditUsername] = useState(bggUsername ?? '');
+	useEffect(() => {
+		if (!saving) {
+			setEditUsername(bggUsername ?? '');
+		}
+	}, [bggUsername, saving]);
 
 	const save = (evt: FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();

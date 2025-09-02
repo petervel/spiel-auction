@@ -130,7 +130,7 @@ router.post("/refresh-token", async (req, res) => {
 		const accessToken = jwt.sign(
 			{ userId: user.id },
 			process.env.JWT_SHARED_SECRET!,
-			{ expiresIn: "1h" }, // New access token valid for 1 hour
+			{ expiresIn: "365d" },
 		);
 
 		res.json({ accessToken });

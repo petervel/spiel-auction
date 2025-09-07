@@ -1,9 +1,9 @@
 import {
-	Schedule,
+	HeartBroken,
 	Sell,
-	SentimentDissatisfied,
 	ShoppingBasket,
-	StarOutlineRounded,
+	StarRounded,
+	WatchLaterRounded,
 } from '@mui/icons-material';
 import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
@@ -31,7 +31,7 @@ export const TabBar = () => {
 		{
 			id: 'latest',
 			label: 'Latest',
-			renderIcon: () => <Schedule />,
+			renderIcon: () => <WatchLaterRounded />,
 			url: '/',
 		},
 		// {
@@ -55,7 +55,7 @@ export const TabBar = () => {
 		{
 			id: 'outbids',
 			label: 'Outbid',
-			renderIcon: () => <SentimentDissatisfied />,
+			renderIcon: () => <HeartBroken />,
 			url: `/outbids${bggUsername ? `/${bggUsername}` : ''}`,
 		},
 	];
@@ -65,7 +65,7 @@ export const TabBar = () => {
 		pages.push({
 			id: 'starred',
 			label: 'Starred',
-			renderIcon: () => <StarOutlineRounded />,
+			renderIcon: () => <StarRounded />,
 			url: `/starred`,
 		});
 		// console.log({ pages });

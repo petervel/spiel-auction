@@ -8,9 +8,18 @@ import { ItemsPage } from './ItemsPage';
 
 export const OutbidsPage = () => {
 	const { username: pathUsername } = useParams();
-	const { bggUsername } = useBggUsername();
+	const { bggUsername, setBggUsername, removeBggUsername } = useBggUsername();
 
 	const [bidder, setBidder] = useState(pathUsername ?? bggUsername);
+
+	const setWrapper = (name: string | undefined) => {
+		setBidder(name);
+		if (name) {
+			setBggUsername(name);
+		} else {
+			removeBggUsername();
+		}
+	};
 
 	const { data, error, isLoading } = useOutbids({
 		username: bidder ?? 'this_is_just_some_nonexistent_user', // TODO: hackish fallback
@@ -30,7 +39,7 @@ export const OutbidsPage = () => {
 				title="Outbid items"
 				username={bidder}
 				items={data}
-				setUsername={setBidder}
+				setUsername={setWrapper}
 				allowStars={true}
 			/>
 		</>

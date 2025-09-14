@@ -11,7 +11,7 @@ const router = express.Router();
 const client = new OAuth2Client({
 	clientId: process.env.GOOGLE_CLIENT_ID,
 	clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-	redirectUri: "postmessage",
+	redirectUri: process.env.GOOGLE_REDIRECT_URI,
 });
 
 router.post("/google", async (req, res) => {

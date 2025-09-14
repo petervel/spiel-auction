@@ -39,6 +39,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 	const login = useGoogleLogin({
 		flow: 'auth-code', // auth-code flow for backend verification
 		scope: 'openid email profile',
+		redirect_uri: import.meta.env.VITE_GOOGLE_REDIRECT_URI,
 		onSuccess: async (tokenResponse) => {
 			// console.log(
 			// 	'Raw tokenResponse from Google (auth-code):',

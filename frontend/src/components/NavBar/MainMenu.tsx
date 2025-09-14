@@ -10,40 +10,39 @@ import {
 	Checkbox,
 	Divider,
 	ListItemIcon,
-	ListSubheader,
 	Menu,
 	MenuItem,
 	MenuList,
 } from '@mui/material';
-import { NavLink } from 'react-router-dom';
-import { useUser } from '../../hooks/useUser';
-// import SwitchAuctionDialog from './SwitchAuctionDialog';
 import classNames from 'classnames';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import { ColorModeContext } from '../../contexts/ColorModeContext';
+import { useUser } from '../../hooks/useUser';
 import css from './NavBar.module.css';
 
 type MenuProps = {
 	anchorEl: HTMLElement | null;
 	close: () => void;
 };
-const MainMenu = ({ anchorEl, close }: MenuProps) => {
-	// const [switchAuctionOpen, setSwitchAuctionOpen] = useState(false);
-	// const openSwitchAuction = () => {
-	// 	setSwitchAuctionOpen(true);
-	// };
 
+const MainMenu = ({ anchorEl, close }: MenuProps) => {
 	const { mode, toggleDarkMode } = useContext(ColorModeContext);
+	const { user, login, logout } = useUser();
+
+	const [donateAnchorEl, setDonateAnchorEl] = useState<null | HTMLElement>(
+		null
+	);
 
 	const openPaypalPage = () => {
-		const url =
-			'https://www.paypal.com/donate/?hosted_button_id=HVYVSGYNRGT4N';
-		window.open(url, '_blank');
+		window.open(
+			'https://www.paypal.com/donate/?hosted_button_id=HVYVSGYNRGT4N',
+			'_blank'
+		);
 	};
 
 	const openTikkiePage = () => {
-		const url = 'https://tikkie.me/pay/5uobupeobapt08qe2kmu';
-		window.open(url, '_blank');
+		window.open('https://tikkie.me/pay/5uobupeobapt08qe2kmu', '_blank');
 	};
 
 	const closeWith = (func: () => void) => () => {
@@ -51,14 +50,8 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 		func();
 	};
 
-	const { user, login, logout } = useUser();
-
 	return (
 		<>
-			{/* <SwitchAuctionDialog
-				open={switchAuctionOpen}
-				onClose={() => setSwitchAuctionOpen(false)}
-			/> */}
 			<Menu open={Boolean(anchorEl)} anchorEl={anchorEl} onClose={close}>
 				<MenuList className={css.menu}>
 					<MenuItem
@@ -84,15 +77,6 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						Export
 					</MenuItem>
 
-					{/* <MenuItem
-						className={css.menuItem}
-						onClick={closeWith(openSwitchAuction)}
-					>
-						<ListItemIcon>
-							<GavelRounded className={css.menuIcon} />
-						</ListItemIcon>
-						Switch Auction
-					</MenuItem> */}
 					<MenuItem
 						className={classNames(css.menuItem, css.darkModeMenu)}
 						onClick={toggleDarkMode}
@@ -100,7 +84,7 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						<ListItemIcon>
 							<Checkbox
 								sx={{ pl: 0 }}
-								checked={mode == 'dark'}
+								checked={mode === 'dark'}
 								onChange={toggleDarkMode}
 								color="default"
 							/>
@@ -108,6 +92,7 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						Dark mode
 					</MenuItem>
 					<Divider />
+
 					{!user ? (
 						<MenuItem
 							className={css.menuItem}
@@ -129,29 +114,44 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 							Logout
 						</MenuItem>
 					)}
+
 					<Divider />
-					<ListSubheader>Donate</ListSubheader>
+
+					{/* Donate submenu trigger */}
 					<MenuItem
 						className={css.menuItem}
-						onClick={closeWith(openPaypalPage)}
-					>
-						<ListItemIcon>
-							<CardGiftcardRounded className={css.menuIcon} />
-						</ListItemIcon>
-						Paypal
-					</MenuItem>
-					<MenuItem
-						className={css.menuItem}
-						onClick={closeWith(openTikkiePage)}
+						onClick={(e) => setDonateAnchorEl(e.currentTarget)}
 					>
 						<ListItemIcon>
 							<VolunteerActivismRounded
 								className={css.menuIcon}
 							/>
 						</ListItemIcon>
-						Tikkie
+						Donate...
 					</MenuItem>
 				</MenuList>
+			</Menu>
+
+			{/* Donate submenu */}
+			<Menu
+				anchorEl={donateAnchorEl}
+				open={Boolean(donateAnchorEl)}
+				onClose={() => setDonateAnchorEl(null)}
+				anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+				transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+			>
+				<MenuItem onClick={closeWith(openPaypalPage)}>
+					<ListItemIcon>
+						<CardGiftcardRounded className={css.menuIcon} />
+					</ListItemIcon>
+					PayPal
+				</MenuItem>
+				<MenuItem onClick={closeWith(openTikkiePage)}>
+					<ListItemIcon>
+						<VolunteerActivismRounded className={css.menuIcon} />
+					</ListItemIcon>
+					Tikkie
+				</MenuItem>
 			</Menu>
 		</>
 	);

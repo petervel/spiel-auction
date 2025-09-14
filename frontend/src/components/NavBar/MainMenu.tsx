@@ -1,4 +1,5 @@
 import {
+	CardGiftcardRounded,
 	LoginRounded,
 	LogoutRounded,
 	Save,
@@ -9,6 +10,7 @@ import {
 	Checkbox,
 	Divider,
 	ListItemIcon,
+	ListSubheader,
 	Menu,
 	MenuItem,
 	MenuList,
@@ -33,9 +35,14 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 
 	const { mode, toggleDarkMode } = useContext(ColorModeContext);
 
-	const openDonatePage = () => {
+	const openPaypalPage = () => {
 		const url =
 			'https://www.paypal.com/donate/?hosted_button_id=HVYVSGYNRGT4N';
+		window.open(url, '_blank');
+	};
+
+	const openTikkiePage = () => {
+		const url = 'https://tikkie.me/pay/5uobupeobapt08qe2kmu';
 		window.open(url, '_blank');
 	};
 
@@ -123,16 +130,26 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						</MenuItem>
 					)}
 					<Divider />
+					<ListSubheader>Donate</ListSubheader>
 					<MenuItem
 						className={css.menuItem}
-						onClick={closeWith(openDonatePage)}
+						onClick={closeWith(openPaypalPage)}
+					>
+						<ListItemIcon>
+							<CardGiftcardRounded className={css.menuIcon} />
+						</ListItemIcon>
+						Paypal
+					</MenuItem>
+					<MenuItem
+						className={css.menuItem}
+						onClick={closeWith(openTikkiePage)}
 					>
 						<ListItemIcon>
 							<VolunteerActivismRounded
 								className={css.menuIcon}
 							/>
 						</ListItemIcon>
-						Donate
+						Tikkie
 					</MenuItem>
 				</MenuList>
 			</Menu>

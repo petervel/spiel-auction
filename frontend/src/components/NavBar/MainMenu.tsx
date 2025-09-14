@@ -47,6 +47,7 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 
 	const closeWith = (func: () => void) => () => {
 		close();
+		setDonateAnchorEl(null);
 		func();
 	};
 

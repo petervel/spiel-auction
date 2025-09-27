@@ -4,7 +4,7 @@ import { useListId } from './useListId';
 
 export type UserDupes = {
 	username: string;
-	maxId: number;
+	latestTimestamp: number;
 	dupes: [
 		{
 			objectName: string;

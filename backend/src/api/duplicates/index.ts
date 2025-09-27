@@ -11,7 +11,7 @@ type UserDupes = Record<
 	string,
 	{
 		username: string;
-		maxId: number;
+		latestTimestamp: number;
 		dupes: [
 			{
 				objectName: string;
@@ -70,12 +70,14 @@ router.get("/:listId", async (req, res) => {
 			},
 		});
 
-		const maxId = Math.max(...items.map((item) => item.id));
+		const latestTimestamp = Math.max(
+			...items.map((item) => item.editTimestamp),
+		);
 
 		if (!result[duplicate.username]) {
 			result[duplicate.username] = {
 				username: duplicate.username,
-				maxId,
+				latestTimestamp,
 				dupes: [{ objectName: duplicate.objectName, items: items }],
 			};
 		} else {
@@ -84,16 +86,19 @@ router.get("/:listId", async (req, res) => {
 			newDupes.push({ objectName: duplicate.objectName, items: items });
 			result[duplicate.username] = {
 				...current,
-				maxId: Math.max(current.maxId, maxId),
+				latestTimestamp: Math.max(
+					current.latestTimestamp,
+					latestTimestamp,
+				),
 				dupes: newDupes,
 			};
 		}
 	}
 
 	res.status(200).json(
-		Object.values(result)
-			.sort((a, b) => b.maxId - a.maxId)
-			.reverse(),
+		Object.values(result).sort(
+			(a, b) => b.latestTimestamp - a.latestTimestamp,
+		),
 	);
 });
 

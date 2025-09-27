@@ -20,7 +20,7 @@
 	font-style: italic;
 }
 
-.deleted {
+a.deleted {
 	text-decoration: line-through;
 	color: var(--color-error);
 }

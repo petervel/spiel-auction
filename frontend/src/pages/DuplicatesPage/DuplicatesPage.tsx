@@ -42,12 +42,6 @@ type UserDuplicatesProps = {
 const UserDuplicates = ({ userDupes }: UserDuplicatesProps) => {
 	const listId = useListId();
 
-	const latestTimestamp = Math.max(
-		...userDupes.dupes.map((dupe) => {
-			return Math.max(...dupe.items.map((item) => item.editTimestamp));
-		})
-	);
-
 	const formatTimestamp = (timestamp: number) =>
 		new Date(1000 * timestamp).toLocaleString();
 
@@ -61,7 +55,7 @@ const UserDuplicates = ({ userDupes }: UserDuplicatesProps) => {
 				{userDupes.username}
 			</a>
 			<span className={css.datetime}>
-				({formatTimestamp(latestTimestamp)})
+				({formatTimestamp(userDupes.latestTimestamp)})
 			</span>
 			<ul>
 				{userDupes.dupes.map((userDupe) => {
@@ -81,13 +75,14 @@ const UserDuplicates = ({ userDupes }: UserDuplicatesProps) => {
 												href={`https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`}
 												target="_blank"
 												className={classNames({
-													deleted: item.deleted,
+													[css.deleted]: item.deleted,
 												})}
 											>
 												<span className={css.auctionId}>
 													{item.id}
 												</span>
 												<span className={css.datetime}>
+													edited:{' '}
 													{formatTimestamp(
 														item.editTimestamp
 													)}

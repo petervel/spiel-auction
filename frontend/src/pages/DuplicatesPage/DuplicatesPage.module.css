@@ -19,3 +19,8 @@
 .auctionId {
 	font-style: italic;
 }
+
+.deleted {
+	text-decoration: line-through;
+	color: var(--color-error);
+}

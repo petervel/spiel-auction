@@ -42,7 +42,7 @@ router.get("/:listId", async (req, res) => {
 		by: ["listId", "username", "objectId", "objectName"],
 		where: {
 			listId,
-			deleted: false,
+			// deleted: false,
 			NOT: {
 				objectId: 23953, // Outside scope of BGG
 			},
@@ -66,7 +66,7 @@ router.get("/:listId", async (req, res) => {
 				listId: duplicate.listId,
 				username: duplicate.username,
 				objectId: duplicate.objectId,
-				deleted: false,
+				// deleted: false,
 			},
 		});
 
@@ -92,7 +92,7 @@ router.get("/:listId", async (req, res) => {
 
 	res.status(200).json(
 		Object.values(result)
-			.sort((userDupe) => userDupe.maxId)
+			.sort((a, b) => b.maxId - a.maxId)
 			.reverse(),
 	);
 });

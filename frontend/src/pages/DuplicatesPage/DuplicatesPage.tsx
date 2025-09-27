@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { TabBar } from '../../components/TabBar/TabBar';
@@ -79,6 +80,9 @@ const UserDuplicates = ({ userDupes }: UserDuplicatesProps) => {
 											<a
 												href={`https://boardgamegeek.com/geeklist/${listId}?itemid=${item.id}`}
 												target="_blank"
+												className={classNames({
+													deleted: item.deleted,
+												})}
 											>
 												<span className={css.auctionId}>
 													{item.id}

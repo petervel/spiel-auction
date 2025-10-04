@@ -1,22 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import useLocalStorage from './useLocalStorage';
 import { useUser } from './useUser';
 
 export const useBggUsername = (pathOverride?: string) => {
 	const { user, setUser, isLoading } = useUser();
+
 	const [bggUsernameLS, setBggUsernameLS] = useLocalStorage<
 		string | undefined
 	>('bgg_username', undefined);
 
+	// local state for the logged-in user's BGG username (from user or LS)
 	const [bggUsername, setBggUsernameState] = useState<string | undefined>(
-		pathOverride
+		undefined
 	);
+
 	const [saving, setSaving] = useState(false);
 
-	// Sync state with UserContext or localStorage
+	// Always sync the local bggUsername from the user context or localStorage
+	// (don't early-return on pathOverride — we want the logged-in username available)
 	useEffect(() => {
-		if (pathOverride) return;
-
 		if (isLoading) return;
 
 		if (user?.bggUsername) {
@@ -27,57 +29,67 @@ export const useBggUsername = (pathOverride?: string) => {
 		} else {
 			setBggUsernameState(bggUsernameLS);
 		}
-	}, [user?.bggUsername, bggUsernameLS, setBggUsernameLS, isLoading]);
+	}, [isLoading, user?.bggUsername, bggUsernameLS, setBggUsernameLS]);
 
-	const setBggUsername = async (username: string | undefined) => {
-		if (!username) {
-			await removeBggUsername()
-			return;
-		}
-		if (!pathOverride) setBggUsernameState(username);
-		setBggUsernameLS(username);
+	// activeName is the username we're currently viewing: pathOverride (URL) wins,
+	// otherwise fall back to the logged-in user's username.
+	const activeName = useMemo(
+		() => pathOverride ?? bggUsername,
+		[pathOverride, bggUsername]
+	);
 
-		if (!user) return;
+	// isOwnName should compare the active page to the *logged-in user's* username
+	// (not the hook's temp state that can be affected by pathOverride)
+	const isOwnName = useMemo(
+		() => Boolean(user?.bggUsername && activeName === user.bggUsername),
+		[user?.bggUsername, activeName]
+	);
 
-		setSaving(true);
-		try {
-			const res = await fetch('/api/user/bggUsername', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify({ bggUsername: username }),
-			});
-			if (!res.ok) throw new Error('Failed to update BGG username');
+	// Save or remove the username. We optimistically update local state + LS,
+	// and then call the server if the user exists.
+	const updateBggUsername = useCallback(
+		async (username?: string) => {
+			// optimistic local update
+			setBggUsernameState(username);
+			setBggUsernameLS(username);
 
-			setUser({ ...user, bggUsername: username });
-		} catch (err) {
-			console.error(err);
-		} finally {
-			setSaving(false);
-		}
+			// if there's no logged-in user, we just persist locally
+			if (!user) return;
+
+			setSaving(true);
+			try {
+				const method = username ? 'POST' : 'DELETE';
+				const res = await fetch('/api/user/bggUsername', {
+					method,
+					headers: username
+						? { 'Content-Type': 'application/json' }
+						: undefined,
+					credentials: 'include',
+					body: username
+						? JSON.stringify({ bggUsername: username })
+						: undefined,
+				});
+
+				if (!res.ok) throw new Error('Failed to update BGG username');
+
+				// update user in context with the new value
+				setUser({ ...user, bggUsername: username });
+			} catch (err) {
+				console.error(err);
+				// optionally: revert optimistic changes here (e.g. setBggUsernameState(prev))
+			} finally {
+				setSaving(false);
+			}
+		},
+		[user, setUser, setBggUsernameLS]
+	);
+
+	return {
+		activeName, // the username this page is showing (path or user)
+		bggUsername, // logged-in user's username (from user or localStorage)
+		setBggUsername: updateBggUsername, // function to save/update username
+		removeBggUsername: () => updateBggUsername(undefined),
+		saving,
+		isOwnName,
 	};
-
-	const removeBggUsername = async () => {
-		setBggUsernameState(undefined);
-		setBggUsernameLS(undefined);
-
-		if (!user) return;
-
-		setSaving(true);
-		try {
-			const res = await fetch('/api/user/bggUsername', {
-				method: 'DELETE',
-				credentials: 'include',
-			});
-			if (!res.ok) throw new Error('Failed to remove BGG username');
-
-			setUser({ ...user, bggUsername: undefined });
-		} catch (err) {
-			console.error(err);
-		} finally {
-			setSaving(false);
-		}
-	};
-
-	return { bggUsername, setBggUsername, saving, removeBggUsername };
 };

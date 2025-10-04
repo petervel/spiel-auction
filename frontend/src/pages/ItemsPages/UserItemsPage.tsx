@@ -1,8 +1,8 @@
-import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ItemsPage } from "./ItemsPage";
-import { useBggUsername } from "../../hooks/useBggUsername";
-import { Spinner } from "../../components/Spinner/Spinner";
+import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ItemsPage } from './ItemsPage';
+import { useBggUsername } from '../../hooks/useBggUsername';
+import { Spinner } from '../../components/Spinner/Spinner';
 
 interface UserItemsPageProps<TParams, TData> {
 	title: string;
@@ -24,7 +24,8 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 	extraProps,
 }: UserItemsPageProps<TParams, TData>) => {
 	const { username: pathUsername } = useParams();
-	const { bggUsername, setBggUsername } = useBggUsername(pathUsername);
+	const { bggUsername, setBggUsername, isOwnName, activeName } =
+		useBggUsername(pathUsername);
 
 	const navigate = useNavigate();
 	useEffect(() => {
@@ -33,22 +34,20 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 		}
 	}, [pathUsername, bggUsername]);
 
-	const params = bggUsername ? paramMapper(bggUsername) : ({} as TParams);
+	const params = activeName ? paramMapper(activeName) : ({} as TParams);
 	const { data, error, isLoading } = hook(params);
 
 	if (isLoading) return <Spinner />;
 	if (!data) return null;
 	if (error) return <div>Error: {(error as Error).message}</div>;
 
-	const isOwnPage = bggUsername === pathUsername;
-
 	return (
 		<ItemsPage
 			title={title}
-			username={bggUsername}
+			username={activeName}
 			items={data.items}
 			setUsername={setBggUsername}
-			subTitle={formatSubtitle?.(data, isOwnPage)}
+			subTitle={formatSubtitle?.(data, isOwnName)}
 			{...extraProps}
 		/>
 	);

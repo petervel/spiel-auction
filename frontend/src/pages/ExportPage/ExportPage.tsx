@@ -27,7 +27,8 @@ export const ExportPage = () => {
 	});
 
 	if (buyingLoading || sellingLoading) return <Spinner />;
-
+	if (!buyingData) return null;
+	if (!sellingData) return null;
 	if (buyingError || sellingError) {
 		const typedError = (buyingError ?? sellingError) as Error;
 		return <div>Error: {typedError.message}</div>;

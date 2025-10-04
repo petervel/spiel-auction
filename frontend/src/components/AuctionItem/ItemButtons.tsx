@@ -20,6 +20,15 @@ interface ItemButtonsProps {
 	bookmarkClass?: string;
 }
 
+type ButtonConfig = {
+	key: string;
+	content: React.ReactNode;
+	link?: string | (() => void);
+	onClick?: () => void;
+	newTab?: boolean;
+	tooltip?: string;
+};
+
 export const ItemButtons = ({
 	item,
 	showCompare,
@@ -32,15 +41,18 @@ export const ItemButtons = ({
 	const iconSize = 30;
 
 	const toggleStar = (itemId: number) => {
-		if (!starred) return; // still loading
+		if (!starred) return;
 		isStarred(itemId) ? unstarItem(itemId) : starItem(itemId);
 	};
 
-	const buttons = [
+	const buttons: ButtonConfig[] = [
 		showStar && {
 			key: 'star',
-			content: isStarred(item.id) ? <StarRounded className="icon" sx={{ fontSize: iconSize }} /> 
-				: <StarOutlineRounded className="icon" sx={{ fontSize: iconSize }} />,
+			content: isStarred(item.id) ? (
+				<StarRounded className="icon" sx={{ fontSize: iconSize }} />
+			) : (
+				<StarOutlineRounded className="icon" sx={{ fontSize: iconSize }} />
+			),
 			onClick: () => toggleStar(item.id),
 			tooltip: 'Add to starred items',
 		},
@@ -57,14 +69,7 @@ export const ItemButtons = ({
 			newTab: true,
 			tooltip: 'Look up on BGG',
 		},
-	].filter(Boolean) as Array<{
-		key: string;
-		content: React.ReactNode;
-		link?: string | (() => void);
-		onClick?: () => void;
-		newTab?: boolean;
-		tooltip?: string;
-	}>;
+	].filter(Boolean) as ButtonConfig[];
 
 	return (
 		<Stack direction="row">

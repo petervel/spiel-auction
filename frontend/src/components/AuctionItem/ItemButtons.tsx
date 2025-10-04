@@ -29,66 +29,62 @@ export const ItemButtons = ({
 	bookmarkClass = '',
 }: ItemButtonsProps) => {
 	const { starItem, unstarItem, starred, isStarred } = useStarred();
+	const iconSize = 30;
 
 	const toggleStar = (itemId: number) => {
 		if (!starred) return; // still loading
-
-		if (isStarred(itemId)) {
-			unstarItem(itemId);
-		} else {
-			starItem(itemId);
-		}
+		isStarred(itemId) ? unstarItem(itemId) : starItem(itemId);
 	};
+
+	const buttons = [
+		showStar && {
+			key: 'star',
+			content: isStarred(item.id) ? <StarRounded className="icon" sx={{ fontSize: iconSize }} /> 
+				: <StarOutlineRounded className="icon" sx={{ fontSize: iconSize }} />,
+			onClick: () => toggleStar(item.id),
+			tooltip: 'Add to starred items',
+		},
+		showCompare && {
+			key: 'compare',
+			content: <BarChartRounded className="icon" sx={{ fontSize: iconSize }} />,
+			link: `/object/${item.objectId}`,
+			tooltip: 'Compare with other auctions',
+		},
+		{
+			key: 'bgg',
+			content: <img src={bggIcon} width={iconSize} height={iconSize} />,
+			link: `https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`,
+			newTab: true,
+			tooltip: 'Look up on BGG',
+		},
+	].filter(Boolean) as Array<{
+		key: string;
+		content: React.ReactNode;
+		link?: string | (() => void);
+		onClick?: () => void;
+		newTab?: boolean;
+		tooltip?: string;
+	}>;
 
 	return (
 		<Stack direction="row">
-			<div className={css.bookmark}>
-				{allowBookmarks && location == 'list' && (
-					<BookmarkButton
-						itemId={item.id}
-						className={bookmarkClass}
-					/>
-				)}
-			</div>
-			<div
-				className={location == 'list' ? css.bigScreen : css.smallScreen}
-			>
-				{showStar && (
+			{allowBookmarks && location === 'list' && (
+				<div className={css.bookmark}>
+					<BookmarkButton itemId={item.id} className={bookmarkClass} />
+				</div>
+			)}
+
+			<div className={location === 'list' ? css.bigScreen : css.smallScreen}>
+				{buttons.map((btn) => (
 					<AuctionItemButton
-						link={() => toggleStar(item.id)}
-						tooltip="Add to starred items"
+						key={btn.key}
+						link={btn.link || btn.onClick!}
+						newTab={btn.newTab}
+						tooltip={btn.tooltip}
 					>
-						{isStarred(item.id) ? (
-							<StarRounded
-								className="icon"
-								sx={{ fontSize: '30px' }}
-							/>
-						) : (
-							<StarOutlineRounded
-								className="icon"
-								sx={{ fontSize: '30px' }}
-							/>
-						)}
+						{btn.content}
 					</AuctionItemButton>
-				)}
-				{showCompare && (
-					<AuctionItemButton
-						link={`/object/${item.objectId}`}
-						tooltip="Compare with other auctions"
-					>
-						<BarChartRounded
-							className="icon"
-							sx={{ fontSize: '30px' }}
-						/>
-					</AuctionItemButton>
-				)}
-				<AuctionItemButton
-					link={`https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`}
-					newTab
-					tooltip="Look up on BGG"
-				>
-					<img src={bggIcon} width="30" height="30" />
-				</AuctionItemButton>
+				))}
 			</div>
 		</Stack>
 	);

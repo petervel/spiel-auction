@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BidAmount } from '../../components/BidAmount/BidAmount';
 import { Spinner } from '../../components/Spinner/Spinner';
-import { TabBar } from '../../components/TabBar/TabBar';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
 import { Item } from '../../model/Item';
@@ -28,22 +27,19 @@ export const SellingPage = () => {
 	const soldCount = data.items.filter((item: Item) => item.hasBids).length;
 
 	return (
-		<>
-			<TabBar />
-			<ItemsPage
-				title="Selling"
-				username={seller}
-				items={data.items}
-				setUsername={setSeller}
-				subTitle={
-					bggUsername == pathUsername && (
-						<BidAmount
-							amount={data.totalPrice}
-							extraText={` (${soldCount} of ${data.items.length} sold)`}
-						/>
-					)
-				}
-			/>
-		</>
+		<ItemsPage
+			title="Selling"
+			username={seller}
+			items={data.items}
+			setUsername={setSeller}
+			subTitle={
+				bggUsername == pathUsername && (
+					<BidAmount
+						amount={data.totalPrice}
+						extraText={` (${soldCount} of ${data.items.length} sold)`}
+					/>
+				)
+			}
+		/>
 	);
 };

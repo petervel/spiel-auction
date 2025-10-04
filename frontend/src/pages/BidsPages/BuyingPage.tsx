@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BidAmount } from '../../components/BidAmount/BidAmount';
 import { Spinner } from '../../components/Spinner/Spinner';
-import { TabBar } from '../../components/TabBar/TabBar';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
 import { ItemsPage } from './ItemsPage';
@@ -26,7 +25,6 @@ export const BuyingPage = () => {
 
 	return (
 		<>
-			<TabBar />
 			<ItemsPage
 				title="Buying"
 				username={buyer}

@@ -3,12 +3,12 @@ import {
 	Sell,
 	ShoppingBasket,
 	StarRounded,
-	WatchLaterRounded,
+	WatchLaterRounded
 } from '@mui/icons-material';
 import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
-import { MouseEvent, ReactNode } from 'react';
-import { useNavigate } from 'react-router';
+import { ReactNode } from 'react';
+import { Link } from 'react-router';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { usePageId } from '../../hooks/usePageId';
 import { useUser } from '../../hooks/useUser';
@@ -37,6 +37,7 @@ export const TabBar = () => {
 		// {
 		// 	id: 'search',
 		// 	label: 'Search',
+		// 	disabled: true,
 		// 	renderIcon: () => <Search />,
 		// 	url: `/search`,
 		// },
@@ -58,31 +59,20 @@ export const TabBar = () => {
 			renderIcon: () => <HeartBroken />,
 			url: `/outbids${bggUsername ? `/${bggUsername}` : ''}`,
 		},
-	];
-
-	// console.log({ user });
-	if (user) {
-		pages.push({
+		{
 			id: 'starred',
 			label: 'Starred',
+			disabled: !user,
 			renderIcon: () => <StarRounded />,
 			url: `/starred`,
-		});
-		// console.log({ pages });
-	}
-
-	const navigate = useNavigate();
-	const gotoPage = (evt: MouseEvent, url: string) => {
-		navigate(url);
-		evt.preventDefault();
-	};
+		},
+	];
 
 	return (
 		<Stack
 			direction="row"
-			spacing={2}
-			marginTop={3}
-			marginBottom={3}
+			spacing={1}
+			marginBlock={3}
 			justifyContent="center"
 		>
 			{pages.map((pageData) => {
@@ -97,20 +87,20 @@ export const TabBar = () => {
 						</Stack>
 					</Button>
 				) : (
-					<Button
-						key={pageData.id}
-						className={classNames(
-							css.button,
-							pageData.id == pageId ? css.active : ''
-						)}
-						aria-label={pageData.label}
-						href={pageData.url}
-						onClick={(evt) => gotoPage(evt, pageData.url)}
-					>
-						<Stack alignItems="center" gap={1} padding={1}>
-							{pageData.renderIcon()}
-						</Stack>
-					</Button>
+					<Link to={pageData.url}>
+						<Button
+							key={pageData.id}
+							className={classNames(
+								css.button,
+								pageData.id == pageId ? css.active : ''
+							)}
+							aria-label={pageData.label}
+						>
+							<Stack alignItems="center" gap={1} padding={1}>
+								{pageData.renderIcon()}
+							</Stack>
+						</Button>
+					</Link>
 				);
 			})}
 		</Stack>

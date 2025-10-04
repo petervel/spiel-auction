@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Spinner } from '../../components/Spinner/Spinner';
-import { TabBar } from '../../components/TabBar/TabBar';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useOutbids } from '../../hooks/useOutbids';
 import { ItemsPage } from './ItemsPage';
@@ -33,15 +32,12 @@ export const OutbidsPage = () => {
 	}
 
 	return (
-		<>
-			<TabBar />
-			<ItemsPage
-				title="Outbid items"
-				username={bidder}
-				items={data}
-				setUsername={setWrapper}
-				allowStars={true}
-			/>
-		</>
+		<ItemsPage
+			title="Outbid items"
+			username={bidder}
+			items={data}
+			setUsername={setWrapper}
+			allowStars={true}
+		/>
 	);
 };

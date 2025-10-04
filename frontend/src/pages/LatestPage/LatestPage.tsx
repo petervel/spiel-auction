@@ -4,7 +4,6 @@ import { Container } from '../../components/Container/Container';
 import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { LoadMore } from '../../components/LoadMore/LoadMore';
 import { Spinner } from '../../components/Spinner/Spinner';
-import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useInfiniteItems } from '../../hooks/useInfiniteItems';
 import { Item } from '../../model/Item';
@@ -53,7 +52,6 @@ export const LatestPage = () => {
 
 	return (
 		<>
-			<TabBar />
 			<Container>
 				<Title
 					title={title}

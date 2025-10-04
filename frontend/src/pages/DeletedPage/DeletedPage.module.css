@@ -19,3 +19,11 @@
 .auctionId {
 	font-style: italic;
 }
+
+.internalLink {
+	display: block;
+	text-align:center;
+	padding: 20px;
+	font-style: italic;
+	text-transform: lowercase;
+}

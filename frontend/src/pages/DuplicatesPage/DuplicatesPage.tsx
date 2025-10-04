@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
-import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { UserDupes, useDuplicates } from '../../hooks/useDuplicates';
 import { useListId } from '../../hooks/useListId';
@@ -22,17 +21,14 @@ export const DuplicatesPage = () => {
 	}
 
 	return (
-		<>
-			<TabBar />
-			<Container>
-				<Title title="Duplicates" />
-				<ul>
-					{items.map((userDupes) => (
-						<UserDuplicates userDupes={userDupes} />
-					))}
-				</ul>
-			</Container>
-		</>
+		<Container>
+			<Title title="Duplicates" />
+			<ul>
+				{items.map((userDupes) => (
+					<UserDuplicates userDupes={userDupes} />
+				))}
+			</ul>
+		</Container>
 	);
 };
 

@@ -1,6 +1,5 @@
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
-import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useDeleted } from '../../hooks/useDeleted';
 import { useListId } from '../../hooks/useListId';
@@ -24,7 +23,7 @@ export const DeletedPage = () => {
 
 	return (
 		<>
-			<TabBar />
+			<a id="items" href="#comments" className={css.internalLink}>go to deleted comments instead?</a>
 			<Container>
 				<Title title="Deleted items" />
 				<ul>
@@ -47,6 +46,7 @@ export const DeletedPage = () => {
 				</ul>
 			</Container>
 
+			<a id="comments" href="#items" className={css.internalLink}>go to deleted items instead?</a>
 			<Container>
 				<Title title="Deleted comments" />
 				<ul>

@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { Container } from '../../components/Container/Container';
 import { LoadMore } from '../../components/LoadMore/LoadMore';
 import { Spinner } from '../../components/Spinner/Spinner';
-import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { BggObject, useInfiniteObjects } from '../../hooks/useInfiniteObjects';
 import SearchResults from './SearchResults';
@@ -48,7 +47,6 @@ export const SearchPage = () => {
 
 	return (
 		<>
-			<TabBar />
 			<Container>
 				<Title title={title} />
 				<SearchResults data={objects} search={filters.search} />

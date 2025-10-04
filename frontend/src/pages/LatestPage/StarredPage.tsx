@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { Container } from '../../components/Container/Container';
 import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Spinner } from '../../components/Spinner/Spinner';
-import { TabBar } from '../../components/TabBar/TabBar';
 import { Title } from '../../components/Title/Title';
 import { useStarred } from '../../hooks/useStarred';
 import { useUser } from '../../hooks/useUser';
@@ -40,47 +39,40 @@ export const StarredPage = () => {
 	const sortedItems = sortItems(items, sorting);
 
 	return (
-		<>
-			<TabBar />
+		<Container>
+			<Title
+				title="Starred items"
+				right={<SortToggle toggleSort={toggleSort} />}
+			/>
 
-			<Container>
-				<Title
-					title="Starred items"
-					right={<SortToggle toggleSort={toggleSort} />}
-				/>
-
-				<>
-					{showSort && (
-						<Stack direction="row" justifyContent="center">
-							<Stack
-								direction="row"
-								justifyContent="space-around"
-								my={2}
-								gap={5}
-							>
-								{SORT_BUTTONS.map((button) => (
-									<div
-										key={button.setting}
-										className={classNames({
-											[css.button]: true,
-											[css.active]:
-												button.setting == sorting,
-										})}
-										onClick={() =>
-											setSorting(button.setting)
-										}
-									>
-										{button.icon}
-									</div>
-								))}
-							</Stack>
+			<>
+				{showSort && (
+					<Stack direction="row" justifyContent="center">
+						<Stack
+							direction="row"
+							justifyContent="space-around"
+							my={2}
+							gap={5}
+						>
+							{SORT_BUTTONS.map((button) => (
+								<div
+									key={button.setting}
+									className={classNames({
+										[css.button]: true,
+										[css.active]: button.setting == sorting,
+									})}
+									onClick={() => setSorting(button.setting)}
+								>
+									{button.icon}
+								</div>
+							))}
 						</Stack>
-					)}
+					</Stack>
+				)}
 
-					<ItemsList items={sortedItems} allowStars={true} />
-				</>
-			</Container>
-		</>
+				<ItemsList items={sortedItems} allowStars={true} />
+			</>
+		</Container>
 	);
 };
 

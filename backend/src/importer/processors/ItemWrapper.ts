@@ -103,6 +103,17 @@ export class ItemWrapper {
 					/(?:\[b\])?\s*title(?:\[\/b\])?\s*:\s*(?:\[[^\]]*])*([^[\n]*)/i,
 				) ?? null;
 			itemData.objectName = title ?? itemData.objectName;
+		} else {
+			// Bundles
+			const bundle =
+				extractString(
+					source["body"],
+					/(?:\[b\])?\s*bundle?(?:\[\/b\])?\s*:\s*(?:\[[^\]]*])*([^[\n]*)/i,
+				) ?? null;
+
+			if (bundle) {
+				itemData.objectName = `${itemData.objectName} (bundle)`;
+			}
 		}
 		return new ItemWrapper(itemData, commentData);
 	}

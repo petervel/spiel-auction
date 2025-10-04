@@ -29,6 +29,7 @@ export const NavBar = () => {
 						variant="h5"
 						component="h1"
 						className={css.title}
+						onClick={() => (location.href = '/')}
 					>
 						Spiel Auction
 					</Typography>

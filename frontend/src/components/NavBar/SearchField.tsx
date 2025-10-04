@@ -1,5 +1,4 @@
-import { Input, Stack } from '@mui/material';
-import classNames from 'classnames';
+import { Input } from '@mui/material';
 import { useState } from 'react';
 import { createSearchParams, useNavigate } from 'react-router-dom';
 import css from './SearchField.module.css';
@@ -20,23 +19,17 @@ const SearchField = () => {
 	};
 
 	return (
-		<Stack flex={1} direction="row">
-			{
-				<Input
-					autoFocus={true}
-					className={classNames({
-						[css.searchBox]: true,
-					})}
-					value={search}
-					onChange={(event) => setSearch(event.target.value)}
-					onKeyUp={(event) => {
-						if (event.key === 'Enter') {
-							handleSearch();
-						}
-					}}
-				/>
-			}
-		</Stack>
+		<Input
+			autoFocus={true}
+			className={css.searchBox}
+			value={search}
+			onChange={(event) => setSearch(event.target.value)}
+			onKeyUp={(event) => {
+				if (event.key === 'Enter') {
+					handleSearch();
+				}
+			}}
+		/>
 	);
 };
 

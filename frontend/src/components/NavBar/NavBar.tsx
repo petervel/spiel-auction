@@ -4,10 +4,10 @@ import Stack from '@mui/material/Stack';
 import classNames from 'classnames';
 import { MouseEvent, useState } from 'react';
 import RandomIcon from '../RandomIcon/RandomIcon';
-import DarkModeToggle from './DarkModeToggle';
 import MainMenu from './MainMenu';
 import css from './NavBar.module.css';
 import SearchField from './SearchField';
+import { Link } from 'react-router-dom';
 
 export const NavBar = () => {
 	const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -17,23 +17,26 @@ export const NavBar = () => {
 	const [showSearch, setSearch] = useState(false);
 
 	return (
-		<Stack padding={3} direction="row" className={css.navbar}>
+		<Stack direction="row" className={css.navbar}>
 			<Stack
 				className={classNames('content-max-width', css.content)}
-				spacing={1}
 				direction="row"
 			>
-				<RandomIcon onClick={() => (location.href = '/')} />
-				{!showSearch && (
-					<Typography
-						variant="h5"
-						component="h1"
-						className={css.title}
-						onClick={() => (location.href = '/')}
-					>
-						Spiel Auction
-					</Typography>
-				)}
+				<Link to="/" className={css.headerLink}>
+					<Stack direction="row" spacing={1} className={css.titleContainer}>
+						<RandomIcon />
+						{!showSearch && (
+							<Typography
+								variant="h5"
+								component="h1"
+								className={css.title}
+							>
+								Spiel Auction
+							</Typography>
+						)}
+					</Stack>
+				</Link>
+				
 				{showSearch && <SearchField />}
 				<IconButton
 					sx={{
@@ -46,7 +49,6 @@ export const NavBar = () => {
 					<Search />
 				</IconButton>
 
-				<DarkModeToggle className={css.darkMode} />
 				<Button onClick={openMenu}>
 					<MenuRounded />
 				</Button>

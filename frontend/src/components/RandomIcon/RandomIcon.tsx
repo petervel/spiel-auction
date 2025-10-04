@@ -11,16 +11,12 @@ import Icon6 from '../../assets/logo/die-hammer6.svg?react';
 
 const icons = [Icon1, Icon2, Icon3, Icon4, Icon5, Icon6];
 
-type RandomIconProps = {
-	onClick: () => void;
-};
-const RandomIcon = ({ onClick }: RandomIconProps) => {
+const RandomIcon = () => {
 	const selectRandomIcon = () => Math.floor(Math.random() * icons.length);
 	const [icon, setIcon] = useState(selectRandomIcon());
 
 	const click = () => {
 		setIcon(selectRandomIcon());
-		onClick();
 	};
 
 	return (

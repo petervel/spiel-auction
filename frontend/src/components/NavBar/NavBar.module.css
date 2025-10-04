@@ -8,7 +8,7 @@
 		fixed;
 	margin-bottom: 15px;
 	box-shadow: #00000038 0px 6px 10px 0px;
-	padding: 12px 24px !important;
+	padding: 12px 24px;
 }
 
 .navbar button,
@@ -16,33 +16,25 @@
 	color: var(--colour-on-main);
 }
 
+.headerLink {
+	text-decoration: none;
+	display: flex;
+	flex-direction: row;
+}
+
 .navbar button svg {
 	font-size: 30px;
 }
 
-.navbar .title {
+.title {
 	display: flex;
 	align-items: center;
 	color: var(--colour-on-main);
 	flex: 1;
-	cursor: pointer;
 }
 
-.navbar .content {
+.content {
 	display: flex;
 	align-content: center;
 	justify-content: center;
-}
-
-.darkMode {
-	display: none !important;
-}
-
-@media only screen and (min-width: 768px) {
-	/* .darkMode {
-		display: flex !important;
-	} */
-	/* .darkModeMenu {
-		display: none !important;
-	} */
 }

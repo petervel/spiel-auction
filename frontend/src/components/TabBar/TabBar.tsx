@@ -73,6 +73,7 @@ export const TabBar = () => {
 			direction="row"
 			spacing={1}
 			marginBlock={3}
+			marginBottom={3}
 			justifyContent="center"
 		>
 			{pages.map((pageData) => {
@@ -87,9 +88,8 @@ export const TabBar = () => {
 						</Stack>
 					</Button>
 				) : (
-					<Link to={pageData.url}>
+					<Link to={pageData.url} key={pageData.id}>
 						<Button
-							key={pageData.id}
 							className={classNames(
 								css.button,
 								pageData.id == pageId ? css.active : ''

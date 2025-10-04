@@ -39,7 +39,7 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 
 	// console.log("Found starred items:", starredItems.length);
 
-	const result = starredItems.map((star) => star.item);
+	const result = { items: starredItems.map((star) => star.item) };
 
 	// console.log("Returning items:", result.length);
 

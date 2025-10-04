@@ -58,9 +58,11 @@ router.get("/:listId", async (req, res) => {
 
 	// console.log("found outbids:", { items });
 
-	const result = items.filter(
-		(item) => item.highestBidder?.toLowerCase() != bidder.toLowerCase(),
-	);
+	const result = {
+		items: items.filter(
+			(item) => item.highestBidder?.toLowerCase() != bidder.toLowerCase(),
+		),
+	};
 
 	// console.log("filtered:", { result });
 

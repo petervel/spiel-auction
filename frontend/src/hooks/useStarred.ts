@@ -3,7 +3,7 @@ import { Item } from '../model/Item';
 import { useUser } from './useUser';
 
 // 🔹 Fetch all starred items
-const fetchStarred = async (): Promise<Item[]> => {
+const fetchStarred = async (): Promise<{items: Item[]}> => {
 	const response = await fetch('/api/starred', { credentials: 'include' });
 	if (!response.ok) {
 		throw new Error('Failed to fetch starred items');
@@ -36,10 +36,10 @@ export const useStarred = () => {
 	const { user, isLoading } = useUser();
 
 	// Get starred items
-	const starredQuery = useQuery<Item[]>(
+	const starredQuery = useQuery<{items: Item[]} | undefined>(
 		['starred'],
 		async () => {
-			if (!isLoading && !user) return []; // not logged in
+			if (!isLoading && !user) return undefined; // not logged in
 			return await fetchStarred();
 		},
 		{
@@ -62,7 +62,7 @@ export const useStarred = () => {
 	});
 
 	const isStarred = (itemId: number) => {
-		return starredQuery.data?.some((i) => i.id === itemId) ?? false;
+		return starredQuery.data?.items.some((i) => i.id === itemId) ?? false;
 	};
 
 	return {

@@ -2,19 +2,21 @@ import { useEffect, useState } from 'react';
 import useLocalStorage from './useLocalStorage';
 import { useUser } from './useUser';
 
-export const useBggUsername = () => {
+export const useBggUsername = (pathOverride?: string) => {
 	const { user, setUser, isLoading } = useUser();
 	const [bggUsernameLS, setBggUsernameLS] = useLocalStorage<
 		string | undefined
 	>('bgg_username', undefined);
 
 	const [bggUsername, setBggUsernameState] = useState<string | undefined>(
-		undefined
+		pathOverride
 	);
 	const [saving, setSaving] = useState(false);
 
 	// Sync state with UserContext or localStorage
 	useEffect(() => {
+		if (pathOverride) return;
+
 		if (isLoading) return;
 
 		if (user?.bggUsername) {
@@ -28,7 +30,11 @@ export const useBggUsername = () => {
 	}, [user?.bggUsername, bggUsernameLS, setBggUsernameLS, isLoading]);
 
 	const setBggUsername = async (username: string | undefined) => {
-		setBggUsernameState(username);
+		if (!username) {
+			await removeBggUsername()
+			return;
+		}
+		if (!pathOverride) setBggUsernameState(username);
 		setBggUsernameLS(username);
 
 		if (!user) return;

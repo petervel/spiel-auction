@@ -43,7 +43,7 @@ export const BookmarkProvider = ({ children }: { children: ReactNode }) => {
 		clearBookmarkLS();
 		setBookmarkState(0);
 	};
-	console.log('bookmark', bookmark);
+	// console.log('bookmark', bookmark);
 
 	const value: BookmarkContextProps = {
 		bookmark,

@@ -51,14 +51,19 @@ export const ItemButtons = ({
 			content: isStarred(item.id) ? (
 				<StarRounded className="icon" sx={{ fontSize: iconSize }} />
 			) : (
-				<StarOutlineRounded className="icon" sx={{ fontSize: iconSize }} />
+				<StarOutlineRounded
+					className="icon"
+					sx={{ fontSize: iconSize }}
+				/>
 			),
 			onClick: () => toggleStar(item.id),
 			tooltip: 'Add to starred items',
 		},
 		showCompare && {
 			key: 'compare',
-			content: <BarChartRounded className="icon" sx={{ fontSize: iconSize }} />,
+			content: (
+				<BarChartRounded className="icon" sx={{ fontSize: iconSize }} />
+			),
 			link: `/object/${item.objectId}`,
 			tooltip: 'Compare with other auctions',
 		},
@@ -75,11 +80,18 @@ export const ItemButtons = ({
 		<Stack direction="row">
 			{allowBookmarks && location === 'list' && (
 				<div className={css.bookmark}>
-					<BookmarkButton itemId={item.id} className={bookmarkClass} />
+					<BookmarkButton
+						itemId={item.id}
+						className={bookmarkClass}
+					/>
 				</div>
 			)}
 
-			<div className={location === 'list' ? css.bigScreen : css.smallScreen}>
+			<div
+				className={
+					location === 'list' ? css.bigScreen : css.smallScreen
+				}
+			>
 				{buttons.map((btn) => (
 					<AuctionItemButton
 						key={btn.key}

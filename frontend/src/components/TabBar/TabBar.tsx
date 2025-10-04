@@ -3,7 +3,7 @@ import {
 	Sell,
 	ShoppingBasket,
 	StarRounded,
-	WatchLaterRounded
+	WatchLaterRounded,
 } from '@mui/icons-material';
 import { Button, Stack } from '@mui/material';
 import classNames from 'classnames';
@@ -77,29 +77,31 @@ export const TabBar = () => {
 			justifyContent="center"
 		>
 			{pages.map((pageData) => {
-				return pageData.disabled ? (
+				const button = (
 					<Button
 						key={pageData.id}
-						className={classNames(css.button, css.disabled)}
+						className={classNames(css.button, {
+							[css.active]: pageData.id === pageId,
+							[css.disabled]: pageData.disabled,
+						})}
 						aria-label={pageData.label}
+						disabled={pageData.disabled}
 					>
 						<Stack alignItems="center" gap={1} padding={1}>
 							{pageData.renderIcon()}
 						</Stack>
 					</Button>
+				);
+
+				return pageData.disabled ? (
+					button
 				) : (
-					<Link to={pageData.url} key={pageData.id}>
-						<Button
-							className={classNames(
-								css.button,
-								pageData.id == pageId ? css.active : ''
-							)}
-							aria-label={pageData.label}
-						>
-							<Stack alignItems="center" gap={1} padding={1}>
-								{pageData.renderIcon()}
-							</Stack>
-						</Button>
+					<Link
+						to={pageData.url}
+						key={pageData.id}
+						style={{ textDecoration: 'none' }}
+					>
+						{button}
 					</Link>
 				);
 			})}

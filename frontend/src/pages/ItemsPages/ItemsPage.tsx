@@ -30,7 +30,10 @@ export const ItemsPage = ({
 	const [showSort, setShowSort] = useState(false);
 	const toggleSort = () => setShowSort((v) => !v);
 
-	const sortedItems = useMemo(() => sortItems(items, sorting), [items,sorting]);
+	const sortedItems = useMemo(
+		() => sortItems(items, sorting),
+		[items, sorting]
+	);
 
 	return (
 		<>
@@ -43,8 +46,10 @@ export const ItemsPage = ({
 				{username ? (
 					<>
 						{showSort && (
-							<SortButtons sorting={sorting} setSorting={setSorting} />
-
+							<SortButtons
+								sorting={sorting}
+								setSorting={setSorting}
+							/>
 						)}
 
 						<ItemsList

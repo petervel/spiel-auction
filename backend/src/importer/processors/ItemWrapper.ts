@@ -87,13 +87,22 @@ export class ItemWrapper {
 			...unstrikedData,
 		};
 
-		if (itemData.objectName === "Outside the Scope of BGG") {
+		if (itemData.objectId === 23953) {
+			// Outside the Scope of BGG
 			const alternateName = extractString(
 				source["body"],
 				/\[size=\d+\]\[b\]\[color=#[0-9a-f]{6}\](.*?)\[\/color\]\[\/b\]\[\/size\]/i,
 				true,
 			)?.trim();
 			itemData.objectName = alternateName ?? itemData.objectName;
+		} else if (itemData.objectId == 268620) {
+			// Similo
+			const title =
+				extractString(
+					source["body"],
+					/(?:\[b\])?\s*title(?:\[\/b\])?\s*:\s*(?:\[[^\]]*])*([^[\n]*)/i,
+				) ?? null;
+			itemData.objectName = title ?? itemData.objectName;
 		}
 		return new ItemWrapper(itemData, commentData);
 	}

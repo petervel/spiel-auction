@@ -41,8 +41,8 @@ export const useBggUsername = (pathOverride?: string) => {
 	// isOwnName should compare the active page to the *logged-in user's* username
 	// (not the hook's temp state that can be affected by pathOverride)
 	const isOwnName = useMemo(
-		() => Boolean(user?.bggUsername && activeName === user.bggUsername),
-		[user?.bggUsername, activeName]
+		() => Boolean(bggUsername && activeName === bggUsername),
+		[bggUsername, activeName]
 	);
 
 	// Save or remove the username. We optimistically update local state + LS,

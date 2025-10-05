@@ -11,6 +11,11 @@ import {
 } from "../util/helpers";
 import { ItemCommentWrapper } from "./ItemCommentWrapper";
 
+// Let users specify a more specific "Title: <my_title>" for these
+const GENERIC_ENTRIES = [
+	268620, // Similo
+];
+
 export class ItemWrapper {
 	private dbObject: Item;
 	private comments: ItemCommentWrapper[];
@@ -87,6 +92,19 @@ export class ItemWrapper {
 			...unstrikedData,
 		};
 
+		const stripped = removeStrikethrough(source["body"]);
+		itemData.isSold =
+			!!itemData.highestBidder &&
+			itemData.currentBid == itemData.binPrice;
+
+		itemData.isEnded =
+			itemData.isSold ||
+			(stripped.length < 150 &&
+				(stripped.length == 0 ||
+					source["body"].length / stripped.length > 4)) ||
+			(!!itemData.auctionEndDate &&
+				itemData.auctionEndDate < formatTimeToDate());
+
 		if (itemData.objectId === 23953) {
 			// Outside the Scope of BGG
 			const alternateName = extractString(
@@ -95,8 +113,8 @@ export class ItemWrapper {
 				true,
 			)?.trim();
 			itemData.objectName = alternateName ?? itemData.objectName;
-		} else if (itemData.objectId == 268620) {
-			// Similo
+		} else if (GENERIC_ENTRIES.includes(itemData.objectId)) {
+			// Similo etc
 			const title =
 				extractString(
 					source["body"],
@@ -193,18 +211,7 @@ export class ItemWrapper {
 		const { highestBid, highestBidder } =
 			ItemCommentWrapper.getHighestBid(commentsData);
 
-		const isSold = !!highestBidder && highestBid == binPrice;
-
 		const hasBids = !!highestBidder;
-
-		const stripped = removeStrikethrough(text);
-
-		let isEnded =
-			isSold ||
-			(stripped.length < 150 &&
-				(stripped.length == 0 ||
-					originalText.length / stripped.length > 4)) ||
-			(!!auctionEndDate && auctionEndDate < formatTimeToDate());
 
 		const currentBid =
 			highestBid ??
@@ -225,8 +232,6 @@ export class ItemWrapper {
 			auctionEndDate,
 			highestBidder,
 			hasBids,
-			isSold,
-			isEnded,
 			currentBid,
 			itemType,
 		});

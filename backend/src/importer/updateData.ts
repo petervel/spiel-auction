@@ -16,7 +16,7 @@ export const updateData = async () => {
 			status: FairStatus.ACTIVE,
 			OR: [
 				{ lastResult: { not: JobResult.RUNNING } },
-				{ startedAt: { lt: now - 10 * 60 } },
+				{ startedAt: { lt: now - 10 * 60 } }, // 10 minutes
 			],
 			lastUpdated: { lt: now - 60 },
 		},

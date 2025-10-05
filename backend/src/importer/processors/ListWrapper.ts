@@ -6,7 +6,7 @@ import { ok } from "../util/result";
 import { ItemWrapper } from "./ItemWrapper";
 import { ListCommentWrapper } from "./ListCommentWrapper";
 
-const BATCH_SIZE = 1000;
+const BATCH_SIZE = 5000;
 
 export class ListWrapper {
 	private dbObject: List;
@@ -91,6 +91,7 @@ export class ListWrapper {
 		while (offset < upserts.length) {
 			const batch = upserts.slice(offset, offset + BATCH_SIZE);
 			await queryWithTimeout(() => prisma.$transaction(batch), 30000); // 30s timeout
+			console.log(`Batch ${offset}-${offset + BATCH_SIZE} done.`);
 			offset += BATCH_SIZE;
 		}
 

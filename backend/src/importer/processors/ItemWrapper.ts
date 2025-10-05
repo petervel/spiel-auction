@@ -99,7 +99,7 @@ export class ItemWrapper {
 
 		itemData.isEnded =
 			itemData.isSold ||
-			(stripped.length < 150 &&
+			(stripped.length < 200 &&
 				(stripped.length == 0 ||
 					source["body"].length / stripped.length > 4)) ||
 			(!!itemData.auctionEndDate &&

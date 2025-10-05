@@ -6,7 +6,7 @@ import { ok } from "../util/result";
 import { ItemWrapper } from "./ItemWrapper";
 import { ListCommentWrapper } from "./ListCommentWrapper";
 
-const BATCH_SIZE = 5000;
+const BATCH_SIZE = 1000;
 
 export class ListWrapper {
 	private dbObject: List;

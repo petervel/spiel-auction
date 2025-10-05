@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ItemsPage } from './ItemsPage';
-import { useBggUsername } from '../../hooks/useBggUsername';
 import { Spinner } from '../../components/Spinner/Spinner';
+import { useBggUsername } from '../../hooks/useBggUsername';
+import { EditBggUserName } from './EditBggUserName';
+import { ItemsPage } from './ItemsPage';
 
 interface UserItemsPageProps<TParams, TData> {
 	title: string;
@@ -38,15 +39,13 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 	const { data, error, isLoading } = hook(params);
 
 	if (isLoading) return <Spinner />;
-	if (!data) return null;
+	if (!data) return <EditBggUserName onSave={setBggUsername} />;
 	if (error) return <div>Error: {(error as Error).message}</div>;
 
 	return (
 		<ItemsPage
 			title={title}
-			username={activeName}
 			items={data.items}
-			setUsername={setBggUsername}
 			subTitle={formatSubtitle?.(data, isOwnName)}
 			{...extraProps}
 		/>

@@ -4,25 +4,20 @@ import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Title } from '../../components/Title/Title';
 import { Item } from '../../model/Item';
 import { SORTING, sortItems } from '../../util';
-import { EditBggUserName } from './EditBggUserName';
-import SortToggle from './SortToggle';
 import { SortButtons } from './SortButtons';
+import SortToggle from './SortToggle';
 
 type ItemsPageProps = {
 	title: string;
-	username?: string;
 	items: Item[];
 	subTitle?: ReactNode;
-	setUsername: (_: string | undefined) => void;
 	allowStars?: boolean;
 };
 
 export const ItemsPage = ({
 	title,
-	username,
 	items,
 	subTitle,
-	setUsername,
 	allowStars = false,
 }: ItemsPageProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.END_DATE);
@@ -43,23 +38,16 @@ export const ItemsPage = ({
 					right={<SortToggle toggleSort={toggleSort} />}
 				/>
 				{subTitle}
-				{username ? (
-					<>
-						{showSort && (
-							<SortButtons
-								sorting={sorting}
-								setSorting={setSorting}
-							/>
-						)}
-
-						<ItemsList
-							items={sortedItems}
-							allowStars={allowStars}
+				<>
+					{showSort && (
+						<SortButtons
+							sorting={sorting}
+							setSorting={setSorting}
 						/>
-					</>
-				) : (
-					<EditBggUserName onSave={setUsername} />
-				)}
+					)}
+
+					<ItemsList items={sortedItems} allowStars={allowStars} />
+				</>
 			</Container>
 		</>
 	);

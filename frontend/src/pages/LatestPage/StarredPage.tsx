@@ -15,13 +15,10 @@ export const StarredPage = () => {
 		return null;
 	}
 
-
 	return (
 		<ItemsPage
 			title="Starred items"
-			username={user.bggUsername} // or just a string identifier if you want
 			items={starred.items}
-			setUsername={() => {}} // not editable here
 			allowStars={true}
 		/>
 	);

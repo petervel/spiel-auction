@@ -91,35 +91,28 @@ export function removeKnownContexts(text: string): string {
 	text = text.replace(/\b(\d+)(th|st|nd)/gi, ""); // 12th
 	return text;
 }
-
-export function parseEndDateString(end: string | null | undefined) {
-	if (end == null || end == undefined) {
-		return undefined;
-	}
-
-	const result1 = end.match(/^([^,]*),?/);
-	end = result1 != null ? result1[1] : end;
-	end = end.replace(/\bokt/gi, "oct"); // German/Dutch spelling
+export function parseEndDateString(end: string | undefined | null) {
+	if (!end) return undefined;
 
 	end = end.replace(
-		/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b\s+/gi,
+		/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b,?\s+/gi,
 		"",
 	);
 
 	end = end.replace(/(,?\s*random time\.?)?/gi, "");
+	end = end.trim();
 
-	const currentYear = `${new Date().getFullYear()}`;
-
-	if (!end.endsWith(currentYear)) {
+	const currentYear = new Date().getFullYear();
+	if (!/\b\d{4}\b/.test(end)) {
 		end += ` ${currentYear}`;
 	}
 
-	const ms = Date.parse(end);
-	if (isNaN(ms)) {
-		return undefined;
-	} else {
-		return formatTimeToDate(ms);
-	}
+	const normalized = end.replace(/\bokt/gi, "oct");
+
+	const ms = Date.parse(normalized);
+	if (isNaN(ms)) return undefined;
+
+	return formatTimeToDate(ms);
 }
 
 export function formatTimeToDate(time?: number) {
@@ -127,10 +120,10 @@ export function formatTimeToDate(time?: number) {
 		time = new Date().getTime();
 	}
 	const d = new Date(time);
-	const yearText = `${d.getFullYear()}`;
-	const monthText = `${d.getMonth() + 1}`.padStart(2, "0");
-	const dayText = `${d.getDate()}`.padStart(2, "0");
-	return `${yearText}${monthText}${dayText}`;
+	const year = d.getFullYear();
+	const month = String(d.getMonth() + 1).padStart(2, "0");
+	const day = String(d.getDate()).padStart(2, "0");
+	return `${year}${month}${day}`;
 }
 
 export function getFirstLetterFromName(name: string): string {

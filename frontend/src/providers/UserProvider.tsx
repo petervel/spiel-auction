@@ -31,10 +31,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 		// fetch once on mount
 		fetchCurrentUser();
 
-		// 🔄 periodic sync
+		if (!user) return;
 		const interval = setInterval(fetchCurrentUser, 300_000); // every 5m
 		return () => clearInterval(interval);
-	}, []);
+	}, [user]);
 
 	const login = useGoogleLogin({
 		flow: 'auth-code', // auth-code flow for backend verification

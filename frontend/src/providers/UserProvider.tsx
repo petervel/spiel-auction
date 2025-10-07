@@ -32,7 +32,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 		fetchCurrentUser();
 
 		// 🔄 periodic sync
-		const interval = setInterval(fetchCurrentUser, 60_000); // every 60s
+		const interval = setInterval(fetchCurrentUser, 300_000); // every 5m
 		return () => clearInterval(interval);
 	}, []);
 

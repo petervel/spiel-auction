@@ -141,7 +141,6 @@ export class ItemWrapper {
 		commentsData: ItemCommentWrapper[],
 		removeStrikeThrough: boolean = true,
 	) {
-		const originalText = text;
 		text = removeStrikeThrough ? removeStrikethrough(text) : text;
 
 		const auctionTypeString =
@@ -160,6 +159,7 @@ export class ItemWrapper {
 				text,
 				/(?:\[b\])?\s*languages?(?:\[\/b\])?\s*:\s*(?:\[[^\]]*])*([^[\n]*)/i,
 			) ?? null;
+
 		const _condition = extractString(
 			text,
 			/(?:\[b\])?\s*condition(?:\[\/b\])?\s*:?\s*(?:\[[^\]]*])*([^[\n]*)/i,
@@ -171,7 +171,7 @@ export class ItemWrapper {
 		const startingBid =
 			extractNumber(
 				text,
-				/(?:\[b\])?\s*starting\s*(?:bid)?(?:price)?\s*(?:\([^\)]*\))?(?:\[\/b\])?(?:\s*:\s*)?(?:\[[^\]]*])*€?(?:euro)?\s*(\d+)(?:,-)?€?(?:euro)?(?:[^[\n]*)/i,
+				/(?:\[b\])?\s*starting\s*(?:bid)?(?:price)?\s*(?:\([^\)]*\))?(?:\[\/b\])?(?:\s*:\s*)?(?:\[[^\]]*])*\s*€?(?:euro)?\s*(\d+)(?:,-)?€?(?:euro)?(?:[^[\n]*)/i,
 			) ?? null;
 
 		const softReserve =

@@ -33,6 +33,7 @@ const AuctionItemDetails = ({ item }: Props) => {
 export default AuctionItemDetails;
 
 function toHtml(text: string): string {
+	text = replaceTags(text);
 	text = replaceStrikethroughs(text);
 	text = replaceBolds(text);
 	text = replaceItalics(text);
@@ -47,6 +48,12 @@ function toHtml(text: string): string {
 	text = replaceThings(text);
 	text = replaceBggEmojis(text);
 	text = replaceExternalImages(text);
+	return text;
+}
+
+function replaceTags(text: string): string {
+	text = text.replace(/>/gi, '&gt;');
+	text = text.replace(/</gi, '&lt;');
 	return text;
 }
 

@@ -9,13 +9,21 @@ export const DonateHint = () => {
 	const [visible, setVisible] = useState(false);
 
 	const dismiss = () => {
-		localStorage.setItem('donateHintDismissed', 'true');
+		localStorage.setItem('donateHintDismissed', Date.now().toString());
 		setVisible(false);
 	};
 
 	useEffect(() => {
 		const dismissed = localStorage.getItem('donateHintDismissed');
-		if (!dismissed) setVisible(true);
+		if (dismissed == 'true') {
+			dismiss();
+			return;
+		}
+
+		const oneWeek = 7 * 24 * 60 * 60 * 1000; // 1 week in ms
+		if (!dismissed || Date.now() - parseInt(dismissed) > oneWeek) {
+			setVisible(true);
+		}
 	}, []);
 
 	if (!visible) return null;

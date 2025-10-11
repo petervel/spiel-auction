@@ -5,7 +5,7 @@ import {
 	StarRounded,
 	WatchLaterRounded,
 } from '@mui/icons-material';
-import { Button, Stack } from '@mui/material';
+import { Button, Stack, Tooltip } from '@mui/material';
 import classNames from 'classnames';
 import { ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -78,19 +78,20 @@ export const TabBar = () => {
 		>
 			{pages.map((pageData) => {
 				const button = (
-					<Button
-						key={pageData.id}
-						className={classNames(css.button, {
-							[css.active]: pageData.id === pageId,
-							[css.disabled]: pageData.disabled,
-						})}
-						aria-label={pageData.label}
-						disabled={pageData.disabled}
-					>
-						<Stack alignItems="center" gap={1} padding={1}>
-							{pageData.renderIcon()}
-						</Stack>
-					</Button>
+					<Tooltip title={pageData.label} key={pageData.id}>
+						<Button
+							className={classNames(css.button, {
+								[css.active]: pageData.id === pageId,
+								[css.disabled]: pageData.disabled,
+							})}
+							aria-label={pageData.label}
+							disabled={pageData.disabled}
+						>
+							<Stack alignItems="center" gap={1} padding={1}>
+								{pageData.renderIcon()}
+							</Stack>
+						</Button>
+					</Tooltip>
 				);
 
 				return pageData.disabled ? (

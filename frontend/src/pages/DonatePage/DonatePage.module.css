@@ -1,0 +1,39 @@
+.container {
+	display: flex;
+	justify-content: center;
+	margin-top: 3rem;
+	padding: 0 1rem;
+}
+
+.paper {
+	padding: 2rem;
+	border-radius: 1.5rem;
+	max-width: var(--content-max-width);
+	width: 100%;
+	text-align: center;
+}
+
+.icon {
+	font-size: 3rem !important;
+	margin-bottom: 0.5rem;
+}
+
+.text {
+	margin-bottom: 1.5rem;
+	line-height: 1.6;
+}
+
+.button {
+	text-transform: none;
+	font-weight: 500;
+}
+
+.footer {
+	margin-top: 2rem;
+	color: var(--mui-palette-text-secondary);
+	font-style: italic;
+}
+
+.stack {
+	margin-block: 1rem;
+}

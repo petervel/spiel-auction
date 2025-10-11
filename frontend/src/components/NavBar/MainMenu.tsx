@@ -42,7 +42,7 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 	};
 
 	const openTikkiePage = () => {
-		window.open('https://tikkie.me/pay/dloiae90d17tba77c656', '_blank');
+		window.open('https://tikkie.me/pay/bnkk5tdth5jodib967jl', '_blank');
 	};
 
 	const closeWith = (func: () => void) => () => {

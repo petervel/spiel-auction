@@ -50,6 +50,8 @@ export const useBggUsername = (pathOverride?: string) => {
 	const updateBggUsername = useCallback(
 		async (username?: string) => {
 			// optimistic local update
+			if (username) username = username.trim();
+
 			setBggUsernameState(username);
 			setBggUsernameLS(username);
 

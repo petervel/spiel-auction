@@ -1,5 +1,4 @@
 import {
-	CardGiftcardRounded,
 	LoginRounded,
 	LogoutRounded,
 	Save,
@@ -121,38 +120,18 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 					{/* Donate submenu trigger */}
 					<MenuItem
 						className={css.menuItem}
+						component={NavLink}
 						onClick={(e) => setDonateAnchorEl(e.currentTarget)}
+						to="/donate"
 					>
 						<ListItemIcon>
 							<VolunteerActivismRounded
 								className={css.menuIcon}
 							/>
 						</ListItemIcon>
-						Donate...
+						Donate
 					</MenuItem>
 				</MenuList>
-			</Menu>
-
-			{/* Donate submenu */}
-			<Menu
-				anchorEl={donateAnchorEl}
-				open={Boolean(donateAnchorEl)}
-				onClose={() => setDonateAnchorEl(null)}
-				anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-				transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-			>
-				<MenuItem onClick={closeWith(openPaypalPage)}>
-					<ListItemIcon>
-						<CardGiftcardRounded className={css.menuIcon} />
-					</ListItemIcon>
-					PayPal
-				</MenuItem>
-				<MenuItem onClick={closeWith(openTikkiePage)}>
-					<ListItemIcon>
-						<VolunteerActivismRounded className={css.menuIcon} />
-					</ListItemIcon>
-					Tikkie
-				</MenuItem>
 			</Menu>
 		</>
 	);

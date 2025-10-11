@@ -1,6 +1,6 @@
-import { Typography, Button, Stack, Paper } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
+import { Button, Paper, Stack, Typography } from '@mui/material';
 import styles from './DonatePage.module.css';
 
 export const DonatePage = () => {
@@ -17,10 +17,10 @@ export const DonatePage = () => {
 				</Typography>
 
 				<Typography variant="body1" className={styles.text}>
-					This app costs a bit to host and maintain — things like
-					server time, database access, and domain fees add up over
-					time. If you enjoy using it and would like to chip in, any
-					small donation helps a lot and is greatly appreciated!
+					This app costs a bit to host and maintain — things like the
+					server, database access, and domain fees add up over time.
+					If you enjoy using it and would like to chip in, any small
+					donation helps a lot and is greatly appreciated!
 				</Typography>
 
 				<Stack

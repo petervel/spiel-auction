@@ -9,13 +9,14 @@ export const DonateHint = () => {
 	const [visible, setVisible] = useState(false);
 
 	const dismiss = () => {
-		localStorage.setItem('donateHintDismissed', Date.now().toString());
+		localStorage.setItem('donateHintDismissed', JSON.stringify(Date.now()));
 		setVisible(false);
 	};
 
 	useEffect(() => {
 		const dismissed = localStorage.getItem('donateHintDismissed');
-		if (dismissed == 'true') {
+		const value = dismissed ? JSON.parse(dismissed) : 0;
+		if (!Number.isInteger(value)) {
 			dismiss();
 			return;
 		}

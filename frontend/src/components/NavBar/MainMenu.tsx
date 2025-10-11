@@ -14,7 +14,7 @@ import {
 	MenuList,
 } from '@mui/material';
 import classNames from 'classnames';
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
 import { ColorModeContext } from '../../contexts/ColorModeContext';
 import { useUser } from '../../hooks/useUser';
@@ -29,24 +29,8 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 	const { mode, toggleDarkMode } = useContext(ColorModeContext);
 	const { user, login, logout } = useUser();
 
-	const [donateAnchorEl, setDonateAnchorEl] = useState<null | HTMLElement>(
-		null
-	);
-
-	const openPaypalPage = () => {
-		window.open(
-			'https://www.paypal.com/donate/?hosted_button_id=HVYVSGYNRGT4N',
-			'_blank'
-		);
-	};
-
-	const openTikkiePage = () => {
-		window.open('https://tikkie.me/pay/bnkk5tdth5jodib967jl', '_blank');
-	};
-
 	const closeWith = (func: () => void) => () => {
 		close();
-		setDonateAnchorEl(null);
 		func();
 	};
 
@@ -121,7 +105,6 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 					<MenuItem
 						className={css.menuItem}
 						component={NavLink}
-						onClick={(e) => setDonateAnchorEl(e.currentTarget)}
 						to="/donate"
 					>
 						<ListItemIcon>

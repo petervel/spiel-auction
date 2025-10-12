@@ -1,11 +1,12 @@
+import { Sort } from '@mui/icons-material';
 import { ReactNode, useMemo, useState } from 'react';
 import { Container } from '../../components/Container/Container';
 import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Title } from '../../components/Title/Title';
+import { TitleButton } from '../../components/Title/TitleButton';
 import { Item } from '../../model/Item';
 import { SORTING, sortItems } from '../../util';
 import { SortButtons } from './SortButtons';
-import SortToggle from './SortToggle';
 
 type ItemsPageProps = {
 	title: string;
@@ -35,7 +36,11 @@ export const ItemsPage = ({
 			<Container>
 				<Title
 					title={title}
-					right={<SortToggle toggleSort={toggleSort} />}
+					right={
+						<TitleButton onClick={toggleSort}>
+							<Sort />
+						</TitleButton>
+					}
 				/>
 				{subTitle}
 				<>

@@ -1,3 +1,4 @@
+import { FilterAltOutlined } from '@mui/icons-material';
 import classNames from 'classnames';
 import { useState } from 'react';
 import { Container } from '../../components/Container/Container';
@@ -5,10 +6,10 @@ import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { LoadMore } from '../../components/LoadMore/LoadMore';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
+import { TitleButton } from '../../components/Title/TitleButton';
 import { useInfiniteItems } from '../../hooks/useInfiniteItems';
 import { Item } from '../../model/Item';
 import { Filters } from './Filters';
-import FiltersToggle from './FiltersToggle';
 import css from './LatestPage.module.css';
 
 export const LatestPage = () => {
@@ -39,8 +40,7 @@ export const LatestPage = () => {
 
 	const title = `Latest${filters.search ? ` '${filters.search}'` : ''}`;
 
-	const toggleFilters = (evt: React.MouseEvent) => {
-		evt.stopPropagation();
+	const toggleFilters = () => {
 		if (showFilters) hideFilters();
 		else setShowFilters(true);
 	};
@@ -55,7 +55,11 @@ export const LatestPage = () => {
 			<Container>
 				<Title
 					title={title}
-					left={<FiltersToggle toggleFilters={toggleFilters} />}
+					left={
+						<TitleButton onClick={toggleFilters}>
+							<FilterAltOutlined />
+						</TitleButton>
+					}
 				/>
 
 				{showFilters && (

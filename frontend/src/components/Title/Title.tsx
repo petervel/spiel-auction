@@ -11,6 +11,7 @@ export const Title = ({ title, left, right }: TitleProps) => {
 	return (
 		<Stack direction="row" className={css.header}>
 			{left && <div className={css.left}>{left}</div>}
+			<div className={css.filler}></div>
 			<Typography variant="h5" component="h2" className={css.title}>
 				{title}
 			</Typography>

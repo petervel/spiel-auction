@@ -1,8 +1,8 @@
 import { Button } from '@mui/material';
 import classNames from 'classnames';
 import { ReactNode } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import css from './AuctionItemButton.module.css';
-import { Link } from 'react-router-dom';
 
 interface Props {
 	link?: string | (() => void);
@@ -22,14 +22,16 @@ const AuctionItemButton = ({
 	// <Tooltip title={tooltip} arrow enterDelay={1000} enterNextDelay={1000}>
 	if (typeof link == 'string') {
 		return (
-			<Link to={link} target={newTab ? '_blank' : '_self'} rel="noreferrer">
-				<Button
-					className={classNames(className, css.button)}
-					title={tooltip}
-				>
-					{children}
-				</Button>
-			</Link>
+			<Button
+				component={RouterLink}
+				to={link}
+				target={newTab ? '_blank' : undefined}
+				rel={newTab ? 'noreferrer' : undefined}
+				className={classNames(className, css.button)}
+				title={tooltip}
+			>
+				{children}
+			</Button>
 		);
 	} else {
 		return (

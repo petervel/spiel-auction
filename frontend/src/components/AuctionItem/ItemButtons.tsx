@@ -87,7 +87,8 @@ export const ItemButtons = ({
 				</div>
 			)}
 
-			<div
+			<Stack
+				direction="row"
 				className={
 					location === 'list' ? css.bigScreen : css.smallScreen
 				}
@@ -102,7 +103,7 @@ export const ItemButtons = ({
 						{btn.content}
 					</AuctionItemButton>
 				))}
-			</div>
+			</Stack>
 		</Stack>
 	);
 };

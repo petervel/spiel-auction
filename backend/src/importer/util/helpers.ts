@@ -1,5 +1,3 @@
-import latinize from "latinize";
-
 export function extractString(
 	source: string,
 	regex: RegExp,
@@ -139,8 +137,7 @@ export function getFirstLetterFromName(name: string): string {
 
 export function stripObjectName(text: string): string {
 	const lower = text.toLowerCase();
-	const latin = latinize(lower);
-	const stripped = latin.replace(/^(([^\da-z])|(the )|(an? ))*/i, "");
+	const stripped = lower.replace(/^(([^\da-z])|(the )|(an? ))*/i, "");
 	const result = stripped.replace(/[^\da-z]$/i, "");
 	return result.length > 0 ? result : lower;
 }

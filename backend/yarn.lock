@@ -160,11 +160,6 @@
     "@types/ms" "*"
     "@types/node" "*"
 
-"@types/latinize@^0.2.18":
-  version "0.2.18"
-  resolved "https://registry.yarnpkg.com/@types/latinize/-/latinize-0.2.18.tgz#18ff876bae9c4e01b8e5efc2a67f6e26cb17a982"
-  integrity sha512-QjX4tcVEOcqDakv96sLMA2ESMcxSJel5KHxmcBgeTlZI7v6gFx9Tjqmt5+Pp8ijfGGr6CxuXzDNYk8A/iZ/GiA==
-
 "@types/mime@^1":
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.5.tgz#1ef302e01cf7d2b5a0fa526790c9123bf1d06690"
@@ -894,11 +889,6 @@ jws@^4.0.0:
   dependencies:
     jwa "^2.0.0"
     safe-buffer "^5.0.1"
-
-latinize@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/latinize/-/latinize-2.0.0.tgz#725ca7b2feeef64f3d69a2d2eaae58dd724b135c"
-  integrity sha512-bMWAnS0C6s9rNqahOEzBEIb9RWECgD1sfmDPws/YoFGAVbC3cjNGCS3Y1THhaQ5wtTJfrq1RO69IM2dGA0DuEg==
 
 lodash.defaults@^4.2.0:
   version "4.2.0"

@@ -31,7 +31,7 @@ export const DonatePage = () => {
 				>
 					<Button
 						component="a"
-						href="https://tikkie.me/pay/bnkk5tdth5jodib967jl"
+						href="https://tikkie.me/pay/qv9f9cbcmflv5159qfe6"
 						target="_blank"
 						rel="noopener noreferrer"
 						variant="contained"

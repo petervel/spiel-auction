@@ -2,7 +2,6 @@ import { ThemeProvider, createTheme } from '@mui/material';
 import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { AppRouter } from './AppRouter';
-import { DonateHint } from './components/DonateHint';
 import { NavBar } from './components/NavBar/NavBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -27,7 +26,7 @@ function App() {
 				<ThemeProvider theme={theme}>
 					<BookmarkProvider>
 						<NavBar />
-						<DonateHint />
+						{/* <DonateHint /> */}
 						<div className="content-max-width">
 							<AppRouter />
 						</div>

@@ -9,8 +9,8 @@
 		"dev:api": "ts-node src/cli-api.ts",
 		"dev:importer": "ts-node src/cli-importer.ts",
 		"start": "node dist/src/index.js",
-		"start:api": "node dist/cli-api.js",
-		"start:importer": "node dist/cli-importer.js",
+		"start:api": "node dist/src/cli-api.js",
+		"start:importer": "node dist/src/cli-importer.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "Peter Vel",

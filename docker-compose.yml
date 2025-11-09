@@ -39,7 +39,7 @@ services:
 
   backend-api:
     image: spiel-auction-backend:prod
-    command: sh -c "npx prisma migrate deploy && yarn start:api
+    command: sh -c "npx prisma migrate deploy && yarn start:api"
     env_file:
       - .env
     ports:

@@ -22,7 +22,7 @@ services:
   backend:
     build:
       context: ./backend
-    image: spiel-auction-backend:dev
+    image: spiel-auction-backend:prod
     env_file:
       - .env
     volumes:
@@ -38,9 +38,8 @@ services:
         condition: service_healthy
 
   backend-api:
-    image: spiel-auction-backend:dev
-    # command: sh -c "npx prisma migrate deploy && yarn dev:api"
-    command: yarn dev:api
+    image: spiel-auction-backend:prod
+    command: sh -c "npx prisma migrate deploy && yarn start:api
     env_file:
       - .env
     ports:
@@ -61,8 +60,8 @@ services:
       retries: 10
 
   backend-importer:
-    image: spiel-auction-backend:dev
-    command: yarn dev:importer
+    image: spiel-auction-backend:prod
+    command: yarn start:importer
     env_file:
       - .env
     volumes:

@@ -6,7 +6,11 @@
 	"scripts": {
 		"build": "npx tsc",
 		"start": "node dist/src/index.js",
+		"start:api": "node dist/api/index.js",
+		"start:importer": "node dist/importer/index.js",
 		"dev": "node --watch -r ts-node/register src/index.ts",
+		"dev:api": "ts-node src/api/index.ts",
+		"dev:importer": "ts-node src/importer/index.ts",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "Peter Vel",

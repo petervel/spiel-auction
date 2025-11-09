@@ -19,8 +19,10 @@ services:
       - internal
     restart: unless-stopped
 
+
   backend:
     build: ./backend
+    image: spiel-auction-backend:latest
     environment:
       DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
       SHADOW_DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/shadowdb
@@ -35,6 +37,21 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - xml-data:/app/xml-data
+      - ./backend/prisma:/app/prisma
+      - ./backend/node_modules:/app/node_modules
+    networks:
+      - internal
+      - default
+    restart: unless-stopped
+
+  backend-api:
+    image: spiel-auction-backend:latest
+    command: sh -c "npx prisma migrate deploy && npm run start:api"
     expose:
       - "3000"
     ports: # temp for dev
@@ -47,16 +64,13 @@ services:
       interval: 5s
       timeout: 30s
       retries: 5
-    volumes:
-      - xml-data:/app/xml-data
-      - ./backend/prisma:/app/prisma
-      - ./backend/node_modules:/app/node_modules
-    networks:
-      - internal
-      - default
-    restart: unless-stopped
-    command: >
-      sh -c "npx prisma migrate deploy && npm start"
+
+  backend-importer:
+    image: spiel-auction-backend:latest
+    command: npm run start:importer
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     build:
@@ -79,7 +93,7 @@ services:
     volumes:
       - frontend-build:/usr/share/nginx/html  # Share the build output with the Nginx container
     depends_on:
-      backend:
+      backend-api:
         condition: service_healthy
     expose:
       - "80"
@@ -103,7 +117,7 @@ services:
       - default
     depends_on:
       - frontend
-      - backend
+      - backend-api
     restart: unless-stopped
 
   certbot:

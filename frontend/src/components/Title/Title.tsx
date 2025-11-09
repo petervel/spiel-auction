@@ -8,14 +8,25 @@ type TitleProps = {
 	right?: ReactNode;
 };
 export const Title = ({ title, left, right }: TitleProps) => {
-	return (
+	return left || right ? (
 		<Stack direction="row" className={css.header}>
 			{left && <div className={css.left}>{left}</div>}
 			<div className={css.filler}></div>
-			<Typography variant="h5" component="h2" className={css.title}>
+			<Typography
+				variant="h5"
+				component="h2"
+				className={css.title}
+				sx={{ position: 'absolute' }}
+			>
 				{title}
 			</Typography>
 			{right && <div className={css.right}>{right}</div>}
+		</Stack>
+	) : (
+		<Stack direction="row" className={css.header}>
+			<Typography variant="h5" component="h2" className={css.title}>
+				{title}
+			</Typography>
 		</Stack>
 	);
 };

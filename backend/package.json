@@ -5,12 +5,12 @@
 	"main": "dist/src/index.js",
 	"scripts": {
 		"build": "npx tsc",
-		"start": "node dist/src/index.js",
-		"start:api": "node dist/api/index.js",
-		"start:importer": "node dist/importer/index.js",
 		"dev": "node --watch -r ts-node/register src/index.ts",
-		"dev:api": "ts-node src/api/index.ts",
-		"dev:importer": "ts-node src/importer/index.ts",
+		"dev:api": "ts-node src/cli-api.ts",
+		"dev:importer": "ts-node src/cli-importer.ts",
+		"start": "node dist/src/index.js",
+		"start:api": "node dist/cli-api.js",
+		"start:importer": "node dist/cli-importer.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "Peter Vel",

@@ -19,58 +19,61 @@ services:
       - internal
     restart: unless-stopped
 
-
   backend:
-    build: ./backend
-    image: spiel-auction-backend:latest
-    environment:
-      DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
-      SHADOW_DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/shadowdb
-      ADMIN_PASSWORD: ${SITE_ADMIN_PASSWORD}
-      ENVIRONMENT_MODE: ${ENVIRONMENT_MODE}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      PAGE_SIZE: ${PAGE_SIZE}
-      DEFAULT_GEEKLIST_ID: ${DEFAULT_GEEKLIST_ID}
-      JWT_SHARED_SECRET: ${JWT_SHARED_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
-    depends_on:
-      db:
-        condition: service_healthy
+    build:
+      context: ./backend
+    image: spiel-auction-backend:dev
+    env_file:
+      - .env
     volumes:
       - xml-data:/app/xml-data
       - ./backend/prisma:/app/prisma
+      - ./backend/src:/app/src
       - ./backend/node_modules:/app/node_modules
     networks:
       - internal
       - default
-    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
 
   backend-api:
-    image: spiel-auction-backend:latest
-    command: sh -c "npx prisma migrate deploy && npm run start:api"
-    expose:
-      - "3000"
-    ports: # temp for dev
+    image: spiel-auction-backend:dev
+    # command: sh -c "npx prisma migrate deploy && yarn dev:api"
+    command: yarn dev:api
+    env_file:
+      - .env
+    ports:
       - "3000:3000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - ./backend/node_modules:/app/node_modules
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    networks:
+      - internal
+      - default
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3000/health"]
-      interval: 5s
-      timeout: 30s
-      retries: 5
+      test: ["CMD", "wget", "--spider", "http://127.0.0.1:3000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
   backend-importer:
-    image: spiel-auction-backend:latest
-    command: npm run start:importer
+    image: spiel-auction-backend:dev
+    command: yarn dev:importer
+    env_file:
+      - .env
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - ./backend/node_modules:/app/node_modules
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    networks:
+      - internal
+      - default
 
   frontend:
     build:

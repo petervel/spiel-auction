@@ -1,6 +1,6 @@
 # xml-fetcher/Dockerfile
 
-FROM node:alpine3.21
+FROM node:25-alpine
 
 # Set the working directory
 WORKDIR /app

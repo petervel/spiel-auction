@@ -6,14 +6,16 @@ if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
 fi
 
+BACKUP_DIR="backups"
+
 print_usage() {
   cat <<EOF
 Usage: $0 <command> [options]
 
 Commands:
-  connect            Connect to the main database as the app user
-  export [FILE]      Export ALL databases to FILE (default: backup.sql)
-  import [FILE]      Import from FILE (default: backup.sql) and OVERWRITE data
+  connect                 Connect to the main database as the app user
+  export [FILENAME]       Export ALL databases to backups/FILENAME (default: backup.sql)
+  import [FILENAME]       Import from backups/FILENAME (default: backup.sql) and OVERWRITE data
 
 Environment (from .env):
   DATABASE_NAME            Name of the main application database
@@ -24,9 +26,9 @@ Environment (from .env):
 Examples:
   $0 connect
   $0 export
-  $0 export my-backup.sql
+  $0 export prod-2025-11-22.sql
   $0 import
-  $0 import my-backup.sql
+  $0 import prod-2025-11-22.sql
 EOF
 }
 
@@ -46,9 +48,11 @@ case "$cmd" in
     ;;
 
   export)
-    BACKUP_FILE="${1:-backup.sql}"
+    FILE_NAME="${1:-backup.sql}"
+    mkdir -p "$BACKUP_DIR"
+    BACKUP_PATH="$BACKUP_DIR/$FILE_NAME"
 
-    echo "Creating MySQL dump into ${BACKUP_FILE}..."
+    echo "Creating MySQL dump into ${BACKUP_PATH}..."
 
     docker compose exec -T db \
       mysqldump \
@@ -58,21 +62,22 @@ case "$cmd" in
         --single-transaction \
         --routines \
         --events \
-      > "$BACKUP_FILE"
+      > "$BACKUP_PATH"
 
-    echo "Done. Backup created at: $BACKUP_FILE"
+    echo "Done. Backup created at: $BACKUP_PATH"
     ;;
 
   import)
-    BACKUP_FILE="${1:-backup.sql}"
+    FILE_NAME="${1:-backup.sql}"
+    BACKUP_PATH="$BACKUP_DIR/$FILE_NAME"
 
-    if [ ! -f "$BACKUP_FILE" ]; then
-      echo "Backup file $BACKUP_FILE not found in current directory."
+    if [ ! -f "$BACKUP_PATH" ]; then
+      echo "Backup file $BACKUP_PATH not found."
       exit 1
     fi
 
     echo "============================================================"
-    echo "  WARNING: You are about to import '$BACKUP_FILE' into MySQL."
+    echo "  WARNING: You are about to import '$BACKUP_PATH' into MySQL."
     echo "  This will effectively OVERWRITE existing data in the"
     echo "  databases contained in this backup (drop & recreate tables,"
     echo "  replace data, etc.)."
@@ -85,11 +90,11 @@ case "$cmd" in
       exit 0
     fi
 
-    echo "Importing $BACKUP_FILE into MySQL..."
+    echo "Importing $BACKUP_PATH into MySQL..."
 
     docker compose exec -T db \
       mysql -u root -p"$DATABASE_ROOT_PASSWORD" \
-      < "$BACKUP_FILE"
+      < "$BACKUP_PATH"
 
     echo "Done. Import completed."
     ;;

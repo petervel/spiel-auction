@@ -29,8 +29,6 @@ services:
     volumes:
       - xml-data:/app/xml-data
       - ./backend/prisma:/app/prisma
-      - ./backend/src:/app/src
-      - ./backend/node_modules:/app/node_modules
     networks:
       - web
     depends_on:
@@ -44,9 +42,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
-      - ./backend/node_modules:/app/node_modules
     networks:
       - web
     depends_on:

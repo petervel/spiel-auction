@@ -19,7 +19,7 @@ services:
       - web
     restart: unless-stopped
 
-  backend:
+  auctions-backend:
     build:
       context: ./backend
     image: spiel-auction-backend:prod
@@ -36,7 +36,7 @@ services:
       db:
         condition: service_healthy
 
-  backend-api:
+  auctions-backend-api:
     image: spiel-auction-backend:prod
     command: sh -c "npx prisma migrate deploy && yarn start:api"
     env_file:
@@ -69,7 +69,7 @@ services:
     networks:
       - web
 
-  frontend:
+  auctions-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
@@ -92,7 +92,7 @@ services:
     expose:
       - "80"
     depends_on:
-      - backend-api
+      - auctions-backend-api
     networks:
       - web
     restart: unless-stopped
@@ -103,8 +103,8 @@ services:
       - frontend-build:/usr/share/nginx/html
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - frontend
-      - backend-api
+      - auctions-frontend
+      - auctions-backend-api
     networks:
       - web
     restart: unless-stopped

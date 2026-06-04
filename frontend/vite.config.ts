@@ -70,6 +70,7 @@ export default defineConfig({
 	server: {
 		host: '0.0.0.0',
 		port: 5173,
+		hmr: { clientPort: 8081 },
 	},
 	define: {
 		'import.meta.env.VITE_DEFAULT_GEEKLIST_ID': JSON.stringify(

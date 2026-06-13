@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: mysql:latest
@@ -93,6 +91,7 @@ services:
     restart: unless-stopped
     environment:
       - DEFAULT_GEEKLIST_ID=${DEFAULT_GEEKLIST_ID}
+      - BGG_API_TOKEN=${BGG_API_TOKEN}
 
 volumes:
   xml-data:

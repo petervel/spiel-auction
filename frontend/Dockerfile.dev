@@ -1,7 +1,8 @@
 # Stage 1: Setup the development environment with Vite
-FROM node:25-alpine AS dev
+FROM node:24-alpine AS dev
 
-# Set the working directory
+RUN apk upgrade --no-cache
+
 WORKDIR /app
 
 # Copy package.json and yarn.lock

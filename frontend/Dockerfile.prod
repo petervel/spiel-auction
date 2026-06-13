@@ -1,7 +1,8 @@
 # Stage 1: Build the application
-FROM node:25-alpine AS builder
+FROM node:24-alpine AS builder
 
-# Create and change to the app directory
+RUN apk upgrade --no-cache
+
 WORKDIR /app
 
 # Copy package.json and yarn.lock
@@ -29,5 +30,6 @@ RUN VITE_DEFAULT_GEEKLIST_ID=$VITE_DEFAULT_GEEKLIST_ID \
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
 
-# Copy the built files from the previous stage
+RUN apk upgrade --no-cache
+
 COPY --from=builder /app/dist /usr/share/nginx/html

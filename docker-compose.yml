@@ -32,6 +32,7 @@ services:
       context: ./backend
     container_name: auctions-backend
     image: spiel-auction-backend:prod
+    command: yarn start:importer
     env_file:
       - .env
     volumes:

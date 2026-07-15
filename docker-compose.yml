@@ -1,6 +1,6 @@
 services:
   db:
-    image: mysql:latest
+    image: mysql:9.7
     container_name: spiel-auction-db
     environment:
       MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
@@ -43,6 +43,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
 
   auctions-backend-api:
     image: spiel-auction-backend:prod
@@ -62,6 +63,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+    restart: unless-stopped
 
   auctions-frontend:
     build:

@@ -1,35 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import useLocalStorage from './useLocalStorage';
+import { useCallback, useMemo, useState } from 'react';
 import { useUser } from './useUser';
 
 export const useBggUsername = (pathOverride?: string) => {
 	const { user, setUser, isLoading } = useUser();
 
-	const [bggUsernameLS, setBggUsernameLS] = useLocalStorage<
-		string | undefined
-	>('bgg_username', undefined);
-
-	// local state for the logged-in user's BGG username (from user or LS)
-	const [bggUsername, setBggUsernameState] = useState<string | undefined>(
-		undefined
-	);
-
 	const [saving, setSaving] = useState(false);
 
-	// Always sync the local bggUsername from the user context or localStorage
-	// (don't early-return on pathOverride — we want the logged-in username available)
-	useEffect(() => {
-		if (isLoading) return;
-
-		if (user?.bggUsername) {
-			setBggUsernameState(user.bggUsername);
-			if (user.bggUsername !== bggUsernameLS) {
-				setBggUsernameLS(user.bggUsername);
-			}
-		} else {
-			setBggUsernameState(bggUsernameLS);
-		}
-	}, [isLoading, user?.bggUsername, bggUsernameLS, setBggUsernameLS]);
+	// The server is the only source of truth - no localStorage fallback,
+	// so a logged-out visitor never has a BGG username to work with.
+	const bggUsername = user?.bggUsername ?? undefined;
 
 	// activeName is the username we're currently viewing: pathOverride (URL) wins,
 	// otherwise fall back to the logged-in user's username.
@@ -45,18 +24,10 @@ export const useBggUsername = (pathOverride?: string) => {
 		[bggUsername, activeName]
 	);
 
-	// Save or remove the username. We optimistically update local state + LS,
-	// and then call the server if the user exists.
 	const updateBggUsername = useCallback(
 		async (username?: string) => {
-			// optimistic local update
-			if (username) username = username.trim();
-
-			setBggUsernameState(username);
-			setBggUsernameLS(username);
-
-			// if there's no logged-in user, we just persist locally
 			if (!user) return;
+			if (username) username = username.trim();
 
 			setSaving(true);
 			try {
@@ -74,24 +45,23 @@ export const useBggUsername = (pathOverride?: string) => {
 
 				if (!res.ok) throw new Error('Failed to update BGG username');
 
-				// update user in context with the new value
 				setUser({ ...user, bggUsername: username });
 			} catch (err) {
 				console.error(err);
-				// optionally: revert optimistic changes here (e.g. setBggUsernameState(prev))
 			} finally {
 				setSaving(false);
 			}
 		},
-		[user, setUser, setBggUsernameLS]
+		[user, setUser]
 	);
 
 	return {
 		activeName, // the username this page is showing (path or user)
-		bggUsername, // logged-in user's username (from user or localStorage)
+		bggUsername, // logged-in user's username (from the server)
 		setBggUsername: updateBggUsername, // function to save/update username
 		removeBggUsername: () => updateBggUsername(undefined),
 		saving,
+		isLoading, // whether the logged-in user (and their username) is still resolving
 		isOwnName,
 	};
 };

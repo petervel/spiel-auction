@@ -1,11 +1,13 @@
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { Spinner } from '../../components/Spinner/Spinner';
 import { useBggUsername } from '../../hooks/useBggUsername';
-// import { useUser } from '../../hooks/useUser';
+import { useUser } from '../../hooks/useUser';
 
 export const SettingsPage = () => {
 	const nav = useNavigate();
+	const { user, isLoading: userLoading } = useUser();
 
 	const { bggUsername, setBggUsername, removeBggUsername, saving } =
 		useBggUsername();
@@ -28,6 +30,19 @@ export const SettingsPage = () => {
 	};
 
 	const cancel = () => nav('/');
+
+	if (userLoading) return <Spinner />;
+
+	if (!user) {
+		return (
+			<Stack paddingInline="2rem">
+				<Typography variant="h4" component="h1">
+					Settings
+				</Typography>
+				<p>Log in to manage your BGG username.</p>
+			</Stack>
+		);
+	}
 
 	return (
 		<Stack paddingInline="2rem">

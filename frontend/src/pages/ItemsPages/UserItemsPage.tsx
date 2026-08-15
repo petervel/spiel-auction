@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { useBggUsername } from '../../hooks/useBggUsername';
+import { useUser } from '../../hooks/useUser';
 import { EditBggUserName } from './EditBggUserName';
 import { ItemsPage } from './ItemsPage';
 
@@ -25,6 +26,7 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 	extraProps,
 }: UserItemsPageProps<TParams, TData>) => {
 	const { username: pathUsername } = useParams();
+	const { user, isLoading: userLoading } = useUser();
 	const { bggUsername, setBggUsername, isOwnName, activeName } =
 		useBggUsername(pathUsername);
 
@@ -38,8 +40,12 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 	const params = activeName ? paramMapper(activeName) : ({} as TParams);
 	const { data, error, isLoading } = hook(params);
 
-	if (isLoading) return <Spinner />;
-	if (!data) return <EditBggUserName onSave={setBggUsername} />;
+	if (userLoading) return <Spinner />;
+	if (!activeName) {
+		if (!user) return <div>Log in to see your items.</div>;
+		return <EditBggUserName onSave={setBggUsername} />;
+	}
+	if (isLoading || !data) return <Spinner />;
 	if (error) return <div>Error: {(error as Error).message}</div>;
 
 	return (

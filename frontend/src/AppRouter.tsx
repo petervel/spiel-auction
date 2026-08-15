@@ -12,6 +12,7 @@ import { StarredPage } from './pages/LatestPage/StarredPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
+import { VerifyLoginPage } from './pages/VerifyLoginPage/VerifyLoginPage';
 
 export const AppRouter = () => {
 	return (
@@ -26,6 +27,7 @@ export const AppRouter = () => {
 				<Route path="/starred" element={<StarredPage />} />
 			</Route>
 
+			<Route path="/login/verify" element={<VerifyLoginPage />} />
 			<Route path="/settings" element={<SettingsPage />} />
 			<Route path="/duplicates" element={<DuplicatesPage />} />
 			<Route path="/deleted" element={<DeletedPage />} />

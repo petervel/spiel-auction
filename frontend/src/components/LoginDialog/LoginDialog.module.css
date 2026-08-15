@@ -1,0 +1,27 @@
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding-top: 0.5rem;
+}
+
+.divider {
+	margin: 0.5rem 0;
+	color: var(--colour-inactive);
+}
+
+.emailForm {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.sentMessage {
+	text-align: center;
+	color: var(--colour-text);
+}
+
+.error {
+	color: var(--color-error);
+	margin: 0;
+}

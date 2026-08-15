@@ -14,8 +14,9 @@ import {
 	MenuList,
 } from '@mui/material';
 import classNames from 'classnames';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { LoginDialog } from '../LoginDialog/LoginDialog';
 import { ColorModeContext } from '../../contexts/ColorModeContext';
 import { useUser } from '../../hooks/useUser';
 import css from './NavBar.module.css';
@@ -27,7 +28,8 @@ type MenuProps = {
 
 const MainMenu = ({ anchorEl, close }: MenuProps) => {
 	const { mode, toggleDarkMode } = useContext(ColorModeContext);
-	const { user, login, logout } = useUser();
+	const { user, logout } = useUser();
+	const [loginOpen, setLoginOpen] = useState(false);
 
 	const closeWith = (func: () => void) => () => {
 		close();
@@ -80,7 +82,7 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 					{!user ? (
 						<MenuItem
 							className={css.menuItem}
-							onClick={closeWith(login)}
+							onClick={closeWith(() => setLoginOpen(true))}
 						>
 							<ListItemIcon>
 								<LoginRounded className={css.menuIcon} />
@@ -116,6 +118,10 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 					</MenuItem>
 				</MenuList>
 			</Menu>
+			<LoginDialog
+				open={loginOpen}
+				onClose={() => setLoginOpen(false)}
+			/>
 		</>
 	);
 };

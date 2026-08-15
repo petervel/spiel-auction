@@ -30,6 +30,17 @@ model User {
   UserStarredItem UserStarredItem[]
 }
 
+model MagicLinkToken {
+  id        Int       @id @default(autoincrement())
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+}
+
 model UserFair {
   id       Int  @id @default(autoincrement())
   user     User @relation(fields: [userId], references: [id])

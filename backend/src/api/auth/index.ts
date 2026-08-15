@@ -4,7 +4,9 @@ import prisma from "../../prismaClient";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 import { authenticateUser, tokenToUser } from "../../../middleware/auth";
-import { ensureCurrentFair } from "../../currentFair";
+import { sendMagicLinkEmail } from "../../email";
+import { consumeMagicLinkToken, createMagicLinkToken } from "../../magicLink";
+import { completeLogin } from "../../session";
 
 const router = express.Router();
 
@@ -40,40 +42,68 @@ router.post("/google", async (req, res) => {
 		let user = await prisma.user.findUnique({
 			where: { googleId: sub },
 		});
+		if (!user && email) {
+			// May already exist from a magic-link signup with this email -
+			// link this Google identity to it rather than creating a
+			// duplicate (email is unique on User).
+			user = await prisma.user.findUnique({ where: { email } });
+			if (user) {
+				user = await prisma.user.update({
+					where: { id: user.id },
+					data: { googleId: sub },
+				});
+			}
+		}
 		if (!user) {
 			user = await prisma.user.create({
 				data: { googleId: sub, email, name },
 			});
 		}
 
-		user = await ensureCurrentFair(user);
-
-		// Create session JWT
-		const sessionToken = jwt.sign(
-			{ userId: user.id },
-			process.env.JWT_SHARED_SECRET!,
-			{ expiresIn: "365d" },
-		);
-
-		res.cookie("session", sessionToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days
-		});
-
-		user = await prisma.user.findUnique({
-			where: { id: user.id },
-			include: {
-				currentUserFair: true,
-				fairs: true,
-			},
-		});
-
-		res.json({ message: "Login successful", user });
+		await completeLogin(res, user);
 	} catch (err) {
 		console.error("Google Auth Error:", err);
 		res.status(401).json({ error: "Authentication failed" });
 	}
+});
+
+router.post("/magic-link/request", async (req, res) => {
+	const { email } = req.body;
+	if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+		res.status(400).json({ error: "Valid email required" });
+		return;
+	}
+
+	try {
+		const rawToken = await createMagicLinkToken(email);
+		const link = `${process.env.SITE_URL}/login/verify?token=${rawToken}`;
+		await sendMagicLinkEmail(email, link);
+		res.json({ message: "Login link sent" });
+	} catch (err) {
+		console.error("Magic link request error:", err);
+		res.status(500).json({ error: "Failed to send login link" });
+	}
+});
+
+router.post("/magic-link/verify", async (req, res) => {
+	const { token } = req.body;
+	if (typeof token !== "string") {
+		res.status(400).json({ error: "Token required" });
+		return;
+	}
+
+	const email = await consumeMagicLinkToken(token);
+	if (!email) {
+		res.status(401).json({ error: "Invalid or expired link" });
+		return;
+	}
+
+	let user = await prisma.user.findUnique({ where: { email } });
+	if (!user) {
+		user = await prisma.user.create({ data: { email } });
+	}
+
+	await completeLogin(res, user);
 });
 
 router.post("/logout", authenticateUser, (_, res) => {

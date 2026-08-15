@@ -11,6 +11,7 @@ COPY package.json yarn.lock ./
 # Use the env variables during build
 ARG VITE_DEFAULT_GEEKLIST_ID
 ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_GOOGLE_REDIRECT_URI
 
 # Install dependencies using Yarn
 RUN yarn install

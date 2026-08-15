@@ -71,6 +71,7 @@ services:
       dockerfile: Dockerfile.prod
       args:
         VITE_API_URL: /api
+        VITE_DEFAULT_GEEKLIST_ID: ${DEFAULT_GEEKLIST_ID}
     container_name: auctions-frontend
     environment:
       VITE_API_URL: /api

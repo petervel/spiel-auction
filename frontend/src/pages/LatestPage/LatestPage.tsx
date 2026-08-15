@@ -33,6 +33,16 @@ export const LatestPage = () => {
 
 	if (error) {
 		const typedError = error as Error;
+		if (typedError.message === 'not_ready') {
+			return (
+				<Container>
+					<div className={css.notReady}>
+						This year's auction list isn't ready yet. Check back
+						soon!
+					</div>
+				</Container>
+			);
+		}
 		return <div>Error: {typedError.message}</div>;
 	}
 

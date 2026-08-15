@@ -12,3 +12,9 @@
 .outdated {
 	filter: grayscale(0.7);
 }
+
+.notReady {
+	padding: 3rem 1rem;
+	text-align: center;
+	color: var(--colour-inactive);
+}

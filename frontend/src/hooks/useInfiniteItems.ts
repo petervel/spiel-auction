@@ -37,6 +37,12 @@ const fetchItems = async (params: {
 	const response = await fetch(url);
 
 	if (!response.ok) {
+		if (response.status === 404) {
+			const body = await response.json().catch(() => null);
+			if (body?.error === 'not_ready') {
+				throw new Error('not_ready');
+			}
+		}
 		throw new Error('Network response was not ok.');
 	}
 

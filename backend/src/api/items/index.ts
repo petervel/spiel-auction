@@ -66,7 +66,14 @@ router.get("/:listId", async (req, res) => {
 
 	const list = await prisma.list.findUnique({ where: { id: listId } });
 	if (!list) {
-		res.status(404).json({ error: `No list found with id ${listId}` });
+		const fair = await prisma.fair.findFirst({
+			where: { geeklistId: listId },
+		});
+		if (fair) {
+			res.status(404).json({ error: "not_ready" });
+		} else {
+			res.status(404).json({ error: `No list found with id ${listId}` });
+		}
 		return;
 	}
 

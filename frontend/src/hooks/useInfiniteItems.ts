@@ -84,6 +84,9 @@ export const useInfiniteItems = (
 				refetchInterval,
 				refetchIntervalInBackground: true,
 				keepPreviousData: true,
+				retry: (failureCount, error) =>
+					(error as Error).message !== 'not_ready' &&
+					failureCount < 3,
 			}
 		),
 		filters,

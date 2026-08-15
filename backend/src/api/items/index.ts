@@ -1,5 +1,6 @@
 import express from "express";
 import prisma from "../../prismaClient";
+import { listNotFoundError } from "../listLookup";
 import { redisClient } from "../redisClient";
 
 const router = express.Router();
@@ -66,14 +67,7 @@ router.get("/:listId", async (req, res) => {
 
 	const list = await prisma.list.findUnique({ where: { id: listId } });
 	if (!list) {
-		const fair = await prisma.fair.findFirst({
-			where: { geeklistId: listId },
-		});
-		if (fair) {
-			res.status(404).json({ error: "not_ready" });
-		} else {
-			res.status(404).json({ error: `No list found with id ${listId}` });
-		}
+		res.status(404).json(await listNotFoundError(listId));
 		return;
 	}
 

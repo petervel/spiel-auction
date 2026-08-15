@@ -18,6 +18,12 @@ const fetchItems = async ({
 	const response = await fetch(url);
 
 	if (!response.ok) {
+		if (response.status === 404) {
+			const body = await response.json().catch(() => null);
+			if (body?.error === 'not_ready') {
+				throw new Error('not_ready');
+			}
+		}
 		throw new Error('Network response was not ok');
 	}
 
@@ -32,5 +38,7 @@ export const useOutbids = (params: { bidder?: string }) => {
 		enabled: Boolean(params.bidder),
 		refetchInterval: 60000, // Automatically refetch data every 60 seconds
 		keepPreviousData: true, // Retain previous data while fetching new data
+		retry: (failureCount, error) =>
+			(error as Error).message !== 'not_ready' && failureCount < 3,
 	});
 };

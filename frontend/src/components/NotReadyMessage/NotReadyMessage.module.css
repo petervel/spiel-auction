@@ -1,0 +1,5 @@
+.notReady {
+	padding: 3rem 1rem;
+	text-align: center;
+	color: var(--colour-inactive);
+}

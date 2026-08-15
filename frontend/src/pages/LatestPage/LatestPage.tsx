@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Container } from '../../components/Container/Container';
 import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { LoadMore } from '../../components/LoadMore/LoadMore';
+import { NotReadyMessage } from '../../components/NotReadyMessage/NotReadyMessage';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
 import { TitleButton } from '../../components/Title/TitleButton';
@@ -34,14 +35,7 @@ export const LatestPage = () => {
 	if (error) {
 		const typedError = error as Error;
 		if (typedError.message === 'not_ready') {
-			return (
-				<Container>
-					<div className={css.notReady}>
-						This year's auction list isn't ready yet. Check back
-						soon!
-					</div>
-				</Container>
-			);
+			return <NotReadyMessage />;
 		}
 		return <div>Error: {typedError.message}</div>;
 	}

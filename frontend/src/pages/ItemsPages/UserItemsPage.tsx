@@ -1,6 +1,7 @@
 import { Link } from '@mui/material';
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { NotReadyMessage } from '../../components/NotReadyMessage/NotReadyMessage';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useUser } from '../../hooks/useUser';
@@ -54,8 +55,12 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 			);
 		return <EditBggUserName onSave={setBggUsername} />;
 	}
+	if (error) {
+		const typedError = error as Error;
+		if (typedError.message === 'not_ready') return <NotReadyMessage />;
+		return <div>Error: {typedError.message}</div>;
+	}
 	if (isLoading || !data) return <Spinner />;
-	if (error) return <div>Error: {(error as Error).message}</div>;
 
 	return (
 		<ItemsPage

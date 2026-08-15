@@ -25,6 +25,12 @@ const fetchItems = async ({
 
 	const response = await fetch(url);
 	if (!response.ok) {
+		if (response.status === 404) {
+			const body = await response.json().catch(() => null);
+			if (body?.error === 'not_ready') {
+				throw new Error('not_ready');
+			}
+		}
 		throw new Error('Network response was not ok');
 	}
 
@@ -45,6 +51,8 @@ export const useBids = (params: FetchItemsParams = {}) => {
 				enabled: hasFilters,
 				refetchInterval: 60000,
 				keepPreviousData: true,
+				retry: (failureCount, error) =>
+					error.message !== 'not_ready' && failureCount < 3,
 			}
 		);
 };

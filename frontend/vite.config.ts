@@ -76,5 +76,11 @@ export default defineConfig({
 		'import.meta.env.VITE_DEFAULT_GEEKLIST_ID': JSON.stringify(
 			process.env.VITE_DEFAULT_GEEKLIST_ID
 		),
+		'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(
+			process.env.VITE_GOOGLE_CLIENT_ID
+		),
+		'import.meta.env.VITE_GOOGLE_REDIRECT_URI': JSON.stringify(
+			process.env.VITE_GOOGLE_REDIRECT_URI
+		),
 	},
 });

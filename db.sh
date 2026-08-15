@@ -1,9 +1,16 @@
 #!/bin/sh
 set -e
 
-# Load env vars from .env
+# Load env vars from .env. Read line-by-line rather than
+# `export $(... | xargs)` - the latter word-splits on any space, which
+# breaks on values like `EMAIL_FROM=Spiel Auction <no-reply@...>`.
 if [ -f .env ]; then
-  export $(grep -v '^#' .env | xargs)
+  while IFS='=' read -r key value; do
+    case "$key" in
+      ''|'#'*) continue ;;
+    esac
+    export "$key=$value"
+  done < .env
 fi
 
 BACKUP_DIR="backups"

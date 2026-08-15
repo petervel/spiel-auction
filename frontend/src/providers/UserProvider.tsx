@@ -6,6 +6,7 @@ import { User } from '../model/User';
 export const UserProvider = ({ children }: { children: ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setLoading] = useState(true);
+	const [isLoginDialogOpen, setLoginDialogOpen] = useState(false);
 
 	const fetchCurrentUser = async () => {
 		try {
@@ -84,7 +85,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
 	return (
 		<UserContext.Provider
-			value={{ user, setUser, login, logout, isLoading }}
+			value={{
+				user,
+				setUser,
+				login,
+				logout,
+				isLoading,
+				isLoginDialogOpen,
+				openLoginDialog: () => setLoginDialogOpen(true),
+				closeLoginDialog: () => setLoginDialogOpen(false),
+			}}
 		>
 			{children}
 		</UserContext.Provider>

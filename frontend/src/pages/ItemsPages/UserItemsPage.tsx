@@ -1,3 +1,4 @@
+import { Link } from '@mui/material';
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Spinner } from '../../components/Spinner/Spinner';
@@ -26,7 +27,7 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 	extraProps,
 }: UserItemsPageProps<TParams, TData>) => {
 	const { username: pathUsername } = useParams();
-	const { user, isLoading: userLoading } = useUser();
+	const { user, isLoading: userLoading, openLoginDialog } = useUser();
 	const { bggUsername, setBggUsername, isOwnName, activeName } =
 		useBggUsername(pathUsername);
 
@@ -42,7 +43,15 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 
 	if (userLoading) return <Spinner />;
 	if (!activeName) {
-		if (!user) return <div>Log in to see your items.</div>;
+		if (!user)
+			return (
+				<div>
+					<Link component="button" onClick={openLoginDialog}>
+						Log in
+					</Link>{' '}
+					to see your items.
+				</div>
+			);
 		return <EditBggUserName onSave={setBggUsername} />;
 	}
 	if (isLoading || !data) return <Spinner />;

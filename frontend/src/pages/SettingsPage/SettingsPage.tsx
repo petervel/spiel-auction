@@ -1,4 +1,4 @@
-import { Button, Stack, TextField, Typography } from '@mui/material';
+import { Button, Link, Stack, TextField, Typography } from '@mui/material';
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Spinner } from '../../components/Spinner/Spinner';
@@ -7,7 +7,7 @@ import { useUser } from '../../hooks/useUser';
 
 export const SettingsPage = () => {
 	const nav = useNavigate();
-	const { user, isLoading: userLoading } = useUser();
+	const { user, isLoading: userLoading, openLoginDialog } = useUser();
 
 	const { bggUsername, setBggUsername, removeBggUsername, saving } =
 		useBggUsername();
@@ -39,7 +39,12 @@ export const SettingsPage = () => {
 				<Typography variant="h4" component="h1">
 					Settings
 				</Typography>
-				<p>Log in to manage your BGG username.</p>
+				<p>
+					<Link component="button" onClick={openLoginDialog}>
+						Log in
+					</Link>{' '}
+					to manage your BGG username.
+				</p>
 			</Stack>
 		);
 	}

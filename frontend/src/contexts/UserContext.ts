@@ -7,6 +7,9 @@ export interface UserContextType {
 	login: () => void;
 	logout: () => void;
 	isLoading: boolean;
+	isLoginDialogOpen: boolean;
+	openLoginDialog: () => void;
+	closeLoginDialog: () => void;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(

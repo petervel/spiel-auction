@@ -4,7 +4,7 @@ import prisma from "../../prismaClient";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 import { authenticateUser, tokenToUser } from "../../../middleware/auth";
-import { useListId } from "../useListId";
+import { ensureCurrentFair } from "../../currentFair";
 
 const router = express.Router();
 
@@ -46,24 +46,7 @@ router.post("/google", async (req, res) => {
 			});
 		}
 
-		if (!user.currentUserFairId) {
-			const defaultFair = await prisma.fair.findFirst({
-				where: { geeklistId: useListId() },
-			});
-			// console.log("Default fair:", defaultFair, useListId());
-			if (defaultFair) {
-				const userFair = await prisma.userFair.create({
-					data: {
-						userId: user.id,
-						fairId: defaultFair.id,
-					},
-				});
-				user = await prisma.user.update({
-					where: { id: user.id },
-					data: { currentUserFairId: userFair.id },
-				});
-			}
-		}
+		user = await ensureCurrentFair(user);
 
 		// Create session JWT
 		const sessionToken = jwt.sign(

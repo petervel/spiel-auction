@@ -1,6 +1,7 @@
 import { User } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { ensureCurrentFair } from "../src/currentFair";
 import prisma from "../src/prismaClient";
 
 export interface AuthenticatedRequest extends Request {
@@ -42,15 +43,18 @@ export const tokenToUser = async (token: string) => {
 		};
 		// console.log("Decoded token:", decoded);
 
-		// 🔹 also fetch full user with fairs if you want it globally available
 		const user = await prisma.user.findUnique({
 			where: { id: decoded.userId },
+		});
+		if (!user) return null;
+
+		await ensureCurrentFair(user);
+
+		// 🔹 also fetch full user with fairs if you want it globally available
+		return prisma.user.findUnique({
+			where: { id: user.id },
 			include: { currentUserFair: true, fairs: false },
 		});
-
-		// console.log("tokenToUser found user.name:", user?.name);
-
-		return user;
 	} catch (error) {
 		console.error("Error verifying token.");
 		return null;

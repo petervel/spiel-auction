@@ -1,6 +1,5 @@
 import {
 	BarChartRounded,
-	HeartBroken,
 	StarOutlineRounded,
 	StarRounded,
 } from '@mui/icons-material';
@@ -17,7 +16,6 @@ interface ItemButtonsProps {
 	showCompare: boolean;
 	location: 'list' | 'details';
 	showStar?: boolean;
-	showOutbid?: boolean;
 	allowBookmarks?: boolean;
 	bookmarkClass?: string;
 }
@@ -36,7 +34,6 @@ export const ItemButtons = ({
 	showCompare,
 	location = 'list',
 	showStar = false,
-	showOutbid = false,
 	allowBookmarks = false,
 	bookmarkClass = '',
 }: ItemButtonsProps) => {
@@ -49,17 +46,6 @@ export const ItemButtons = ({
 	};
 
 	const buttons: ButtonConfig[] = [
-		showOutbid && {
-			key: 'outbid',
-			content: (
-				<HeartBroken
-					className={css.outbidIcon}
-					sx={{ fontSize: iconSize }}
-				/>
-			),
-			onClick: () => {},
-			tooltip: "You've been outbid",
-		},
 		showStar && {
 			key: 'star',
 			content: isStarred(item.id) ? (

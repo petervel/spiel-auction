@@ -1,3 +1,4 @@
+import { HeartBroken } from '@mui/icons-material';
 import { Collapse, Skeleton, Stack } from '@mui/material';
 import classNames from 'classnames';
 import { useState } from 'react';
@@ -78,11 +79,17 @@ export const AuctionItem = ({
 							.join(' · ')}
 					</div>
 				</div>
+				{isOutbid && (
+					<HeartBroken
+						className={css.outbidIcon}
+						sx={{ fontSize: 30 }}
+						titleAccess="You've been outbid"
+					/>
+				)}
 				<ItemButtons
 					item={item}
 					showCompare={showCompare}
 					showStar={allowStars && user !== null}
-					showOutbid={isOutbid}
 					location="list"
 					allowBookmarks={allowBookmarks}
 					bookmarkClass={css.bookmark}
@@ -93,7 +100,6 @@ export const AuctionItem = ({
 					item={item}
 					showCompare={showCompare}
 					showStar={user !== null}
-					showOutbid={isOutbid}
 					location="details"
 					allowBookmarks={false}
 				/>

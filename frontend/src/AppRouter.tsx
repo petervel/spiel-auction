@@ -1,7 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import TabLayout from './layouts/TabLayout';
 import { BuyingPage } from './pages/BidsPages/BuyingPage';
-import { OutbidsPage } from './pages/BidsPages/OutbidsPage';
 import { SellingPage } from './pages/BidsPages/SellingPage';
 import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DonatePage } from './pages/DonatePage/DonatePage';
@@ -21,7 +20,6 @@ export const AppRouter = () => {
 				<Route path="/" element={<LatestPage />} />
 				<Route path="/object/:objectId" element={<ObjectPage />} />
 				<Route path="/buying/:username?" element={<BuyingPage />} />
-				<Route path="/outbids/:username?" element={<OutbidsPage />} />
 				<Route path="/selling/:username?" element={<SellingPage />} />
 				<Route path="/search" element={<SearchPage />} />
 				<Route path="/starred" element={<StarredPage />} />

@@ -1,5 +1,4 @@
 import {
-	HeartBroken,
 	Sell,
 	ShoppingBasket,
 	StarRounded,
@@ -15,7 +14,7 @@ import { useUser } from '../../hooks/useUser';
 import css from './TabBar.module.css';
 
 type PageData = {
-	id: 'latest' | 'search' | 'selling' | 'buying' | 'starred' | 'outbids';
+	id: 'latest' | 'search' | 'selling' | 'buying' | 'starred';
 	label: string;
 	renderIcon: () => ReactNode;
 	url: string;
@@ -54,14 +53,8 @@ export const TabBar = () => {
 			url: `/buying${bggUsername ? `/${bggUsername}` : ''}`,
 		},
 		{
-			id: 'outbids',
-			label: 'Outbid',
-			renderIcon: () => <HeartBroken />,
-			url: `/outbids${bggUsername ? `/${bggUsername}` : ''}`,
-		},
-		{
 			id: 'starred',
-			label: 'Starred',
+			label: 'Outbid & Starred',
 			disabled: !user,
 			renderIcon: () => <StarRounded />,
 			url: `/starred`,

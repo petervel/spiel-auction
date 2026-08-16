@@ -34,3 +34,8 @@ FROM nginx:alpine
 RUN apk upgrade --no-cache
 
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# nginx:alpine's stock default.conf has no SPA fallback, so any direct
+# load of a client-side route (e.g. /buying/someuser) 404s instead of
+# falling through to index.html for React Router to handle.
+COPY nginx.conf /etc/nginx/conf.d/default.conf

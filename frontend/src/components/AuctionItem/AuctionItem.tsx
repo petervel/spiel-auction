@@ -16,12 +16,14 @@ interface Props {
 	item: Item;
 	allowBookmarks?: boolean;
 	allowStars?: boolean;
+	isOutbid?: boolean;
 }
 
 export const AuctionItem = ({
 	item,
 	allowBookmarks = false,
 	allowStars = false,
+	isOutbid = false,
 }: Props) => {
 	const [expanded, setExpanded] = useState(false);
 	const pageId = usePageId();
@@ -80,6 +82,7 @@ export const AuctionItem = ({
 					item={item}
 					showCompare={showCompare}
 					showStar={allowStars && user !== null}
+					showOutbid={isOutbid}
 					location="list"
 					allowBookmarks={allowBookmarks}
 					bookmarkClass={css.bookmark}
@@ -90,6 +93,7 @@ export const AuctionItem = ({
 					item={item}
 					showCompare={showCompare}
 					showStar={user !== null}
+					showOutbid={isOutbid}
 					location="details"
 					allowBookmarks={false}
 				/>

@@ -8,6 +8,10 @@
 	display: flex;
 }
 
+.outbidIcon {
+	color: var(--color-error);
+}
+
 .smallScreen {
 	display: flex;
 	justify-items: center;

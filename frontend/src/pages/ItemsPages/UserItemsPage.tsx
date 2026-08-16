@@ -1,6 +1,6 @@
-import { Link } from '@mui/material';
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { NotReadyMessage } from '../../components/NotReadyMessage/NotReadyMessage';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { useBggUsername } from '../../hooks/useBggUsername';
@@ -28,7 +28,7 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 	extraProps,
 }: UserItemsPageProps<TParams, TData>) => {
 	const { username: pathUsername } = useParams();
-	const { user, isLoading: userLoading, openLoginDialog } = useUser();
+	const { user, isLoading: userLoading } = useUser();
 	const { bggUsername, setBggUsername, isOwnName, activeName } =
 		useBggUsername(pathUsername);
 
@@ -47,10 +47,7 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 		if (!user)
 			return (
 				<div>
-					<Link component="button" onClick={openLoginDialog}>
-						Log in
-					</Link>{' '}
-					to see your items.
+					<LoginLink /> to see your items.
 				</div>
 			);
 		return <EditBggUserName onSave={setBggUsername} />;

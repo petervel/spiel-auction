@@ -13,6 +13,7 @@ type ItemsPageProps = {
 	items: Item[];
 	subTitle?: ReactNode;
 	allowStars?: boolean;
+	outbidItemIds?: Set<number>;
 };
 
 export const ItemsPage = ({
@@ -20,6 +21,7 @@ export const ItemsPage = ({
 	items,
 	subTitle,
 	allowStars = false,
+	outbidItemIds,
 }: ItemsPageProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.END_DATE);
 
@@ -51,7 +53,11 @@ export const ItemsPage = ({
 						/>
 					)}
 
-					<ItemsList items={sortedItems} allowStars={allowStars} />
+					<ItemsList
+						items={sortedItems}
+						allowStars={allowStars}
+						outbidItemIds={outbidItemIds}
+					/>
 				</>
 			</Container>
 		</>

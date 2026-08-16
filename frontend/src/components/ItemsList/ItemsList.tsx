@@ -6,12 +6,14 @@ type ItemsListProps = {
 	items: Item[];
 	allowBookmarks?: boolean;
 	allowStars?: boolean;
+	outbidItemIds?: Set<number>;
 };
 
 export const ItemsList = ({
 	items,
 	allowBookmarks = false,
 	allowStars = false,
+	outbidItemIds,
 }: ItemsListProps) => {
 	return (
 		<ul className={css.items}>
@@ -23,6 +25,7 @@ export const ItemsList = ({
 							item={item}
 							allowBookmarks={allowBookmarks}
 							allowStars={allowStars}
+							isOutbid={outbidItemIds?.has(item.id)}
 						/>
 					);
 				})

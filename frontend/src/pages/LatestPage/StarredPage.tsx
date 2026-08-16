@@ -1,5 +1,4 @@
-import { Link } from '@mui/material';
-import { Container } from '../../components/Container/Container';
+import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { NotReadyMessage } from '../../components/NotReadyMessage/NotReadyMessage';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { useOutbids } from '../../hooks/useOutbids';
@@ -8,7 +7,7 @@ import { useUser } from '../../hooks/useUser';
 import { ItemsPage } from '../ItemsPages/ItemsPage';
 
 export const StarredPage = () => {
-	const { user, isLoading: userLoading, openLoginDialog } = useUser();
+	const { user, isLoading: userLoading } = useUser();
 	const { starred, isLoading: starredLoading } = useStarred();
 	const {
 		data: outbidsData,
@@ -20,14 +19,9 @@ export const StarredPage = () => {
 
 	if (!user) {
 		return (
-			<Container>
-				<div>
-					<Link component="button" onClick={openLoginDialog}>
-						Log in
-					</Link>{' '}
-					to see your outbid and starred items.
-				</div>
-			</Container>
+			<div>
+				<LoginLink /> to see your outbid and starred items.
+			</div>
 		);
 	}
 
@@ -40,19 +34,18 @@ export const StarredPage = () => {
 	const outbidItems = outbidsData?.items ?? [];
 	const outbidItemIds = new Set(outbidItems.map((item) => item.id));
 
-	// Don't show an item under Starred if it's already shown under Outbid.
-	const starredItems = (starred?.items ?? []).filter(
+	// Union of outbid + starred, without duplicating an item that's both.
+	const starredOnlyItems = (starred?.items ?? []).filter(
 		(item) => !outbidItemIds.has(item.id)
 	);
+	const combinedItems = [...outbidItems, ...starredOnlyItems];
 
 	return (
-		<>
-			<ItemsPage title="Outbid" items={outbidItems} allowStars={true} />
-			<ItemsPage
-				title="Starred"
-				items={starredItems}
-				allowStars={true}
-			/>
-		</>
+		<ItemsPage
+			title="Outbid & Starred"
+			items={combinedItems}
+			allowStars={true}
+			outbidItemIds={outbidItemIds}
+		/>
 	);
 };

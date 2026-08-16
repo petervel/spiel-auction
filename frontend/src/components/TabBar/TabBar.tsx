@@ -10,7 +10,6 @@ import { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { usePageId } from '../../hooks/usePageId';
-import { useUser } from '../../hooks/useUser';
 import css from './TabBar.module.css';
 
 type PageData = {
@@ -24,7 +23,6 @@ type PageData = {
 export const TabBar = () => {
 	const pageId = usePageId();
 	const { bggUsername } = useBggUsername();
-	const { user } = useUser();
 
 	const pages: PageData[] = [
 		{
@@ -55,7 +53,6 @@ export const TabBar = () => {
 		{
 			id: 'starred',
 			label: 'Outbid & Starred',
-			disabled: !user,
 			renderIcon: () => <StarRounded />,
 			url: `/starred`,
 		},

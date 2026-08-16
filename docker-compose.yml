@@ -12,7 +12,11 @@ services:
       - ./data:/var/lib/mysql
       - ./my.cnf:/etc/mysql/conf.d/my.cnf
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      # A plain ping can report healthy before MySQL can actually complete
+      # a real authenticated connection (caching_sha2_password full-auth
+      # briefly fails right after startup) - run a real query instead so
+      # dependents don't race that window.
+      test: ["CMD-SHELL", "mysql -u$$MYSQL_USER -p$$MYSQL_PASSWORD -e 'SELECT 1' $$MYSQL_DATABASE || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3

@@ -85,7 +85,7 @@ function replaceNewlines(text: string): string {
 	return text;
 }
 function replaceUrls(text: string): string {
-	text = text.replace(/\[url=([^\]]+)]/gi, '<a href="$1">');
+	text = text.replace(/\[url=([^\]]+)]/gi, '<a href="$1" target="_blank">');
 	text = text.replace(/\[\/url\]/gi, '</a>');
 	return text;
 }

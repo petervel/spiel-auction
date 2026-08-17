@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useInfiniteQuery } from 'react-query';
 import { Item } from '../model/Item';
+import { fetchListJson, retryUnlessNotReady } from './fetchList';
 import { useListId } from './useListId';
 
 export interface ItemData {
@@ -34,19 +35,7 @@ const fetchItems = async (params: {
 		url.searchParams.append('lastId', `${pageParam}`);
 	}
 
-	const response = await fetch(url);
-
-	if (!response.ok) {
-		if (response.status === 404) {
-			const body = await response.json().catch(() => null);
-			if (body?.error === 'not_ready') {
-				throw new Error('not_ready');
-			}
-		}
-		throw new Error('Network response was not ok.');
-	}
-
-	const data: ItemData = await response.json();
+	const data = await fetchListJson<ItemData>(url);
 	return { data, nextCursor: data.lastId || null };
 };
 
@@ -84,9 +73,7 @@ export const useInfiniteItems = (
 				refetchInterval,
 				refetchIntervalInBackground: true,
 				keepPreviousData: true,
-				retry: (failureCount, error) =>
-					(error as Error).message !== 'not_ready' &&
-					failureCount < 3,
+				retry: retryUnlessNotReady,
 			}
 		),
 		filters,

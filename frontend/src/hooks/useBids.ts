@@ -1,12 +1,12 @@
 import { QueryFunctionContext, useQuery } from 'react-query';
-import { useListId } from './useListId';
 import { Item } from '../model/Item';
-
+import { fetchListJson, retryUnlessNotReady } from './fetchList';
+import { useListId } from './useListId';
 
 type ResultType = {
 	totalPrice: number;
 	items: Item[];
-}
+};
 
 interface FetchItemsParams {
 	buyer?: string;
@@ -15,7 +15,9 @@ interface FetchItemsParams {
 
 const fetchItems = async ({
 	queryKey,
-}: QueryFunctionContext<[string, number, FetchItemsParams]>): Promise<ResultType> => {
+}: QueryFunctionContext<
+	[string, number, FetchItemsParams]
+>): Promise<ResultType> => {
 	const [, listId, params] = queryKey;
 
 	const url = new URL(`/api/bids/${listId}`, window.location.origin);
@@ -23,36 +25,22 @@ const fetchItems = async ({
 	if (params.buyer) url.searchParams.append('buyer', params.buyer);
 	if (params.seller) url.searchParams.append('seller', params.seller);
 
-	const response = await fetch(url);
-	if (!response.ok) {
-		if (response.status === 404) {
-			const body = await response.json().catch(() => null);
-			if (body?.error === 'not_ready') {
-				throw new Error('not_ready');
-			}
-		}
-		throw new Error('Network response was not ok');
-	}
-
-	return response.json();
+	return fetchListJson<ResultType>(url);
 };
 
 export const useBids = (params: FetchItemsParams = {}) => {
 	const listId = useListId();
 
-	const hasFilters = Boolean(params.buyer || params.seller)
+	const hasFilters = Boolean(params.buyer || params.seller);
 	return useQuery<
-			ResultType,
-			Error,
-			ResultType,
-			[string, number, FetchItemsParams]
-		>(
-			['bids', listId, params], fetchItems, {
-				enabled: hasFilters,
-				refetchInterval: 60000,
-				keepPreviousData: true,
-				retry: (failureCount, error) =>
-					error.message !== 'not_ready' && failureCount < 3,
-			}
-		);
+		ResultType,
+		Error,
+		ResultType,
+		[string, number, FetchItemsParams]
+	>(['bids', listId, params], fetchItems, {
+		enabled: hasFilters,
+		refetchInterval: 60000,
+		keepPreviousData: true,
+		retry: retryUnlessNotReady,
+	});
 };

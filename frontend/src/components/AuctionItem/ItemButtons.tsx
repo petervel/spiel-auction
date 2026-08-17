@@ -14,7 +14,6 @@ import css from './ItemButtons.module.css';
 interface ItemButtonsProps {
 	item: Item;
 	showCompare: boolean;
-	location: 'list' | 'details';
 	showStar?: boolean;
 	allowBookmarks?: boolean;
 	bookmarkClass?: string;
@@ -32,7 +31,6 @@ type ButtonConfig = {
 export const ItemButtons = ({
 	item,
 	showCompare,
-	location = 'list',
 	showStar = false,
 	allowBookmarks = false,
 	bookmarkClass = '',
@@ -78,7 +76,7 @@ export const ItemButtons = ({
 
 	return (
 		<Stack direction="row">
-			{allowBookmarks && location === 'list' && (
+			{allowBookmarks && (
 				<div className={css.bookmark}>
 					<BookmarkButton
 						itemId={item.id}
@@ -87,12 +85,7 @@ export const ItemButtons = ({
 				</div>
 			)}
 
-			<Stack
-				direction="row"
-				className={
-					location === 'list' ? css.bigScreen : css.smallScreen
-				}
-			>
+			<Stack direction="row">
 				{buttons.map((btn) => (
 					<AuctionItemButton
 						key={btn.key}

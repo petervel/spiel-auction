@@ -1,5 +1,5 @@
 import { HeartBroken } from '@mui/icons-material';
-import { Collapse, Skeleton, Stack } from '@mui/material';
+import { Collapse, Skeleton, Stack, useMediaQuery } from '@mui/material';
 import classNames from 'classnames';
 import { useState } from 'react';
 import { useBookmark } from '../../hooks/useBookmark';
@@ -37,6 +37,13 @@ export const AuctionItem = ({
 	const toggleExpanded = () => setExpanded((val) => !val);
 
 	const listId = useListId();
+
+	// Matches the old .bigScreen/.smallScreen breakpoint: buttons show
+	// inline in the collapsed row on desktop, or only once expanded on
+	// mobile. Rendered in exactly one of those two spots below, instead
+	// of rendering both and hiding one with CSS.
+	const isDesktop = useMediaQuery('(min-width:768px)');
+	const showStar = allowStars && user !== null;
 
 	return (
 		<div
@@ -86,23 +93,25 @@ export const AuctionItem = ({
 						titleAccess="You've been outbid"
 					/>
 				)}
-				<ItemButtons
-					item={item}
-					showCompare={showCompare}
-					showStar={allowStars && user !== null}
-					location="list"
-					allowBookmarks={allowBookmarks}
-					bookmarkClass={css.bookmark}
-				/>
+				{isDesktop && (
+					<ItemButtons
+						item={item}
+						showCompare={showCompare}
+						showStar={showStar}
+						allowBookmarks={allowBookmarks}
+						bookmarkClass={css.bookmark}
+					/>
+				)}
 			</Stack>
 			<Collapse in={expanded}>
-				<ItemButtons
-					item={item}
-					showCompare={showCompare}
-					showStar={user !== null}
-					location="details"
-					allowBookmarks={false}
-				/>
+				{!isDesktop && (
+					<ItemButtons
+						item={item}
+						showCompare={showCompare}
+						showStar={showStar}
+						allowBookmarks={false}
+					/>
+				)}
 
 				<AuctionItemDetails item={item} />
 			</Collapse>

@@ -1,22 +1,7 @@
-@media screen and (max-width: 768px) {
-	.bigScreen {
-		display: none !important;
-	}
-}
-
 .bookmark {
 	display: flex;
 }
 
-.smallScreen {
-	display: flex;
-	justify-items: center;
-}
-@media screen and (min-width: 768px) {
-	.smallScreen > * {
-		display: none !important;
-	}
-}
 @media screen and (min-width: 1280px) {
 	.bookmark {
 		display: none;

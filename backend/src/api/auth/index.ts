@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import { authenticateUser, tokenToUser } from "../../../middleware/auth";
 import { sendMagicLinkEmail } from "../../email";
 import { consumeMagicLinkToken, createMagicLinkToken } from "../../magicLink";
-import { completeLogin } from "../../session";
+import { completeLogin, touchLastSeen } from "../../session";
 
 const router = express.Router();
 
@@ -161,6 +161,11 @@ router.get("/me", async (req, res) => {
 
 	try {
 		const user = await tokenToUser(token);
+		if (user) {
+			touchLastSeen(user).catch((err) =>
+				console.error("Error updating lastSeenAt:", err),
+			);
+		}
 		return res.json({ user });
 	} catch (err) {
 		console.error("Error in /me:", err);

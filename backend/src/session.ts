@@ -28,3 +28,24 @@ export const completeLogin = async (res: Response, user: User) => {
 
 	res.json({ message: "Login successful", user: fullUser });
 };
+
+const LAST_SEEN_THROTTLE_MS = 15 * 60 * 1000;
+
+// Called from /me, which the frontend only hits while the tab is
+// actually visible (see UserProvider's visibilitychange handling) -
+// so this doubles as a "genuinely looked at recently" signal, not
+// just "session cookie still valid". Throttled to avoid a write on
+// every poll.
+export const touchLastSeen = async (user: User) => {
+	if (
+		user.lastSeenAt &&
+		Date.now() - user.lastSeenAt.getTime() < LAST_SEEN_THROTTLE_MS
+	) {
+		return;
+	}
+
+	await prisma.user.update({
+		where: { id: user.id },
+		data: { lastSeenAt: new Date() },
+	});
+};

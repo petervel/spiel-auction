@@ -22,6 +22,7 @@ model User {
   bggUsername       String?
   accessLevel       AccessLevel @default(NORMAL)
   createdAt         DateTime    @default(now())
+  lastSeenAt        DateTime?
   googleId          String?     @unique
   currentUserFairId Int?
   currentUserFair   UserFair?   @relation("CurrentUserFair", fields: [currentUserFairId], references: [id])

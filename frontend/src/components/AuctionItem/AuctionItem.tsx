@@ -93,13 +93,19 @@ export const AuctionItem = ({
 						titleAccess="You've been outbid"
 					/>
 				)}
+				{allowBookmarks && (
+					<div className={css.inlineBookmark}>
+						<BookmarkButton
+							itemId={item.id}
+							className={css.bookmark}
+						/>
+					</div>
+				)}
 				{isDesktop && (
 					<ItemButtons
 						item={item}
 						showCompare={showCompare}
 						showStar={showStar}
-						allowBookmarks={allowBookmarks}
-						bookmarkClass={css.bookmark}
 					/>
 				)}
 			</Stack>
@@ -109,7 +115,6 @@ export const AuctionItem = ({
 						item={item}
 						showCompare={showCompare}
 						showStar={showStar}
-						allowBookmarks={false}
 					/>
 				)}
 

@@ -8,15 +8,11 @@ import bggIcon from '../../assets/bgg.svg';
 import { useStarred } from '../../hooks/useStarred';
 import { Item } from '../../model/Item';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
-import BookmarkButton from './BookmarkButton';
-import css from './ItemButtons.module.css';
 
 interface ItemButtonsProps {
 	item: Item;
 	showCompare: boolean;
 	showStar?: boolean;
-	allowBookmarks?: boolean;
-	bookmarkClass?: string;
 }
 
 type ButtonConfig = {
@@ -32,8 +28,6 @@ export const ItemButtons = ({
 	item,
 	showCompare,
 	showStar = false,
-	allowBookmarks = false,
-	bookmarkClass = '',
 }: ItemButtonsProps) => {
 	const { starItem, unstarItem, starred, isStarred } = useStarred();
 	const iconSize = 30;
@@ -76,27 +70,16 @@ export const ItemButtons = ({
 
 	return (
 		<Stack direction="row">
-			{allowBookmarks && (
-				<div className={css.bookmark}>
-					<BookmarkButton
-						itemId={item.id}
-						className={bookmarkClass}
-					/>
-				</div>
-			)}
-
-			<Stack direction="row">
-				{buttons.map((btn) => (
-					<AuctionItemButton
-						key={btn.key}
-						link={btn.link || btn.onClick!}
-						newTab={btn.newTab}
-						tooltip={btn.tooltip}
-					>
-						{btn.content}
-					</AuctionItemButton>
-				))}
-			</Stack>
+			{buttons.map((btn) => (
+				<AuctionItemButton
+					key={btn.key}
+					link={btn.link || btn.onClick!}
+					newTab={btn.newTab}
+					tooltip={btn.tooltip}
+				>
+					{btn.content}
+				</AuctionItemButton>
+			))}
 		</Stack>
 	);
 };

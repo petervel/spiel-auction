@@ -119,7 +119,7 @@ function replaceStars(text: string): string {
 function replaceUsers(text: string): string {
 	text = text.replace(
 		/\[user=([^[]+)\]/gi,
-		'<a href="https://boardgamegeek.com/user/$1">$1'
+		'<a href="https://boardgamegeek.com/user/$1" target="_blank">$1'
 	);
 	text = text.replace(/\[\/user\]/gi, '</a>');
 	return text;
@@ -127,7 +127,7 @@ function replaceUsers(text: string): string {
 function replaceThings(text: string): string {
 	text = text.replace(
 		/\[thing=(\d+)\]/gi,
-		'<a href="https://boardgamegeek.com/thing/$1">'
+		'<a href="https://boardgamegeek.com/thing/$1" target="_blank">'
 	);
 	text = text.replace(/\[\/thing\]/gi, '</a>');
 	return text;

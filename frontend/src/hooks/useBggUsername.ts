@@ -31,16 +31,13 @@ export const useBggUsername = (pathOverride?: string) => {
 
 			setSaving(true);
 			try {
-				const method = username ? 'POST' : 'DELETE';
+				// The backend only exposes POST /bggUsername (no DELETE route) -
+				// it already treats a null body as "clear it".
 				const res = await fetch('/api/user/bggUsername', {
-					method,
-					headers: username
-						? { 'Content-Type': 'application/json' }
-						: undefined,
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
 					credentials: 'include',
-					body: username
-						? JSON.stringify({ bggUsername: username })
-						: undefined,
+					body: JSON.stringify({ bggUsername: username || null }),
 				});
 
 				if (!res.ok) throw new Error('Failed to update BGG username');

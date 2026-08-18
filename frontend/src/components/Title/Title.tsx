@@ -16,6 +16,7 @@ export const Title = ({ title, left, right }: TitleProps) => {
 				variant="h5"
 				component="h2"
 				className={css.title}
+				mx={0}
 				sx={{ position: left || right ? 'absolute' : '' }}
 			>
 				{title}

@@ -13,6 +13,14 @@ const RETRY_INTERVAL_MS = 15_000;  // 15 seconds while waiting for BGG to queue
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// docker's own --timestamps flag only shows up when someone remembers to
+// pass it, and isn't there at all once logs are piped elsewhere - put the
+// timestamp in the message itself so it's always there.
+const log = (message: string) =>
+  console.log(`[${new Date().toISOString()}] ${message}`);
+const logError = (message: string) =>
+  console.error(`[${new Date().toISOString()}] ${message}`);
+
 // BGG regenerates the geeklist XML on any change since it was last built,
 // and the ?comments=1 version gets invalidated by any new bid/comment
 // across all ~15k items - on a busy list that can churn faster than BGG
@@ -40,9 +48,31 @@ const SOURCES: Source[] = [
   },
 ];
 
+// Axios errors carry the full request/response (headers, sockets, retry
+// config, ...) - logging one raw drowns the log in noise. Reduce it to the
+// status and response body, which is what actually explains the failure
+// (e.g. BGG's rate-limit message arrives as a normal response body on a
+// 429, not as a distinct error type).
+const describeError = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
+    const body =
+      typeof error.response?.data === "string"
+        ? error.response.data
+            .replace(/<\?xml[^>]*\?>/g, "")
+            .replace(/<[^>]+>/g, "")
+            .replace(/\s+/g, " ")
+            .trim()
+        : undefined;
+    if (status) return body ? `HTTP ${status}: ${body}` : `HTTP ${status}`;
+    return error.message;
+  }
+  return error instanceof Error ? error.message : String(error);
+};
+
 const fetchXML = async (source: Source): Promise<string | null> => {
   if (!BGG_API_TOKEN) {
-    console.error("BGG_API_TOKEN is not set");
+    logError("BGG_API_TOKEN is not set");
     return null;
   }
   try {
@@ -52,7 +82,7 @@ const fetchXML = async (source: Source): Promise<string | null> => {
     });
     return response.data;
   } catch (error) {
-    console.error(`[${source.name}] Failed to fetch XML:`, error);
+    logError(`[${source.name}] Failed to fetch XML: ${describeError(error)}`);
     return null;
   }
 };
@@ -82,7 +112,7 @@ const saveXML = (source: Source, xmlContent: string) => {
   const fileName = `${source.filePrefix}-${timestamp}.xml`;
   const filePath = path.join(xmlDir, fileName);
   fs.writeFileSync(filePath, xmlContent);
-  console.log(`[${source.name}] XML saved successfully: ${fileName}`);
+  log(`[${source.name}] XML saved successfully: ${fileName}`);
 };
 
 const filesFor = (source: Source) =>
@@ -109,7 +139,7 @@ const cleanupOldFiles = (source: Source) => {
     .slice(3)
     .forEach((file) => {
       fs.unlinkSync(path.join(xmlDir, file.name));
-      console.log(`[${source.name}] Deleted old XML file: ${file.name}`);
+      log(`[${source.name}] Deleted old XML file: ${file.name}`);
     });
 };
 
@@ -122,16 +152,16 @@ const fetchAndStoreXML = async (
 
   const status = checkXML(xmlContent);
   if (status === "queued") {
-    console.log(`[${source.name}] BGG is still processing the geeklist, will retry in 15s.`);
+    log(`[${source.name}] BGG is still processing the geeklist, will retry in 15s.`);
     return "queued";
   }
   if (status !== null) {
-    console.log(`[${source.name}] ${status}`);
+    log(`[${source.name}] ${status}`);
     return false;
   }
 
   if (xmlContent === getMostRecentXML(source)) {
-    console.log(`[${source.name}] XML unchanged since last fetch, skipping save.`);
+    log(`[${source.name}] XML unchanged since last fetch, skipping save.`);
     return "unchanged";
   }
 
@@ -144,7 +174,7 @@ const runLoop = async (source: Source) => {
   let interval = MIN_INTERVAL_MS;
 
   while (true) {
-    console.log(`[${source.name}] Fetching geeklist from BGG...`);
+    log(`[${source.name}] Fetching geeklist from BGG...`);
     let result = await fetchAndStoreXML(source);
 
     // While BGG is queuing our request, poll every 15 seconds.
@@ -161,7 +191,7 @@ const runLoop = async (source: Source) => {
       interval = Math.min(interval * 2, MAX_INTERVAL_MS);
     }
 
-    console.log(`[${source.name}] Next fetch in ${interval / 1000}s.`);
+    log(`[${source.name}] Next fetch in ${interval / 1000}s.`);
     await sleep(interval);
   }
 };

@@ -7,9 +7,15 @@ const listId = process.env.DEFAULT_GEEKLIST_ID; // TODO: Move this to DB so it c
 const BGG_API_TOKEN = process.env.BGG_API_TOKEN;
 const xmlDir = "/app/data";
 
-const MIN_INTERVAL_MS = 60_000;    // 1 minute — reset to this on any change
+const MIN_INTERVAL_MS = 120_000;   // 2 minutes — reset to this on any change
 const MAX_INTERVAL_MS = 900_000;   // 15 minutes — ceiling for backoff
-const RETRY_INTERVAL_MS = 15_000;  // 15 seconds while waiting for BGG to queue
+const RETRY_INTERVAL_MS = 30_000;  // 30 seconds while waiting for BGG to queue
+
+// Running two sources means two independent loops hitting BGG on roughly
+// the same cadence - without this they'd fire in lockstep, doubling the
+// instantaneous burst size right when BGG is most likely to rate-limit.
+// Stagger their start so requests interleave instead.
+const STAGGER_MS = 30_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -170,14 +176,16 @@ const fetchAndStoreXML = async (
   return "changed";
 };
 
-const runLoop = async (source: Source) => {
+const runLoop = async (source: Source, initialDelayMs: number) => {
+  if (initialDelayMs > 0) await sleep(initialDelayMs);
+
   let interval = MIN_INTERVAL_MS;
 
   while (true) {
     log(`[${source.name}] Fetching geeklist from BGG...`);
     let result = await fetchAndStoreXML(source);
 
-    // While BGG is queuing our request, poll every 15 seconds.
+    // While BGG is queuing our request, poll every 30 seconds.
     while (result === "queued") {
       await sleep(RETRY_INTERVAL_MS);
       result = await fetchAndStoreXML(source);
@@ -200,10 +208,10 @@ const run = () => {
   if (!fs.existsSync(xmlDir)) fs.mkdirSync(xmlDir);
 
   // Independent loops - a stuck/slow comments fetch must never hold back
-  // the reliable items-only one.
-  for (const source of SOURCES) {
-    runLoop(source);
-  }
+  // the reliable items-only one. Staggered so they don't fire in lockstep.
+  SOURCES.forEach((source, index) => {
+    runLoop(source, index * STAGGER_MS);
+  });
 };
 
 run();

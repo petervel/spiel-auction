@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `Fair`
+    ADD COLUMN `itemsLastUpdated` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `itemsLastResult` ENUM('NONE', 'FAILURE', 'SUCCESS', 'RUNNING') NOT NULL DEFAULT 'NONE',
+    ADD COLUMN `itemsStartedAt` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `latestItemsFile` VARCHAR(191) NULL;

@@ -199,7 +199,9 @@ const fetchAndStoreXML = async (
 
   const status = checkXML(xmlContent);
   if (status === "queued") {
-    log(`[${source.name}] BGG is still processing the geeklist, will retry in 15s.`);
+    log(
+      `[${source.name}] BGG is still processing the geeklist, will retry in ${RETRY_INTERVAL_MS / 1000}s.`,
+    );
     return "queued";
   }
   if (status !== null) {

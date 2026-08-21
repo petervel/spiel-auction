@@ -1,4 +1,5 @@
 import {
+	ForumRounded,
 	LoginRounded,
 	LogoutRounded,
 	Save,
@@ -66,6 +67,19 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 							<Save className={css.menuIcon} />
 						</ListItemIcon>
 						Export
+					</MenuItem>
+					<MenuItem
+						className={css.menuItem}
+						component="a"
+						href="https://boardgamegeek.com/thread/3753367/auction-tool-2026-discussion-thread"
+						target="_blank"
+						rel="noopener noreferrer"
+						onClick={close}
+					>
+						<ListItemIcon>
+							<ForumRounded className={css.menuIcon} />
+						</ListItemIcon>
+						Help
 					</MenuItem>
 
 					<MenuItem

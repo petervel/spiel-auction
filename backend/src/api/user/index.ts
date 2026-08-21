@@ -124,10 +124,9 @@ router.post(
 
 			const isAdmin = req.user?.accessLevel === "ADMIN";
 
-			// Normal users can only switch to active, non-test fairs. Admins
-			// can switch to any fair regardless of status (including the
-			// archived test fair).
-			if (!isAdmin && (fair.status !== "ACTIVE" || fair.geeklistId === TEST_GEEKLIST_ID)) {
+			// Normal users can switch to any fair except the test one. Admins
+			// can switch to any fair, including the test one.
+			if (!isAdmin && fair.geeklistId === TEST_GEEKLIST_ID) {
 				res.status(403).json({ error: "Forbidden" });
 				return;
 			}

@@ -24,13 +24,10 @@ router.get(
 			res.status(200).json(JSON.parse(cache));
 			return;
 		}
-		// Admins can see/select any fair regardless of status (including
-		// the archived test fair); normal users only get active, non-test
-		// ones.
+		// Admins can see/select any fair, including the test one; normal
+		// users see everything except the test fair (archived ones too).
 		const fairs = await prisma.fair.findMany({
-			where: isAdmin
-				? {}
-				: { status: "ACTIVE", geeklistId: { not: TEST_GEEKLIST_ID } },
+			where: isAdmin ? {} : { geeklistId: { not: TEST_GEEKLIST_ID } },
 		});
 		await redisClient.set(cacheKey, JSON.stringify(fairs));
 		await redisClient.expire(cacheKey, 30);

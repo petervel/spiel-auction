@@ -1,7 +1,10 @@
 import { Button, Stack } from '@mui/material';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { BackButton } from '../../components/BackButton/BackButton';
+import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
+import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
 import { useListId } from '../../hooks/useListId';
@@ -26,33 +29,41 @@ export const ExportPage = () => {
 		seller: bggUsername,
 	});
 
-	if (buyingLoading || sellingLoading) return <Spinner />;
-	if (!buyingData) return null;
-	if (!sellingData) return null;
-	if (buyingError || sellingError) {
-		const typedError = (buyingError ?? sellingError) as Error;
-		return <div>Error: {typedError.message}</div>;
-	}
+	const renderBody = () => {
+		if (buyingLoading || sellingLoading) return <Spinner />;
+		if (!buyingData || !sellingData) return null;
+		if (buyingError || sellingError) {
+			const typedError = (buyingError ?? sellingError) as Error;
+			return <div>Error: {typedError.message}</div>;
+		}
 
-	const workbook = new ExcelJS.Workbook();
-	createSheet(listId, workbook, buyingData.items, true);
+		const workbook = new ExcelJS.Workbook();
+		createSheet(listId, workbook, buyingData.items, true);
 
-	const filteredSales = (sellingData.items as Item[]).filter(
-		(item: Item) => item.hasBids
-	);
-	createSheet(listId, workbook, filteredSales, false);
+		const filteredSales = (sellingData.items as Item[]).filter(
+			(item: Item) => item.hasBids
+		);
+		createSheet(listId, workbook, filteredSales, false);
+
+		return (
+			<Stack alignItems="center" my={5}>
+				<div>
+					<Button
+						variant="contained"
+						onClick={() => triggerDownload(workbook)}
+					>
+						Export to XLSX
+					</Button>
+				</div>
+			</Stack>
+		);
+	};
 
 	return (
-		<Stack alignItems="center" my={5}>
-			<div>
-				<Button
-					variant="contained"
-					onClick={() => triggerDownload(workbook)}
-				>
-					Export to XLSX
-				</Button>
-			</div>
-		</Stack>
+		<>
+			<Title title="Export" left={<BackButton />} />
+			<Container>{renderBody()}</Container>
+		</>
 	);
 };
 

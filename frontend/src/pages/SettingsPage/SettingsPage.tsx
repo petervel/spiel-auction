@@ -5,12 +5,13 @@ import {
 	Snackbar,
 	Stack,
 	TextField,
-	Typography,
 } from '@mui/material';
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { Spinner } from '../../components/Spinner/Spinner';
+import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useCurrentFair } from '../../hooks/useCurrentFair';
 import { useFairs } from '../../hooks/useFairs';
@@ -65,9 +66,7 @@ export const SettingsPage = () => {
 	if (!user) {
 		return (
 			<Stack paddingInline="2rem">
-				<Typography variant="h4" component="h1">
-					Settings
-				</Typography>
+				<Title title="Settings" left={<BackButton />} />
 				<p>
 					<LoginLink /> to manage your BGG username.
 				</p>
@@ -76,51 +75,55 @@ export const SettingsPage = () => {
 	}
 
 	return (
-		<Stack paddingInline="2rem" alignItems="center">
-			<Stack gap={4} width="100%" maxWidth={400}>
-				<Typography variant="h4" component="h1">
-					Settings
-				</Typography>
-				{fairs && fairs.length > 1 && (
-					<>
-						<TextField
-							select
-							value={currentFairId ?? ''}
-							onChange={(evt) => handleFairChange(+evt.target.value)}
-							disabled={switchingFair}
-							fullWidth
-							label="Active fair"
-							variant="standard"
-						>
-							{fairs.map((fair) => (
-								<MenuItem key={fair.id} value={fair.id}>
-									{fair.name}
-								</MenuItem>
-							))}
-						</TextField>
-						<Divider sx={{ width: '100%' }} />
-					</>
-				)}
-				<form onSubmit={save} style={{ width: '100%' }}>
-					<Stack gap={3} alignItems="start">
-						<TextField
-							name="username"
-							value={editUsername}
-							onChange={(evt) => setEditUsername(evt.target.value)}
-							fullWidth
-							label="BGG username"
-							variant="standard"
-						/>
-						<Stack gap={2} direction="row">
-							<Button variant="contained" type="submit">
-								Save
-							</Button>
-							<Button type="button" onClick={cancel}>
-								Cancel
-							</Button>
+		<Stack paddingInline="2rem">
+			<Title title="Settings" left={<BackButton />} />
+			<Stack alignItems="center">
+				<Stack gap={4} width="100%" maxWidth={400}>
+					{fairs && fairs.length > 1 && (
+						<>
+							<TextField
+								select
+								value={currentFairId ?? ''}
+								onChange={(evt) =>
+									handleFairChange(+evt.target.value)
+								}
+								disabled={switchingFair}
+								fullWidth
+								label="Active fair"
+								variant="standard"
+							>
+								{fairs.map((fair) => (
+									<MenuItem key={fair.id} value={fair.id}>
+										{fair.name}
+									</MenuItem>
+								))}
+							</TextField>
+							<Divider sx={{ width: '100%' }} />
+						</>
+					)}
+					<form onSubmit={save} style={{ width: '100%' }}>
+						<Stack gap={3} alignItems="start">
+							<TextField
+								name="username"
+								value={editUsername}
+								onChange={(evt) =>
+									setEditUsername(evt.target.value)
+								}
+								fullWidth
+								label="BGG username"
+								variant="standard"
+							/>
+							<Stack gap={2} direction="row">
+								<Button variant="contained" type="submit">
+									Save
+								</Button>
+								<Button type="button" onClick={cancel}>
+									Cancel
+								</Button>
+							</Stack>
 						</Stack>
-					</Stack>
-				</form>
+					</form>
+				</Stack>
 			</Stack>
 			<Snackbar
 				open={!!switchedToastMessage}

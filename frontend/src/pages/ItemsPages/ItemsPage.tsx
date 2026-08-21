@@ -35,30 +35,25 @@ export const ItemsPage = ({
 
 	return (
 		<>
+			<Title
+				title={title}
+				right={
+					<TitleButton onClick={toggleSort}>
+						<Sort />
+					</TitleButton>
+				}
+			/>
+			{subTitle}
 			<Container>
-				<Title
-					title={title}
-					right={
-						<TitleButton onClick={toggleSort}>
-							<Sort />
-						</TitleButton>
-					}
-				/>
-				{subTitle}
-				<>
-					{showSort && (
-						<SortButtons
-							sorting={sorting}
-							setSorting={setSorting}
-						/>
-					)}
+				{showSort && (
+					<SortButtons sorting={sorting} setSorting={setSorting} />
+				)}
 
-					<ItemsList
-						items={sortedItems}
-						allowStars={allowStars}
-						outbidItemIds={outbidItemIds}
-					/>
-				</>
+				<ItemsList
+					items={sortedItems}
+					allowStars={allowStars}
+					outbidItemIds={outbidItemIds}
+				/>
 			</Container>
 		</>
 	);

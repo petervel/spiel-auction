@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { BackButton } from '../../components/BackButton/BackButton';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
@@ -21,14 +22,16 @@ export const DuplicatesPage = () => {
 	}
 
 	return (
-		<Container>
-			<Title title="Duplicates" />
-			<ul>
-				{items.map((userDupes) => (
-					<UserDuplicates userDupes={userDupes} />
-				))}
-			</ul>
-		</Container>
+		<>
+			<Title title="Duplicates" left={<BackButton />} />
+			<Container>
+				<ul>
+					{items.map((userDupes) => (
+						<UserDuplicates userDupes={userDupes} />
+					))}
+				</ul>
+			</Container>
+		</>
 	);
 };
 

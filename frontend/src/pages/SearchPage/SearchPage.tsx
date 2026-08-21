@@ -47,8 +47,8 @@ export const SearchPage = () => {
 
 	return (
 		<>
+			<Title title={title} />
 			<Container>
-				<Title title={title} />
 				<SearchResults data={objects} search={filters.search} />
 				{hasNextPage && (
 					<LoadMore

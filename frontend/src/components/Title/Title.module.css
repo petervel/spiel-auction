@@ -1,14 +1,18 @@
 .header {
-	padding-block: 8px;
-	position: relative;
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
 	align-items: center;
+	padding-block: 8px;
+}
+
+.left {
+	justify-self: start;
 }
 
 .title {
 	text-align: center;
-	width: 100%;
 }
 
-.filler {
-	flex: 1;
+.right {
+	justify-self: end;
 }

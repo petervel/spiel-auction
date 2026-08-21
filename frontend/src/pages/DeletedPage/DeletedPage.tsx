@@ -1,3 +1,4 @@
+import { BackButton } from '../../components/BackButton/BackButton';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
@@ -24,8 +25,8 @@ export const DeletedPage = () => {
 	return (
 		<>
 			<a id="items" href="#comments" className={css.internalLink}>go to deleted comments instead?</a>
+			<Title title="Deleted items" left={<BackButton />} />
 			<Container>
-				<Title title="Deleted items" />
 				<ul>
 					{Object.keys(data.items)
 						.sort(
@@ -47,8 +48,8 @@ export const DeletedPage = () => {
 			</Container>
 
 			<a id="comments" href="#items" className={css.internalLink}>go to deleted items instead?</a>
+			<Title title="Deleted comments" />
 			<Container>
-				<Title title="Deleted comments" />
 				<ul>
 					{Object.keys(data.comments)
 						.sort(

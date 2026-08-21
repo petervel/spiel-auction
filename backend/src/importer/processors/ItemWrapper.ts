@@ -29,6 +29,7 @@ export class ItemWrapper {
 		listId: number,
 		source: Record<string, any>,
 		updateTime: number,
+		referenceYear: number,
 	): ItemWrapper {
 		let itemData: Item = {
 			id: Number(source["@_id"]),
@@ -61,8 +62,8 @@ export class ItemWrapper {
 			isEnded: false,
 			currentBid: null,
 			itemType: ItemType.GAME,
-			...this.getDerivedData(source["body"], [], true),
-			...this.getDerivedData(source["body"], [], false),
+			...this.getDerivedData(source["body"], [], true, referenceYear),
+			...this.getDerivedData(source["body"], [], false, referenceYear),
 		};
 
 		if (source["body"].toLowerCase().includes("auction ended")) {
@@ -78,12 +79,14 @@ export class ItemWrapper {
 			source["body"],
 			commentData,
 			true,
+			referenceYear,
 		);
 
 		const strikedData = this.getDerivedData(
 			source["body"],
 			commentData,
 			false,
+			referenceYear,
 		);
 
 		itemData = {
@@ -139,7 +142,8 @@ export class ItemWrapper {
 	private static getDerivedData(
 		text: string,
 		commentsData: ItemCommentWrapper[],
-		removeStrikeThrough: boolean = true,
+		removeStrikeThrough: boolean,
+		referenceYear: number,
 	) {
 		text = removeStrikeThrough ? removeStrikethrough(text) : text;
 
@@ -205,7 +209,7 @@ export class ItemWrapper {
 					.replace(/^[\s,]*/, "")
 			: null;
 		const auctionEndDate = auctionEnd
-			? (parseEndDateString(auctionEnd) ?? null)
+			? (parseEndDateString(auctionEnd, referenceYear) ?? null)
 			: null;
 
 		const { highestBid, highestBidder } =
@@ -241,6 +245,7 @@ export class ItemWrapper {
 		listId: number,
 		source: String,
 		updateTime: number,
+		referenceYear: number,
 	): ItemWrapper[] {
 		if (!source) return [];
 
@@ -248,7 +253,12 @@ export class ItemWrapper {
 
 		const items = [];
 		for (const itemArray of itemsArray) {
-			const wrapper = ItemWrapper.fromXml(listId, itemArray, updateTime);
+			const wrapper = ItemWrapper.fromXml(
+				listId,
+				itemArray,
+				updateTime,
+				referenceYear,
+			);
 
 			items.push(wrapper);
 		}

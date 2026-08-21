@@ -89,7 +89,10 @@ export function removeKnownContexts(text: string): string {
 	text = text.replace(/\b(\d+)(th|st|nd)/gi, ""); // 12th
 	return text;
 }
-export function parseEndDateString(end: string | undefined | null) {
+export function parseEndDateString(
+	end: string | undefined | null,
+	referenceYear: number,
+) {
 	if (!end) return undefined;
 
 	end = end.replace(
@@ -100,9 +103,8 @@ export function parseEndDateString(end: string | undefined | null) {
 	end = end.replace(/(,?\s*random time\.?)?/gi, "");
 	end = end.trim();
 
-	const currentYear = new Date().getFullYear();
 	if (!/\b\d{4}\b/.test(end)) {
-		end += ` ${currentYear}`;
+		end += ` ${referenceYear}`;
 	}
 
 	const normalized = end.replace(/\bokt/gi, "oct");

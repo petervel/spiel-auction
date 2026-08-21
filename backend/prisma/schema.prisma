@@ -75,6 +75,12 @@ model Fair {
   // status decides whether the importer fetches/updates this fair; hidden
   // decides whether normal users see it as a selectable option in the UI.
   hidden      Boolean    @default(false)
+  // The real-world date this fair is held. Used as the reference year
+  // when resolving imprecise end-date notations in item bodies (e.g.
+  // "Auction ends: Thu 17 Nov" has no year) - without this, parsing
+  // always assumed the current year, which is wrong for any fair other
+  // than the one happening right now.
+  eventDate   DateTime
   geeklistId  Int        @unique
   lastUpdated Int        @default(0)
   lastResult  JobResult  @default(NONE)

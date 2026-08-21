@@ -176,7 +176,12 @@ async function update(fair: Fair, updateTime: number, pass: PassOptions) {
 	const object = parseResult.value;
 
 	console.info(`${fair.geeklistId}: Loading auction list object...`);
-	const listWrapper = await ListWrapper.fromXml(fair.id, object, updateTime);
+	const listWrapper = await ListWrapper.fromXml(
+		fair.id,
+		object,
+		updateTime,
+		fair.eventDate.getFullYear(),
+	);
 
 	console.info(`${fair.geeklistId}: Data loaded. Saving...`);
 	const upsertResult = await listWrapper.save({

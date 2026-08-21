@@ -33,7 +33,9 @@ const parseGeeklist = (file: string): Record<string, any> => {
 const loadItems = (file: string) => {
 	const geeklist = parseGeeklist(file);
 	const listId = Number(geeklist["@_id"]);
-	return ItemWrapper.loadAll(listId, geeklist["item"], 1700000000);
+	// Reference year for resolving imprecise end-date notations - not
+	// exercised by any assertion here, so any real year is fine.
+	return ItemWrapper.loadAll(listId, geeklist["item"], 1700000000, 2024);
 };
 
 const upsertCalls = () =>

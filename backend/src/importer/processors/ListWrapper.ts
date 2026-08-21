@@ -27,6 +27,7 @@ export class ListWrapper {
 		fairId: number,
 		source: Record<string, any>,
 		updateTime: number,
+		referenceYear: number,
 	) {
 		const listId = Number(source["@_id"]);
 
@@ -67,7 +68,12 @@ export class ListWrapper {
 			deleted: false,
 		};
 
-		const items = ItemWrapper.loadAll(listId, source["item"], updateTime);
+		const items = ItemWrapper.loadAll(
+			listId,
+			source["item"],
+			updateTime,
+			referenceYear,
+		);
 
 		return new ListWrapper(listData, commentsData, items);
 	}

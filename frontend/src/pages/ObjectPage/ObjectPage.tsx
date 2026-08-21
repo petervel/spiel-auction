@@ -28,11 +28,9 @@ export const ObjectPage = () => {
 	const title = data.length ? data[0].objectName : `Object #${objectId}`;
 
 	return (
-		<>
+		<Container>
 			<Title title={title} />
-			<Container>
-				<ItemsList items={data} allowStars={true} />
-			</Container>
-		</>
+			<ItemsList items={data} allowStars={true} />
+		</Container>
 	);
 };

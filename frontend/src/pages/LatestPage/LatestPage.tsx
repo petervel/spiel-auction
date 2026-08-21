@@ -56,18 +56,20 @@ export const LatestPage = () => {
 
 	return (
 		<>
-			<Title
-				title={title}
-				left={
-					<TitleButton onClick={toggleFilters}>
-						<FilterAltOutlined />
-					</TitleButton>
-				}
-			/>
-
-			{showFilters && <Filters filters={filters} setFilters={setFilters} />}
-
 			<Container>
+				<Title
+					title={title}
+					left={
+						<TitleButton onClick={toggleFilters}>
+							<FilterAltOutlined />
+						</TitleButton>
+					}
+				/>
+
+				{showFilters && (
+					<Filters filters={filters} setFilters={setFilters} />
+				)}
+
 				<div
 					className={classNames({
 						[css.items]: true,

@@ -98,6 +98,9 @@ services:
       - xml-data:/app/data
     networks:
       - web
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     environment:
       - BGG_API_TOKEN=${BGG_API_TOKEN}

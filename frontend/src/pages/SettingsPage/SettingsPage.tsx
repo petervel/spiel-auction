@@ -76,11 +76,11 @@ export const SettingsPage = () => {
 	}
 
 	return (
-		<Stack paddingInline="2rem" gap={3}>
-			<Typography variant="h4" component="h1">
-				Settings
-			</Typography>
-			<Stack gap={4} alignItems="start" maxWidth={400}>
+		<Stack paddingInline="2rem" alignItems="center">
+			<Stack gap={4} width="100%" maxWidth={400}>
+				<Typography variant="h4" component="h1">
+					Settings
+				</Typography>
 				{fairs && fairs.length > 1 && (
 					<>
 						<TextField

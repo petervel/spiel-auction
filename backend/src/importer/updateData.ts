@@ -157,7 +157,7 @@ type PassOptions = {
 
 async function update(fair: Fair, updateTime: number, pass: PassOptions) {
 	console.info(`${fair.geeklistId}: Fetching XML (${pass.filePrefix})...`);
-	const fileResult = getLatestXmlFilename(pass.filePrefix);
+	const fileResult = getLatestXmlFilename(pass.filePrefix, fair.geeklistId);
 	if (fileResult.isErr()) return fileResult;
 
 	const latestFile = fileResult.value;
@@ -199,11 +199,13 @@ async function update(fair: Fair, updateTime: number, pass: PassOptions) {
 
 const XML_DIR = path.join("/app/xml-data");
 
-const getLatestXmlFilename = (filePrefix: string) => {
+const getLatestXmlFilename = (filePrefix: string, geeklistId: number) => {
 	const files = fs
 		.readdirSync(XML_DIR)
 		.filter(
-			(file) => file.startsWith(`${filePrefix}-`) && file.endsWith(".xml"),
+			(file) =>
+				file.startsWith(`${filePrefix}-${geeklistId}-`) &&
+				file.endsWith(".xml"),
 		);
 
 	if (files.length === 0) {

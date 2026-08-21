@@ -100,8 +100,8 @@ services:
       - web
     restart: unless-stopped
     environment:
-      - DEFAULT_GEEKLIST_ID=${DEFAULT_GEEKLIST_ID}
       - BGG_API_TOKEN=${BGG_API_TOKEN}
+      - DATABASE_URL=${DATABASE_URL}
 
 volumes:
   xml-data:

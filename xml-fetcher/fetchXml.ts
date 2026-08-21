@@ -1,9 +1,9 @@
 import axios from "axios";
 import * as fs from "fs";
+import * as mysql from "mysql2/promise";
 import * as path from "path";
 import * as xml2js from "xml2js";
 
-const listId = process.env.DEFAULT_GEEKLIST_ID; // TODO: Move this to DB so it can be set in web UI
 const BGG_API_TOKEN = process.env.BGG_API_TOKEN;
 const xmlDir = "/app/data";
 
@@ -20,31 +20,27 @@ const RETRY_INTERVAL_MS = 60_000;  // 60 seconds while waiting for BGG to queue 
 const RATE_LIMIT_MIN_INTERVAL_MS = 900_000;   // 15 minutes
 const RATE_LIMIT_MAX_INTERVAL_MS = 1_800_000; // 30 minutes
 
-// Running two sources means two independent loops hitting BGG - without
-// this they'd fire in lockstep, doubling the instantaneous burst size
-// right when BGG is most likely to rate-limit. Stagger their start so
-// requests interleave instead.
-const STAGGER_MS = 60_000;
+// BGG's rate limit is evaluated across the whole app's combined request
+// volume (same IP/token), not per-fair or per-endpoint - confirmed this
+// session when two sources firing close together both got 429'd, even
+// though either alone might have succeeded. Every actual HTTP request,
+// regardless of which fair or source it's for, waits out this minimum
+// gap since the last request from anywhere before firing.
+const MIN_GAP_BETWEEN_REQUESTS_MS = 90_000;
+let lastGlobalRequestAt = 0;
 
-// The stagger above only offsets the very first request - each loop's
-// interval then evolves independently (queued-retries, doubling, resets
-// on success), so their schedules drift and can converge again later.
-// Production logs showed exactly that: both sources firing within
-// seconds of each other, both getting 429'd together, even after one had
-// just been succeeding fine on its own. Enforce an ongoing minimum gap
-// since the OTHER source's most recent request (not just once at
-// startup), covering every actual HTTP request including queued-retries.
-const MIN_GAP_FROM_OTHER_SOURCE_MS = 90_000;
-const lastRequestAt: Record<string, number> = {};
-
-const waitForOtherSourceGap = async (sourceName: string) => {
-  const otherAttempts = SOURCES.filter((s) => s.name !== sourceName).map(
-    (s) => lastRequestAt[s.name] ?? 0,
-  );
-  const mostRecentOther = Math.max(0, ...otherAttempts);
-  const wait = MIN_GAP_FROM_OTHER_SOURCE_MS - (Date.now() - mostRecentOther);
-  if (wait > 0) await sleep(wait);
-  lastRequestAt[sourceName] = Date.now();
+const waitForGlobalGap = async () => {
+  // Loop rather than a single check-then-sleep: when several callers are
+  // all waiting on the same stale lastGlobalRequestAt, they'd otherwise
+  // all wake up and fire within milliseconds of each other. Re-checking
+  // after every wake-up re-serializes them, since whichever one runs
+  // first updates lastGlobalRequestAt before the next one's turn.
+  while (true) {
+    const wait = MIN_GAP_BETWEEN_REQUESTS_MS - (Date.now() - lastGlobalRequestAt);
+    if (wait <= 0) break;
+    await sleep(wait);
+  }
+  lastGlobalRequestAt = Date.now();
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -66,24 +62,27 @@ const logError = (message: string) =>
 // one keeps item listings fresh, the unreliable one is still the only
 // source of bid data, whenever it does land.
 type Source = {
-  name: string;
+  name: "comments" | "items";
   label: string; // for logging - includes the geeklist id, e.g. "comments #319165"
   url: string;
   filePrefix: string;
+  geeklistId: number;
 };
 
-const SOURCES: Source[] = [
+const sourcesFor = (geeklistId: number): Source[] => [
   {
     name: "comments",
-    label: `comments #${listId}`,
-    url: `https://boardgamegeek.com/xmlapi/geeklist/${listId}?comments=1`,
+    label: `comments #${geeklistId}`,
+    url: `https://boardgamegeek.com/xmlapi/geeklist/${geeklistId}?comments=1`,
     filePrefix: "data",
+    geeklistId,
   },
   {
     name: "items",
-    label: `items #${listId}`,
-    url: `https://boardgamegeek.com/xmlapi/geeklist/${listId}`,
+    label: `items #${geeklistId}`,
+    url: `https://boardgamegeek.com/xmlapi/geeklist/${geeklistId}`,
     filePrefix: "items-data",
+    geeklistId,
   },
 ];
 
@@ -119,7 +118,7 @@ const fetchXML = async (source: Source): Promise<FetchResult> => {
     return { ok: false, rateLimited: false };
   }
 
-  await waitForOtherSourceGap(source.name);
+  await waitForGlobalGap();
 
   try {
     const response = await axios.get(source.url, {
@@ -157,17 +156,22 @@ const checkXML = (xmlContent: string): null | "queued" | string => {
 
 const saveXML = (source: Source, xmlContent: string) => {
   const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
-  const fileName = `${source.filePrefix}-${timestamp}.xml`;
+  const fileName = `${source.filePrefix}-${source.geeklistId}-${timestamp}.xml`;
   const filePath = path.join(xmlDir, fileName);
   fs.writeFileSync(filePath, xmlContent);
   log(`[${source.label}] XML saved successfully: ${fileName}`);
 };
 
+// Filenames include the geeklist id so files from different fairs sharing
+// the same prefix (e.g. two "data-*.xml") never get mixed up - both here
+// and in the backend's own lookup of the latest file per fair.
 const filesFor = (source: Source) =>
   fs
     .readdirSync(xmlDir)
     .filter(
-      (file) => file.startsWith(`${source.filePrefix}-`) && file.endsWith(".xml"),
+      (file) =>
+        file.startsWith(`${source.filePrefix}-${source.geeklistId}-`) &&
+        file.endsWith(".xml"),
     )
     .map((file) => ({
       name: file,
@@ -222,12 +226,16 @@ const fetchAndStoreXML = async (
   return "changed";
 };
 
-const runLoop = async (source: Source, initialDelayMs: number) => {
-  if (initialDelayMs > 0) await sleep(initialDelayMs);
+// A fair's two loops run until its geeklist id drops out of the active
+// set (checked once per iteration - no hard cancellation needed, this
+// just stops scheduling further fetches for it).
+const activeGeeklistIds = new Set<number>();
+const runningLoops = new Set<number>();
 
+const runLoop = async (source: Source) => {
   let interval = MIN_INTERVAL_MS;
 
-  while (true) {
+  while (activeGeeklistIds.has(source.geeklistId)) {
     log(`[${source.label}] Fetching geeklist from BGG...`);
     let result = await fetchAndStoreXML(source);
 
@@ -256,16 +264,54 @@ const runLoop = async (source: Source, initialDelayMs: number) => {
     log(`[${source.label}] Next fetch in ${interval / 1000}s.`);
     await sleep(interval);
   }
+
+  log(`[${source.label}] Fair no longer active, stopping.`);
+  runningLoops.delete(source.geeklistId);
 };
 
-const run = () => {
+const startFairLoops = (geeklistId: number, name: string) => {
+  log(`Starting fetch loops for "${name}" (geeklist #${geeklistId}).`);
+  runningLoops.add(geeklistId);
+  for (const source of sourcesFor(geeklistId)) {
+    runLoop(source);
+  }
+};
+
+type ActiveFair = { id: number; geeklistId: number; name: string };
+
+const FAIR_REFRESH_INTERVAL_MS = 5 * 60_000; // 5 minutes
+
+const reconcileFairs = async (pool: mysql.Pool) => {
+  try {
+    const [rows] = await pool.query<mysql.RowDataPacket[]>(
+      "SELECT id, geeklistId, name FROM Fair WHERE status = 'ACTIVE'",
+    );
+    const fairs = rows as unknown as ActiveFair[];
+
+    activeGeeklistIds.clear();
+    for (const fair of fairs) activeGeeklistIds.add(fair.geeklistId);
+
+    for (const fair of fairs) {
+      if (!runningLoops.has(fair.geeklistId)) {
+        startFairLoops(fair.geeklistId, fair.name);
+      }
+    }
+  } catch (error) {
+    logError(`Failed to load active fairs from the DB: ${describeError(error)}`);
+  }
+};
+
+const run = async () => {
   if (!fs.existsSync(xmlDir)) fs.mkdirSync(xmlDir);
 
-  // Independent loops - a stuck/slow comments fetch must never hold back
-  // the reliable items-only one. Staggered so they don't fire in lockstep.
-  SOURCES.forEach((source, index) => {
-    runLoop(source, index * STAGGER_MS);
-  });
+  if (!process.env.DATABASE_URL) {
+    logError("DATABASE_URL is not set");
+    return;
+  }
+  const pool = mysql.createPool(process.env.DATABASE_URL);
+
+  await reconcileFairs(pool);
+  setInterval(() => reconcileFairs(pool), FAIR_REFRESH_INTERVAL_MS);
 };
 
 run();

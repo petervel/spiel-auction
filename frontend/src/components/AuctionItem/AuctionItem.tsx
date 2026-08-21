@@ -87,11 +87,12 @@ export const AuctionItem = ({
 					</div>
 				</div>
 				{isOutbid && (
-					<HeartBroken
-						className={css.outbidIcon}
-						sx={{ fontSize: 30 }}
-						titleAccess="You've been outbid"
-					/>
+					<div className={css.outbidIcon}>
+						<HeartBroken
+							sx={{ fontSize: 30 }}
+							titleAccess="You've been outbid"
+						/>
+					</div>
 				)}
 				{allowBookmarks && (
 					<div className={css.inlineBookmark}>

@@ -6,13 +6,22 @@
 .info {
 	cursor: pointer;
 	flex: 1;
-	padding: 10px 0px;
+	padding: 8px 0px;
 	overflow: hidden;
 }
 
+/* Matches AuctionItemButton's box (display/min-width/padding) so this
+   status icon lines up with the star/compare/BGG buttons beside it,
+   without actually being a clickable button. */
 .outbidIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
 	flex-shrink: 0;
 	align-self: center;
+	min-width: 50px;
+	padding: 8px;
 	color: var(--color-error);
 }
 

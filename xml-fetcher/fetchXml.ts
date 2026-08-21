@@ -7,7 +7,7 @@ const listId = process.env.DEFAULT_GEEKLIST_ID; // TODO: Move this to DB so it c
 const BGG_API_TOKEN = process.env.BGG_API_TOKEN;
 const xmlDir = "/app/data";
 
-const MIN_INTERVAL_MS = 120_000;   // 2 minutes — reset to this on any change
+const MIN_INTERVAL_MS = 240_000;   // 4 minutes — reset to this on any change
 const MAX_INTERVAL_MS = 900_000;   // 15 minutes — ceiling for backoff
 const RETRY_INTERVAL_MS = 30_000;  // 30 seconds while waiting for BGG to queue
 

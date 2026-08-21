@@ -1,9 +1,17 @@
-import { Button, Stack, TextField, Typography } from '@mui/material';
+import {
+	Button,
+	MenuItem,
+	Stack,
+	TextField,
+	Typography,
+} from '@mui/material';
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { useBggUsername } from '../../hooks/useBggUsername';
+import { useCurrentFair } from '../../hooks/useCurrentFair';
+import { useFairs } from '../../hooks/useFairs';
 import { useUser } from '../../hooks/useUser';
 
 export const SettingsPage = () => {
@@ -12,6 +20,10 @@ export const SettingsPage = () => {
 
 	const { bggUsername, setBggUsername, removeBggUsername, saving } =
 		useBggUsername();
+
+	const { data: fairs } = useFairs();
+	const { currentFairId, switchFair, saving: switchingFair } =
+		useCurrentFair();
 
 	const [editUsername, setEditUsername] = useState(bggUsername ?? '');
 	useEffect(() => {
@@ -52,6 +64,23 @@ export const SettingsPage = () => {
 			<Typography variant="h4" component="h1">
 				Settings
 			</Typography>
+			{fairs && fairs.length > 1 && (
+				<TextField
+					select
+					value={currentFairId ?? ''}
+					onChange={(evt) => switchFair(+evt.target.value)}
+					disabled={switchingFair}
+					label="Active fair"
+					variant="standard"
+					sx={{ maxWidth: 300 }}
+				>
+					{fairs.map((fair) => (
+						<MenuItem key={fair.id} value={fair.id}>
+							{fair.name}
+						</MenuItem>
+					))}
+				</TextField>
+			)}
 			<form onSubmit={save}>
 				<Stack gap={3} alignItems="start">
 					<TextField

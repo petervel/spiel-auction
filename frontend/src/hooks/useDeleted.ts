@@ -39,7 +39,7 @@ const fetchObject = async (listId: number) => {
 export const useDeleted = () => {
 	const listId = useListId();
 
-	return useQuery(`deleted`, () => fetchObject(listId), {
+	return useQuery(['deleted', listId], () => fetchObject(listId), {
 		retry: 3,
 		refetchInterval: 60 * 1000, // once per minute
 	});

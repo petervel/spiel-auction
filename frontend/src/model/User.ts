@@ -1,10 +1,12 @@
+import { Fair } from './Fair';
+
 export interface User {
 	id: number;
 	email: string;
 	createdAt: string;
 	currentUserFair: UserFair | null;
 
-	accessLevel?: 'USER' | 'ADMIN' | 'MODERATOR';
+	accessLevel?: 'NORMAL' | 'ADMIN' | 'MODERATOR';
 	bggUsername?: string;
 }
 
@@ -13,4 +15,5 @@ export interface UserFair {
 	userId: number;
 	fairId: number;
 	bookmark: number | null;
+	fair: Fair;
 }

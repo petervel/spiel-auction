@@ -24,7 +24,7 @@ const fetchObject = async (listId: number) => {
 export const useDuplicates = () => {
 	const listId = useListId();
 
-	return useQuery(`duplicates`, () => fetchObject(listId), {
+	return useQuery(['duplicates', listId], () => fetchObject(listId), {
 		retry: 3,
 		refetchInterval: 60 * 1000, // once per minute
 	});

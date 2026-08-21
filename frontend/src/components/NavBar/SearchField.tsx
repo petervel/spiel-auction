@@ -1,11 +1,17 @@
 import { Input } from '@mui/material';
-import { useState } from 'react';
 import { createSearchParams, useNavigate } from 'react-router-dom';
 import css from './SearchField.module.css';
 
-const SearchField = () => {
-	const [search, setSearch] = useState('');
+type SearchFieldProps = {
+	search: string;
+	onSearchChange: (search: string) => void;
+	onClose?: () => void;
+};
 
+// search is lifted to NavBar (rather than local state here) so it
+// survives hiding the field - this component unmounts on blur, which
+// would otherwise wipe out whatever the user had typed.
+const SearchField = ({ search, onSearchChange, onClose }: SearchFieldProps) => {
 	const navigate = useNavigate();
 	const handleSearch = () => {
 		if (search.length === 0) return;
@@ -23,12 +29,13 @@ const SearchField = () => {
 			autoFocus={true}
 			className={css.searchBox}
 			value={search}
-			onChange={(event) => setSearch(event.target.value)}
+			onChange={(event) => onSearchChange(event.target.value)}
 			onKeyUp={(event) => {
 				if (event.key === 'Enter') {
 					handleSearch();
 				}
 			}}
+			onBlur={onClose}
 		/>
 	);
 };

@@ -3,6 +3,7 @@ import {
 	AuthenticatedRequest,
 	authenticateUser,
 } from "../../../middleware/auth";
+import { TEST_GEEKLIST_ID } from "../../constants";
 import prisma from "../../prismaClient";
 
 const router = express.Router();
@@ -94,6 +95,62 @@ router.post(
 			const updatedUser = await prisma.user.update({
 				where: { id: req.user.id },
 				data: { bggUsername },
+			});
+
+			res.status(200).json({ user: updatedUser });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.post(
+	"/currentFair",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const fairId = +req.body.fairId;
+			if (Number.isNaN(fairId)) {
+				res.status(400).json({ error: "Invalid fairId" });
+				return;
+			}
+
+			const fair = await prisma.fair.findUnique({ where: { id: fairId } });
+			if (!fair) {
+				res.status(404).json({ error: "Fair not found" });
+				return;
+			}
+
+			const isAdmin = req.user?.accessLevel === "ADMIN";
+
+			// Normal users can only switch to active, non-test fairs. Admins
+			// can switch to any fair regardless of status (including the
+			// archived test fair).
+			if (!isAdmin && (fair.status !== "ACTIVE" || fair.geeklistId === TEST_GEEKLIST_ID)) {
+				res.status(403).json({ error: "Forbidden" });
+				return;
+			}
+
+			if (!req.user?.id) {
+				res.status(401).json({ error: "Not authenticated" });
+				return;
+			}
+
+			const userFair =
+				(await prisma.userFair.findUnique({
+					where: {
+						userId_fairId: { userId: req.user.id, fairId },
+					},
+				})) ??
+				(await prisma.userFair.create({
+					data: { userId: req.user.id, fairId },
+				}));
+
+			const updatedUser = await prisma.user.update({
+				where: { id: req.user.id },
+				data: { currentUserFairId: userFair.id },
+				include: { currentUserFair: { include: { fair: true } } },
 			});
 
 			res.status(200).json({ user: updatedUser });

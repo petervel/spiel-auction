@@ -1,10 +1,8 @@
 import express from "express";
 import prisma from "../../prismaClient";
 import { redisClient } from "../redisClient";
-import { useListId } from "../useListId";
 
 const MAX_RESULTS = 100;
-const LIST_ID = useListId();
 
 const router = express.Router();
 type BggObject = {
@@ -13,11 +11,19 @@ type BggObject = {
 	objectSubtype: string;
 };
 router.get("/:listId", async (req, res) => {
+	const LIST_ID = +req.params.listId;
+	if (Number.isNaN(LIST_ID)) {
+		res.status(400).json({
+			error: `Invalid listId provided (must be a number): ${req.params.listId}`,
+		});
+		return;
+	}
+
 	const search = (req.query.search as string) || undefined;
 
 	const offset = +(req.query.offset ?? 0) as number;
 
-	const cacheKey = `api:objects:${search}:${offset}`;
+	const cacheKey = `api:objects:${LIST_ID}:${search}:${offset}`;
 
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {

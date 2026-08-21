@@ -53,7 +53,7 @@ export const tokenToUser = async (token: string) => {
 		// 🔹 also fetch full user with fairs if you want it globally available
 		return prisma.user.findUnique({
 			where: { id: user.id },
-			include: { currentUserFair: true, fairs: false },
+			include: { currentUserFair: { include: { fair: true } }, fairs: false },
 		});
 	} catch (error) {
 		console.error("Error verifying token.");

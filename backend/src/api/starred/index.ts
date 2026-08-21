@@ -11,7 +11,8 @@ const router = express.Router();
 // 🔹 Get all starred items for logged in user
 router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	const userId = req.userId;
-	const cacheKey = `api:starred:${userId}`;
+	const fairId = req.user?.currentUserFair?.fairId;
+	const cacheKey = `api:starred:${userId}:${fairId}`;
 
 	// console.log("Fetching starred items for userId:", userId);
 	// Check cache
@@ -32,7 +33,7 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	}
 
 	const starredItems = await prisma.userStarredItem.findMany({
-		where: { userId, fairId: req.user?.currentUserFair?.fairId },
+		where: { userId, fairId },
 		include: { item: true },
 		orderBy: { itemId: "desc" },
 	});
@@ -58,7 +59,8 @@ router.get("/ids", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	}
 
 	const userId = req.userId;
-	const cacheKey = `api:starred:ids:${userId}`;
+	const fairId = req.user?.currentUserFair?.fairId;
+	const cacheKey = `api:starred:ids:${userId}:${fairId}`;
 
 	// Check cache
 	const cache = await redisClient.get(cacheKey);
@@ -69,7 +71,7 @@ router.get("/ids", authenticateUser, async (req: AuthenticatedRequest, res) => {
 
 	const items = await prisma.userStarredItem.findMany({
 		select: { itemId: true },
-		where: { userId },
+		where: { userId, fairId },
 		orderBy: { itemId: "desc" },
 	});
 
@@ -115,7 +117,9 @@ router.post(
 			});
 
 			// Bust cache
-			await redisClient.del(`api:starred:${req.userId}`);
+			await redisClient.del(
+				`api:starred:${req.userId}:${req.user?.currentUserFair?.fairId}`,
+			);
 
 			res.status(200).json({ success: true, starred: true, star });
 		} catch (err) {
@@ -147,7 +151,9 @@ router.delete(
 			});
 
 			// Bust cache
-			await redisClient.del(`api:starred:${req.userId}`);
+			await redisClient.del(
+				`api:starred:${req.userId}:${req.user?.currentUserFair?.fairId}`,
+			);
 
 			res.status(200).json({ success: true, starred: false });
 		} catch (err) {

@@ -19,7 +19,16 @@ router.get("/:objectId", async (req, res) => {
 		});
 		return;
 	}
-	const cacheKey = `api:object:${objectId}`;
+
+	const listId = req.query.listId ? +req.query.listId : LIST_ID;
+	if (Number.isNaN(listId)) {
+		res.status(400).json({
+			error: `Invalid listId provided (must be a number): ${req.query.listId}`,
+		});
+		return;
+	}
+
+	const cacheKey = `api:object:${listId}:${objectId}`;
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
 		res.status(200).json(JSON.parse(cache));
@@ -27,7 +36,7 @@ router.get("/:objectId", async (req, res) => {
 	}
 
 	const items = await prisma.item.findMany({
-		where: { listId: LIST_ID, objectId: objectId, deleted: false },
+		where: { listId, objectId: objectId, deleted: false },
 		orderBy: { postDate: "desc" },
 	});
 

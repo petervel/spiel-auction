@@ -1,9 +1,14 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
+import { AuthenticatedRequest } from "../middleware/auth";
 
-export const checkAdmin = (req: Request, res: Response, next: NextFunction) => {
-	if (req.cookies?.isAdmin == "true") {
+export const requireAdmin = (
+	req: AuthenticatedRequest,
+	res: Response,
+	next: NextFunction,
+) => {
+	if (req.user?.accessLevel === "ADMIN") {
 		next();
 	} else {
-		return res.status(403).json({ error: "Forbidden: Admin only" });
+		res.status(403).json({ error: "Forbidden: Admin only" });
 	}
 };

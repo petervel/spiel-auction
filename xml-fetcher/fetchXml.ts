@@ -120,6 +120,8 @@ const fetchXML = async (source: Source): Promise<FetchResult> => {
 
   await waitForGlobalGap();
 
+  log(`[${source.label}] Fetching geeklist from BGG...`);
+
   try {
     const response = await axios.get(source.url, {
       responseType: "text",
@@ -236,7 +238,6 @@ const runLoop = async (source: Source) => {
   let interval = MIN_INTERVAL_MS;
 
   while (activeGeeklistIds.has(source.geeklistId)) {
-    log(`[${source.label}] Fetching geeklist from BGG...`);
     let result = await fetchAndStoreXML(source);
 
     // While BGG is queuing our request, poll every RETRY_INTERVAL_MS.

@@ -15,7 +15,7 @@ const RETRY_INTERVAL_MS = 30_000;  // 30 seconds while waiting for BGG to queue
 // the same cadence - without this they'd fire in lockstep, doubling the
 // instantaneous burst size right when BGG is most likely to rate-limit.
 // Stagger their start so requests interleave instead.
-const STAGGER_MS = 30_000;
+const STAGGER_MS = 60_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

@@ -6,8 +6,8 @@ export const useCurrentFair = () => {
 	const [saving, setSaving] = useState(false);
 
 	const switchFair = useCallback(
-		async (fairId: number) => {
-			if (!user) return;
+		async (fairId: number): Promise<boolean> => {
+			if (!user) return false;
 
 			setSaving(true);
 			try {
@@ -22,8 +22,10 @@ export const useCurrentFair = () => {
 
 				const data = await res.json();
 				setUser(data.user);
+				return true;
 			} catch (err) {
 				console.error(err);
+				return false;
 			} finally {
 				setSaving(false);
 			}

@@ -9,7 +9,7 @@ const xmlDir = "/app/data";
 
 const MIN_INTERVAL_MS = 240_000;   // 4 minutes — reset to this on any change
 const MAX_INTERVAL_MS = 900_000;   // 15 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
-const RETRY_INTERVAL_MS = 30_000;  // 30 seconds while waiting for BGG to queue
+const RETRY_INTERVAL_MS = 60_000;  // 60 seconds while waiting for BGG to queue - also keeps a single source from firing twice within the same minute while queued
 
 // A 429 is BGG explicitly saying "slow down", unlike an unchanged/generic
 // miss - jump straight to a much larger interval instead of gradually
@@ -17,8 +17,8 @@ const RETRY_INTERVAL_MS = 30_000;  // 30 seconds while waiting for BGG to queue
 // ceiling above if it keeps recurring. Production logs showed the 15
 // minute ceiling wasn't enough for a sustained rate-limit window to
 // actually clear - retries every 15 min just kept getting 429'd for hours.
-const RATE_LIMIT_MIN_INTERVAL_MS = 1_200_000; // 20 minutes
-const RATE_LIMIT_MAX_INTERVAL_MS = 3_600_000; // 60 minutes
+const RATE_LIMIT_MIN_INTERVAL_MS = 900_000;   // 15 minutes
+const RATE_LIMIT_MAX_INTERVAL_MS = 1_800_000; // 30 minutes
 
 // Running two sources means two independent loops hitting BGG - without
 // this they'd fire in lockstep, doubling the instantaneous burst size
@@ -67,6 +67,7 @@ const logError = (message: string) =>
 // source of bid data, whenever it does land.
 type Source = {
   name: string;
+  label: string; // for logging - includes the geeklist id, e.g. "comments #319165"
   url: string;
   filePrefix: string;
 };
@@ -74,11 +75,13 @@ type Source = {
 const SOURCES: Source[] = [
   {
     name: "comments",
+    label: `comments #${listId}`,
     url: `https://boardgamegeek.com/xmlapi/geeklist/${listId}?comments=1`,
     filePrefix: "data",
   },
   {
     name: "items",
+    label: `items #${listId}`,
     url: `https://boardgamegeek.com/xmlapi/geeklist/${listId}`,
     filePrefix: "items-data",
   },
@@ -125,7 +128,7 @@ const fetchXML = async (source: Source): Promise<FetchResult> => {
     });
     return { ok: true, xml: response.data };
   } catch (error) {
-    logError(`[${source.name}] Failed to fetch XML: ${describeError(error)}`);
+    logError(`[${source.label}] Failed to fetch XML: ${describeError(error)}`);
     const rateLimited =
       axios.isAxiosError(error) && error.response?.status === 429;
     return { ok: false, rateLimited };
@@ -157,7 +160,7 @@ const saveXML = (source: Source, xmlContent: string) => {
   const fileName = `${source.filePrefix}-${timestamp}.xml`;
   const filePath = path.join(xmlDir, fileName);
   fs.writeFileSync(filePath, xmlContent);
-  log(`[${source.name}] XML saved successfully: ${fileName}`);
+  log(`[${source.label}] XML saved successfully: ${fileName}`);
 };
 
 const filesFor = (source: Source) =>
@@ -184,7 +187,7 @@ const cleanupOldFiles = (source: Source) => {
     .slice(3)
     .forEach((file) => {
       fs.unlinkSync(path.join(xmlDir, file.name));
-      log(`[${source.name}] Deleted old XML file: ${file.name}`);
+      log(`[${source.label}] Deleted old XML file: ${file.name}`);
     });
 };
 
@@ -200,17 +203,17 @@ const fetchAndStoreXML = async (
   const status = checkXML(xmlContent);
   if (status === "queued") {
     log(
-      `[${source.name}] BGG is still processing the geeklist, will retry in ${RETRY_INTERVAL_MS / 1000}s.`,
+      `[${source.label}] BGG is still processing the geeklist, will retry in ${RETRY_INTERVAL_MS / 1000}s.`,
     );
     return "queued";
   }
   if (status !== null) {
-    log(`[${source.name}] ${status}`);
+    log(`[${source.label}] ${status}`);
     return false;
   }
 
   if (xmlContent === getMostRecentXML(source)) {
-    log(`[${source.name}] XML unchanged since last fetch, skipping save.`);
+    log(`[${source.label}] XML unchanged since last fetch, skipping save.`);
     return "unchanged";
   }
 
@@ -225,10 +228,10 @@ const runLoop = async (source: Source, initialDelayMs: number) => {
   let interval = MIN_INTERVAL_MS;
 
   while (true) {
-    log(`[${source.name}] Fetching geeklist from BGG...`);
+    log(`[${source.label}] Fetching geeklist from BGG...`);
     let result = await fetchAndStoreXML(source);
 
-    // While BGG is queuing our request, poll every 30 seconds.
+    // While BGG is queuing our request, poll every RETRY_INTERVAL_MS.
     while (result === "queued") {
       await sleep(RETRY_INTERVAL_MS);
       result = await fetchAndStoreXML(source);
@@ -250,7 +253,7 @@ const runLoop = async (source: Source, initialDelayMs: number) => {
       interval = Math.min(interval * 2, MAX_INTERVAL_MS);
     }
 
-    log(`[${source.name}] Next fetch in ${interval / 1000}s.`);
+    log(`[${source.label}] Next fetch in ${interval / 1000}s.`);
     await sleep(interval);
   }
 };

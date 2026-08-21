@@ -72,6 +72,9 @@ model Fair {
   id          Int        @id @default(autoincrement())
   name        String     @unique
   status      FairStatus @default(ACTIVE)
+  // status decides whether the importer fetches/updates this fair; hidden
+  // decides whether normal users see it as a selectable option in the UI.
+  hidden      Boolean    @default(false)
   geeklistId  Int        @unique
   lastUpdated Int        @default(0)
   lastResult  JobResult  @default(NONE)

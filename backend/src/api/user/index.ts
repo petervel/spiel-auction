@@ -3,7 +3,6 @@ import {
 	AuthenticatedRequest,
 	authenticateUser,
 } from "../../../middleware/auth";
-import { TEST_GEEKLIST_ID } from "../../constants";
 import prisma from "../../prismaClient";
 
 const router = express.Router();
@@ -124,9 +123,9 @@ router.post(
 
 			const isAdmin = req.user?.accessLevel === "ADMIN";
 
-			// Normal users can switch to any fair except the test one. Admins
-			// can switch to any fair, including the test one.
-			if (!isAdmin && fair.geeklistId === TEST_GEEKLIST_ID) {
+			// Normal users can switch to any non-hidden fair. Admins can
+			// switch to any fair, including hidden ones.
+			if (!isAdmin && fair.hidden) {
 				res.status(403).json({ error: "Forbidden" });
 				return;
 			}

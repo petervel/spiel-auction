@@ -3,7 +3,6 @@ import {
 	AuthenticatedRequest,
 	authenticateUser,
 } from "../../../middleware/auth";
-import { TEST_GEEKLIST_ID } from "../../constants";
 import prisma from "../../prismaClient";
 import { redisClient } from "../redisClient";
 
@@ -24,10 +23,10 @@ router.get(
 			res.status(200).json(JSON.parse(cache));
 			return;
 		}
-		// Admins can see/select any fair, including the test one; normal
-		// users see everything except the test fair (archived ones too).
+		// Admins can see/select any fair, including hidden ones; normal
+		// users only get non-hidden ones.
 		const fairs = await prisma.fair.findMany({
-			where: isAdmin ? {} : { geeklistId: { not: TEST_GEEKLIST_ID } },
+			where: isAdmin ? {} : { hidden: false },
 		});
 		await redisClient.set(cacheKey, JSON.stringify(fairs));
 		await redisClient.expire(cacheKey, 30);

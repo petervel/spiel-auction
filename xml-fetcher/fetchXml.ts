@@ -9,7 +9,7 @@ const xmlDir = "/app/data";
 
 const MIN_INTERVAL_MS = 240_000;   // 4 minutes — reset to this on any change
 const MAX_INTERVAL_MS = 900_000;   // 15 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
-const RETRY_INTERVAL_MS = 90_000;  // 90 seconds between quick queued-retries - matches the global gate below, so this is already the fastest we can go
+const RETRY_INTERVAL_MS = 30_000;  // 30 seconds between quick queued-retries - these deliberately skip the global gate below (see runLoop), so this spacing is real, not just a floor
 
 // Traced a production log of 429s: every ban lasted almost exactly 60
 // minutes from the first 429 to the first non-429 response after it,
@@ -114,13 +114,21 @@ type FetchResult =
   | { ok: true; xml: string }
   | { ok: false; rateLimited: boolean };
 
-const fetchXML = async (source: Source): Promise<FetchResult> => {
+const fetchXML = async (
+  source: Source,
+  options?: { skipGlobalGate?: boolean },
+): Promise<FetchResult> => {
   if (!BGG_API_TOKEN) {
     logError("BGG_API_TOKEN is not set");
     return { ok: false, rateLimited: false };
   }
 
-  await waitForGlobalGap();
+  // Skipped for quick queued-chase retries (see runLoop) - those are
+  // rechecking the same single request in a narrow window, not a fresh
+  // request competing with other sources/fairs for the shared budget.
+  if (!options?.skipGlobalGate) {
+    await waitForGlobalGap();
+  }
 
   log(`[${source.label}] Fetching geeklist from BGG...`);
 
@@ -203,8 +211,9 @@ const cleanupOldFiles = (source: Source) => {
 // non-429 error.
 const fetchAndStoreXML = async (
   source: Source,
+  options?: { skipGlobalGate?: boolean },
 ): Promise<"changed" | "unchanged" | "queued" | "rateLimited" | false> => {
-  const result = await fetchXML(source);
+  const result = await fetchXML(source, options);
   if (!result.ok) return result.rateLimited ? "rateLimited" : false;
   const xmlContent = result.xml;
 
@@ -247,7 +256,7 @@ const runLoop = async (source: Source) => {
     let queuedAttempts = 1;
     while (result === "queued" && queuedAttempts < QUEUED_RETRY_LIMIT) {
       await sleep(RETRY_INTERVAL_MS);
-      result = await fetchAndStoreXML(source);
+      result = await fetchAndStoreXML(source, { skipGlobalGate: true });
       queuedAttempts++;
     }
 

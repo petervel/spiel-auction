@@ -284,8 +284,9 @@ const startFairLoops = (geeklistId: number, name: string) => {
 type ActiveFair = { id: number; geeklistId: number; name: string };
 
 const FAIR_REFRESH_INTERVAL_MS = 5 * 60_000; // 5 minutes
+const STARTUP_RETRY_INTERVAL_MS = 10_000; // 10 seconds
 
-const reconcileFairs = async (pool: mysql.Pool) => {
+const reconcileFairs = async (pool: mysql.Pool): Promise<boolean> => {
   try {
     const [rows] = await pool.query<mysql.RowDataPacket[]>(
       "SELECT id, geeklistId, name FROM Fair WHERE status = 'ACTIVE'",
@@ -300,8 +301,10 @@ const reconcileFairs = async (pool: mysql.Pool) => {
         startFairLoops(fair.geeklistId, fair.name);
       }
     }
+    return true;
   } catch (error) {
     logError(`Failed to load active fairs from the DB: ${describeError(error)}`);
+    return false;
   }
 };
 
@@ -314,7 +317,17 @@ const run = async () => {
   }
   const pool = mysql.createPool(process.env.DATABASE_URL);
 
-  await reconcileFairs(pool);
+  // The DB might not be ready to authenticate the instant this container
+  // starts, even with a healthcheck-based startup dependency - that only
+  // helps if whatever (re)started the container actually respects it,
+  // which a plain container restart or a host reboot restarting both
+  // containers together doesn't. Retry quickly at boot instead of
+  // silently doing nothing until the next FAIR_REFRESH_INTERVAL_MS tick.
+  while (!(await reconcileFairs(pool))) {
+    log(`Retrying in ${STARTUP_RETRY_INTERVAL_MS / 1000}s...`);
+    await sleep(STARTUP_RETRY_INTERVAL_MS);
+  }
+
   setInterval(() => reconcileFairs(pool), FAIR_REFRESH_INTERVAL_MS);
 };
 

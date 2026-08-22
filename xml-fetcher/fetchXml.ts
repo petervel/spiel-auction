@@ -9,7 +9,7 @@ const xmlDir = "/app/data";
 
 const MIN_INTERVAL_MS = 240_000;   // 4 minutes — reset to this on any change
 const MAX_INTERVAL_MS = 900_000;   // 15 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
-const RETRY_INTERVAL_MS = 60_000;  // 60 seconds while waiting for BGG to queue - also keeps a single source from firing twice within the same minute while queued
+const RETRY_INTERVAL_MS = 90_000;  // 90 seconds while waiting for BGG to queue - matches the global gate below, so a solo retrying source isn't the only thing enforcing spacing
 
 // A 429 is BGG explicitly saying "slow down", unlike an unchanged/generic
 // miss - jump straight to a much larger interval instead of gradually

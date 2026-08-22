@@ -9,16 +9,25 @@ const xmlDir = "/app/data";
 
 const MIN_INTERVAL_MS = 240_000;   // 4 minutes — reset to this on any change
 const MAX_INTERVAL_MS = 900_000;   // 15 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
-const RETRY_INTERVAL_MS = 90_000;  // 90 seconds while waiting for BGG to queue - matches the global gate below, so a solo retrying source isn't the only thing enforcing spacing
+const RETRY_INTERVAL_MS = 90_000;  // 90 seconds between quick queued-retries - matches the global gate below, so this is already the fastest we can go
 
-// A 429 is BGG explicitly saying "slow down", unlike an unchanged/generic
-// miss - jump straight to a much larger interval instead of gradually
-// doubling up to it, and allow it to climb further/longer than the benign
-// ceiling above if it keeps recurring. Production logs showed the 15
-// minute ceiling wasn't enough for a sustained rate-limit window to
-// actually clear - retries every 15 min just kept getting 429'd for hours.
-const RATE_LIMIT_MIN_INTERVAL_MS = 900_000;   // 15 minutes
-const RATE_LIMIT_MAX_INTERVAL_MS = 1_800_000; // 30 minutes
+// Traced a production log of 429s: every ban lasted almost exactly 60
+// minutes from the first 429 to the first non-429 response after it,
+// regardless of how many requests happened during the ban or how long
+// the previous backoff had climbed to. It's a fixed-duration lockout, not
+// a decaying one - so there's no benefit to escalating further on repeat
+// 429s, and no benefit to trying again sooner either. Just wait out the
+// known duration.
+const RATE_LIMIT_INTERVAL_MS = 3_600_000; // 60 minutes, flat
+
+// "Still processing" means someone changed the list since BGG last built
+// it - during high-churn periods (mostly European daytime, since that's
+// when bidders are active) it can invalidate faster than BGG can finish
+// rebuilding, so continuing to poll every RETRY_INTERVAL_MS indefinitely
+// just burns requests chasing a moving target. Try a few times quickly in
+// case it settles, then give it real time before trying again.
+const QUEUED_RETRY_LIMIT = 3;
+const STILL_NOT_READY_INTERVAL_MS = 30 * 60_000; // 30 minutes
 
 // BGG's rate limit is evaluated across the whole app's combined request
 // volume (same IP/token), not per-fair or per-endpoint - confirmed this
@@ -233,23 +242,24 @@ const runLoop = async (source: Source) => {
   while (activeGeeklistIds.has(source.geeklistId)) {
     let result = await fetchAndStoreXML(source);
 
-    // While BGG is queuing our request, poll every RETRY_INTERVAL_MS.
-    while (result === "queued") {
+    // Quickly retry a few times in case the list settles down long enough
+    // for BGG to finish rebuilding, without chasing it indefinitely.
+    let queuedAttempts = 1;
+    while (result === "queued" && queuedAttempts < QUEUED_RETRY_LIMIT) {
       await sleep(RETRY_INTERVAL_MS);
       result = await fetchAndStoreXML(source);
+      queuedAttempts++;
     }
 
     if (result === "changed") {
       // Changed: reset backoff to minimum.
       interval = MIN_INTERVAL_MS;
+    } else if (result === "queued") {
+      // Still not ready after QUEUED_RETRY_LIMIT quick tries - give the
+      // list real time to settle instead of continuing to chase it.
+      interval = STILL_NOT_READY_INTERVAL_MS;
     } else if (result === "rateLimited") {
-      // Jump straight to a much larger interval rather than gradually
-      // doubling up to it, and let it climb higher/longer than the
-      // benign ceiling if 429s keep recurring.
-      interval = Math.min(
-        Math.max(interval * 2, RATE_LIMIT_MIN_INTERVAL_MS),
-        RATE_LIMIT_MAX_INTERVAL_MS,
-      );
+      interval = RATE_LIMIT_INTERVAL_MS;
     } else {
       // Unchanged or a non-429 error: double the interval, capped at maximum.
       interval = Math.min(interval * 2, MAX_INTERVAL_MS);

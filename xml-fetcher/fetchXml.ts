@@ -53,16 +53,16 @@ const log = (message: string) =>
 const logError = (message: string) =>
   console.error(`[${new Date().toISOString()}] ${message}`);
 
-// BGG regenerates the geeklist XML on any change since it was last built,
-// and the ?comments=1 version gets invalidated by any new bid/comment
-// across all ~15k items - on a busy list that can churn faster than BGG
-// can finish generating it, so that fetch may never land. The plain
-// version only gets invalidated by item edits, which are far rarer, so
-// it succeeds far more reliably. Fetch both independently: the reliable
-// one keeps item listings fresh, the unreliable one is still the only
-// source of bid data, whenever it does land.
+// This used to also fetch the plain (comments-less) XML as a second,
+// more-reliable source, on the theory that it'd stay fresh even when the
+// ?comments=1 fetch got rate-limited. In practice both sources hit BGG's
+// rate limit about equally often, so the second source was just doubling
+// request volume without actually buying more reliability - back to a
+// single source. The backend's items-only import pass (updateData.ts)
+// is left in place but now permanently idle (never gets a items-data-*
+// file to import) rather than removed, to keep this a small change.
 type Source = {
-  name: "comments" | "items";
+  name: "comments";
   label: string; // for logging - includes the geeklist id, e.g. "comments #319165"
   url: string;
   filePrefix: string;
@@ -75,13 +75,6 @@ const sourcesFor = (geeklistId: number): Source[] => [
     label: `comments #${geeklistId}`,
     url: `https://boardgamegeek.com/xmlapi/geeklist/${geeklistId}?comments=1`,
     filePrefix: "data",
-    geeklistId,
-  },
-  {
-    name: "items",
-    label: `items #${geeklistId}`,
-    url: `https://boardgamegeek.com/xmlapi/geeklist/${geeklistId}`,
-    filePrefix: "items-data",
     geeklistId,
   },
 ];

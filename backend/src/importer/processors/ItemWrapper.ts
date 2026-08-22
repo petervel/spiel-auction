@@ -266,36 +266,14 @@ export class ItemWrapper {
 		return items;
 	}
 
-	public static saveAll(
-		items: ItemWrapper[],
-		options?: { itemsOnly?: boolean },
-	) {
+	public static saveAll(items: ItemWrapper[]) {
 		let upserts: PrismaPromise<any>[] = [];
 		for (const wrapper of items) {
-			let updateData: Partial<Item> = wrapper.dbObject;
-
-			if (options?.itemsOnly) {
-				// This source has no <comment> elements, so highestBidder
-				// etc. would come out as "no bids" - never write that over
-				// real bid state. The comments pass owns these fields; a
-				// brand new item (the `create` branch) legitimately has no
-				// bids yet, so it keeps the full object.
-				const {
-					highestBidder: _highestBidder,
-					hasBids: _hasBids,
-					currentBid: _currentBid,
-					isSold: _isSold,
-					isEnded: _isEnded,
-					...rest
-				} = wrapper.dbObject;
-				updateData = rest;
-			}
-
 			upserts.push(
 				prisma.item.upsert({
 					where: { id: wrapper.dbObject.id },
 					create: wrapper.dbObject,
-					update: updateData,
+					update: wrapper.dbObject,
 				}),
 			);
 

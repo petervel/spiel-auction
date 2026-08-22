@@ -20,27 +20,13 @@ export const updateData = async () => {
 
 	const now = Math.floor(Date.now() / 1000);
 
-	// Selects any fair where EITHER pass is due and not currently locked -
-	// each pass's own due/lock state is then re-checked per fair below,
-	// since a fair can match here because only one of the two is due.
 	const fairs = await prisma.fair.findMany({
 		where: {
 			status: FairStatus.ACTIVE,
+			lastUpdated: { lt: now - STALE_SECONDS },
 			OR: [
-				{
-					lastUpdated: { lt: now - STALE_SECONDS },
-					OR: [
-						{ lastResult: { not: JobResult.RUNNING } },
-						{ startedAt: { lt: now - LOCK_TIMEOUT_SECONDS } },
-					],
-				},
-				{
-					itemsLastUpdated: { lt: now - STALE_SECONDS },
-					OR: [
-						{ itemsLastResult: { not: JobResult.RUNNING } },
-						{ itemsStartedAt: { lt: now - LOCK_TIMEOUT_SECONDS } },
-					],
-				},
+				{ lastResult: { not: JobResult.RUNNING } },
+				{ startedAt: { lt: now - LOCK_TIMEOUT_SECONDS } },
 			],
 		},
 	});
@@ -50,33 +36,19 @@ export const updateData = async () => {
 			isDue(fair.lastUpdated, now) &&
 			!isLocked(fair.lastResult, fair.startedAt, now)
 		) {
-			await runCommentsPass(fair, now);
-		}
-
-		if (
-			isDue(fair.itemsLastUpdated, now) &&
-			!isLocked(fair.itemsLastResult, fair.itemsStartedAt, now)
-		) {
-			await runItemsPass(fair, now);
+			await runUpdate(fair, now);
 		}
 	}
 	return true;
 };
 
-// The ?comments=1 fetch: full item data plus bids/comments. This is the
-// unreliable one - BGG regenerates it on any new comment across the whole
-// list, which on a busy list can outrun how fast it can finish building.
-async function runCommentsPass(fair: Fair, now: number) {
+async function runUpdate(fair: Fair, now: number) {
 	await prisma.fair.update({
 		where: { id: fair.id },
 		data: { lastResult: JobResult.RUNNING, startedAt: now },
 	});
 
-	const result = await update(fair, now, {
-		filePrefix: "data",
-		itemsOnly: false,
-		previousFile: fair.latestFile,
-	});
+	const result = await update(fair, now);
 
 	if (result.isErr()) {
 		await prisma.fair.update({
@@ -84,7 +56,7 @@ async function runCommentsPass(fair: Fair, now: number) {
 			data: { lastResult: JobResult.FAILURE },
 		});
 		console.log(
-			`Processing fair ${fair.geeklistId} (comments) unsuccessful: ${result.error}`,
+			`Processing fair ${fair.geeklistId} unsuccessful: ${result.error}`,
 		);
 		return;
 	}
@@ -101,68 +73,17 @@ async function runCommentsPass(fair: Fair, now: number) {
 	console.log(`${fair.geeklistId} Marking deleted items and comments...`);
 	await markDeletedItems(fair.geeklistId, now);
 	await markDeletedComments(fair.geeklistId, now);
-	console.log(`"${fair.name}" (comments) successfully updated at ${now}.`);
+	console.log(`"${fair.name}" successfully updated at ${now}.`);
 }
 
-// The plain fetch: item listings only, no comments/bids. Far more reliable
-// since it's only invalidated by item edits, not by bid activity - keeps
-// listings fresh even while the comments pass is stuck.
-async function runItemsPass(fair: Fair, now: number) {
-	await prisma.fair.update({
-		where: { id: fair.id },
-		data: { itemsLastResult: JobResult.RUNNING, itemsStartedAt: now },
-	});
-
-	const result = await update(fair, now, {
-		filePrefix: "items-data",
-		itemsOnly: true,
-		previousFile: fair.latestItemsFile,
-	});
-
-	if (result.isErr()) {
-		await prisma.fair.update({
-			where: { id: fair.id },
-			data: { itemsLastResult: JobResult.FAILURE },
-		});
-		console.log(
-			`Processing fair ${fair.geeklistId} (items) unsuccessful: ${result.error}`,
-		);
-		return;
-	}
-
-	await prisma.fair.update({
-		where: { id: fair.id },
-		data: {
-			itemsLastUpdated: now,
-			itemsLastResult: JobResult.SUCCESS,
-			latestItemsFile: result.value.latestFile,
-		},
-	});
-
-	// Not markDeletedComments here - this pass never sees comments, so
-	// their lastSeen is never refreshed by it. Running that check here
-	// would mark every comment deleted the moment the (unreliable)
-	// comments pass goes stale for over an hour, which is expected to
-	// happen regularly - that's the whole reason for this split.
-	console.log(`${fair.geeklistId} Marking deleted items...`);
-	await markDeletedItems(fair.geeklistId, now);
-	console.log(`"${fair.name}" (items) successfully updated at ${now}.`);
-}
-
-type PassOptions = {
-	filePrefix: string;
-	itemsOnly: boolean;
-	previousFile: string | null;
-};
-
-async function update(fair: Fair, updateTime: number, pass: PassOptions) {
-	console.info(`${fair.geeklistId}: Fetching XML (${pass.filePrefix})...`);
-	const fileResult = getLatestXmlFilename(pass.filePrefix, fair.geeklistId);
+async function update(fair: Fair, updateTime: number) {
+	console.info(`${fair.geeklistId}: Fetching XML...`);
+	const fileResult = getLatestXmlFilename("data", fair.geeklistId);
 	if (fileResult.isErr()) return fileResult;
 
 	const latestFile = fileResult.value;
 
-	if (pass.previousFile == latestFile) {
+	if (fair.latestFile == latestFile) {
 		return err("No new XML file, nothing to be done.");
 	}
 
@@ -184,9 +105,7 @@ async function update(fair: Fair, updateTime: number, pass: PassOptions) {
 	);
 
 	console.info(`${fair.geeklistId}: Data loaded. Saving...`);
-	const upsertResult = await listWrapper.save({
-		itemsOnly: pass.itemsOnly,
-	});
+	const upsertResult = await listWrapper.save();
 
 	if (upsertResult.isErr()) return upsertResult;
 

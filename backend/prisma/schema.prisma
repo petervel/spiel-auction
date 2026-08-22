@@ -89,14 +89,6 @@ model Fair {
   listId      Int?       @unique
   latestFile  String?
 
-  // Tracks the reliable, comments-less XML fetch separately from the
-  // fields above (which track the unreliable ?comments=1 fetch) - the two
-  // run on independent cadences.
-  itemsLastUpdated Int       @default(0)
-  itemsLastResult  JobResult @default(NONE)
-  itemsStartedAt   Int       @default(0)
-  latestItemsFile  String?
-
   UserFair        UserFair[]
   UserStarredItem UserStarredItem[]
 }

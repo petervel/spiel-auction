@@ -78,7 +78,7 @@ export class ListWrapper {
 		return new ListWrapper(listData, commentsData, items);
 	}
 
-	public async save(options?: { itemsOnly?: boolean }) {
+	public async save() {
 		let upserts: PrismaPromise<any>[] = [];
 
 		upserts.push(
@@ -91,7 +91,7 @@ export class ListWrapper {
 
 		upserts = upserts.concat(ListCommentWrapper.saveAll(this.comments));
 
-		upserts = upserts.concat(ItemWrapper.saveAll(this.items, options));
+		upserts = upserts.concat(ItemWrapper.saveAll(this.items));
 
 		let offset = 0;
 		while (offset < upserts.length) {

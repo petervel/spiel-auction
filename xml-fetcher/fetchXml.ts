@@ -7,7 +7,13 @@ import * as xml2js from "xml2js";
 const BGG_API_TOKEN = process.env.BGG_API_TOKEN;
 const xmlDir = "/app/data";
 
-const MIN_INTERVAL_MS = 240_000;   // 4 minutes — reset to this on any change
+// Equal on purpose: during high-churn periods most cycles come back
+// "changed" and reset straight to this interval, so it's effectively the
+// sustained request rate, not just a floor. At 4 minutes that was up to 45
+// calls/hour worst-case (with queued chases costing up to 3 calls each),
+// well past the ~9-16/hour we've actually seen survive before a 429 - so
+// there's no longer any backoff room needed above the base interval either.
+const MIN_INTERVAL_MS = 900_000;   // 15 minutes — reset to this on any change
 const MAX_INTERVAL_MS = 900_000;   // 15 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
 const RETRY_INTERVAL_MS = 30_000;  // 30 seconds between quick queued-retries - these deliberately skip the global gate below (see runLoop), so this spacing is real, not just a floor
 

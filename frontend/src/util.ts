@@ -1,6 +1,7 @@
 import { Item } from './model/Item';
 
 export enum SORTING {
+	MOST_RECENT,
 	END_DATE,
 	NAME,
 	PRICE,
@@ -8,12 +9,16 @@ export enum SORTING {
 
 export const sortItems = (
 	items: Item[],
-	sorting: SORTING = SORTING.END_DATE
+	sorting: SORTING = SORTING.MOST_RECENT
 ) => {
 	return items.sort(sortingLookup[sorting]);
 };
 
 const isOver = (item: Item) => item.isEnded || item.isSold;
+
+const sortByMostRecent = (a: Item, b: Item): number => {
+	return b.postTimestamp - a.postTimestamp;
+};
 
 const sortByEndDate = (a: Item, b: Item): number => {
 	if (isOver(a) != isOver(b)) {
@@ -46,6 +51,7 @@ const sortByPrice = (a: Item, b: Item): number => {
 };
 
 const sortingLookup = {
+	[SORTING.MOST_RECENT]: sortByMostRecent,
 	[SORTING.END_DATE]: sortByEndDate,
 	[SORTING.NAME]: sortByName,
 	[SORTING.PRICE]: sortByPrice,

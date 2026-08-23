@@ -34,16 +34,18 @@ export const StarredPage = () => {
 	const outbidItems = outbidsData?.items ?? [];
 	const outbidItemIds = new Set(outbidItems.map((item) => item.id));
 
-	// Union of outbid + starred, without duplicating an item that's both.
+	// An outbid item that's also starred only shows in the Outbid section.
 	const starredOnlyItems = (starred?.items ?? []).filter(
 		(item) => !outbidItemIds.has(item.id)
 	);
-	const combinedItems = [...outbidItems, ...starredOnlyItems];
 
 	return (
 		<ItemsPage
 			title="Outbid & Starred"
-			items={combinedItems}
+			sections={[
+				{ label: 'Outbid', items: outbidItems },
+				{ label: 'Starred', items: starredOnlyItems },
+			]}
 			allowStars={true}
 			outbidItemIds={outbidItemIds}
 		/>

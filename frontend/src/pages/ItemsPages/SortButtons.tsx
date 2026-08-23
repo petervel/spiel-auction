@@ -1,35 +1,33 @@
-import { Stack } from "@mui/material";
-import classNames from "classnames";
-import { SORTING } from "../../util";
-import css from "./SortButtons.module.css"
-import { Timer, SortByAlpha, Euro } from "@mui/icons-material";
+import { MenuItem, Select, SelectChangeEvent, Stack, Typography } from '@mui/material';
+import { SORTING } from '../../util';
 
-// Separate SortButtons component for clarity
 type SortButtonsProps = {
 	sorting: SORTING;
 	setSorting: (value: SORTING) => void;
 };
 
 export const SortButtons = ({ sorting, setSorting }: SortButtonsProps) => (
-	<Stack direction="row" justifyContent="center" my={2}>
-		<Stack direction="row" justifyContent="space-around" gap={5}>
-			{SORT_BUTTONS.map((button) => (
-				<div
-					key={button.setting}
-					className={classNames(css.button, {
-						[css.active]: button.setting === sorting,
-					})}
-					onClick={() => setSorting(button.setting)}
-				>
-					{button.icon}
-				</div>
+	<Stack direction="row" justifyContent="center" alignItems="center" gap={1} my={2}>
+		<Typography variant="body2">Sort by</Typography>
+		<Select
+			size="small"
+			value={sorting}
+			onChange={(event: SelectChangeEvent<number>) =>
+				setSorting(Number(event.target.value))
+			}
+		>
+			{SORT_OPTIONS.map((option) => (
+				<MenuItem key={option.value} value={option.value}>
+					{option.label}
+				</MenuItem>
 			))}
-		</Stack>
+		</Select>
 	</Stack>
 );
 
-const SORT_BUTTONS = [
-	{ setting: SORTING.END_DATE, icon: <Timer /> },
-	{ setting: SORTING.NAME, icon: <SortByAlpha /> },
-	{ setting: SORTING.PRICE, icon: <Euro /> },
+const SORT_OPTIONS = [
+	{ value: SORTING.MOST_RECENT, label: 'Most recent' },
+	{ value: SORTING.END_DATE, label: 'End date' },
+	{ value: SORTING.NAME, label: 'Name' },
+	{ value: SORTING.PRICE, label: 'Price' },
 ];

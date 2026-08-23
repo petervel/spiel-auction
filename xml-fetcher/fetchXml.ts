@@ -9,13 +9,19 @@ const xmlDir = "/app/data";
 
 // Equal on purpose: during high-churn periods most cycles come back
 // "changed" and reset straight to this interval, so it's effectively the
-// sustained request rate, not just a floor. At 4 minutes that was up to 45
-// calls/hour worst-case (with queued chases costing up to 3 calls each),
-// well past the ~9-16/hour we've actually seen survive before a 429 - so
-// there's no longer any backoff room needed above the base interval either.
-const MIN_INTERVAL_MS = 900_000;   // 15 minutes — reset to this on any change
-const MAX_INTERVAL_MS = 900_000;   // 15 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
-const RETRY_INTERVAL_MS = 30_000;  // 30 seconds between quick queued-retries - these deliberately skip the global gate below (see runLoop), so this spacing is real, not just a floor
+// sustained request rate, not just a floor. A production run at 15 minutes
+// held for ~8.75 hours with zero 429s (averaging ~8.76 calls/hour), so
+// there's headroom to push for more updates/hour - stepping down
+// cautiously to 12 minutes rather than jumping straight back toward the
+// old 4-minute value that did cause bans.
+const MIN_INTERVAL_MS = 720_000;   // 12 minutes — reset to this on any change
+const MAX_INTERVAL_MS = 720_000;   // 12 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
+// Traced a production run at 30s spacing: every single retry that ever
+// succeeded resolved on the 3rd attempt, never the 2nd - so the 2nd attempt
+// was consistently too early to matter. Widening to 45s pushes the 3rd
+// attempt out to 90s after the first (was 60s), which should catch updates
+// that finish resolving a bit later, without adding a 4th call.
+const RETRY_INTERVAL_MS = 45_000;  // 45 seconds between quick queued-retries - these deliberately skip the global gate below (see runLoop), so this spacing is real, not just a floor
 
 // Traced a production log of 429s: every ban lasted almost exactly 60
 // minutes from the first 429 to the first non-429 response after it,

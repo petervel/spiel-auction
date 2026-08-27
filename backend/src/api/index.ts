@@ -7,6 +7,7 @@ import items from "./items";
 import object from "./object";
 import objects from "./objects";
 import outbids from "./outbids";
+import push from "./push";
 import starred from "./starred";
 import user from "./user";
 
@@ -20,6 +21,7 @@ export default [
 	{ path: "/object", object: object },
 	{ path: "/objects", object: objects },
 	{ path: "/outbids", object: outbids },
+	{ path: "/push", object: push },
 	{ path: "/user", object: user },
 	{ path: "/starred", object: starred },
 ];

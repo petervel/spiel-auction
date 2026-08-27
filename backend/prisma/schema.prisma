@@ -27,8 +27,9 @@ model User {
   currentUserFairId Int?
   currentUserFair   UserFair?   @relation("CurrentUserFair", fields: [currentUserFairId], references: [id])
 
-  fairs           UserFair[]
-  UserStarredItem UserStarredItem[]
+  fairs             UserFair[]
+  UserStarredItem   UserStarredItem[]
+  PushSubscription  PushSubscription[]
 }
 
 model MagicLinkToken {
@@ -66,6 +67,20 @@ model UserStarredItem {
   itemId Int
 
   @@unique([userId, itemId])
+}
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  // Bounded rather than @db.Text so MySQL can put a unique index on it -
+  // browser push endpoints are ~150-300 chars, 512 is safe headroom.
+  endpoint  String   @unique @db.VarChar(512)
+  p256dh    String   @db.VarChar(255)
+  auth      String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Fair {

@@ -17,6 +17,14 @@ export class ItemCommentWrapper {
 		this.dbObject = dbObject;
 	}
 
+	public get bid(): number | null {
+		return this.dbObject.bid;
+	}
+
+	public get username(): string {
+		return this.dbObject.username;
+	}
+
 	public static fromXml(
 		item: Item,
 		source: Record<string, any>,

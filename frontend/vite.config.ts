@@ -17,6 +17,15 @@ export default defineConfig(({ mode }) => {
 			react(),
 			svgr(),
 			VitePWA({
+				// generateSW (the default) can't add push/notificationclick
+				// listeners - injectManifest hands the whole service worker
+				// over to our own source file instead (src/sw.ts), which has
+				// to reimplement precaching/navigation fallback/runtime
+				// caching by hand (see the `workbox` block below, which has
+				// no effect in this mode).
+				strategies: 'injectManifest',
+				srcDir: 'src',
+				filename: 'sw.ts',
 				registerType: 'autoUpdate',
 				includeAssets: [
 					'favicon.svg',
@@ -28,6 +37,7 @@ export default defineConfig(({ mode }) => {
 				injectRegister: 'auto',
 				devOptions: {
 					enabled: true,
+					type: 'module',
 				},
 				manifest: {
 					name: 'Spiel Auctions',
@@ -51,26 +61,8 @@ export default defineConfig(({ mode }) => {
 						},
 					],
 				},
-				workbox: {
+				injectManifest: {
 					globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-					navigateFallback: '/index.html',
-					runtimeCaching: [
-						{
-							urlPattern: ({ url }) =>
-								url.pathname.startsWith('/api/'),
-							handler: 'NetworkFirst', // try network first, fallback to cache
-							options: {
-								cacheName: 'api-cache',
-								networkTimeoutSeconds: 5, // fallback to cache if network slow
-								fetchOptions: {
-									credentials: 'include',
-								},
-								cacheableResponse: {
-									statuses: [0, 200],
-								},
-							},
-						},
-					],
 				},
 			}),
 		],

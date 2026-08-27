@@ -3,6 +3,7 @@ import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
 import prisma from "../prismaClient";
+import { notifyOutbidBidders } from "./notifications/outbidNotifier";
 import { ListWrapper } from "./processors/ListWrapper";
 import { Result, err, ok } from "./util/result";
 
@@ -104,10 +105,30 @@ async function update(fair: Fair, updateTime: number) {
 		fair.eventDate.getFullYear(),
 	);
 
+	// Snapshot the previous highest bid per item before it gets overwritten
+	// below - save() batches upserts as array-form transactions, so there's
+	// no way to read "before" state from inside that write.
+	const previousBids = await prisma.item.findMany({
+		where: { listId: fair.id, deleted: false },
+		select: { id: true, currentBid: true },
+	});
+	const previousHighestBids = new Map(
+		previousBids
+			.filter((item) => item.currentBid != null)
+			.map((item) => [item.id, item.currentBid as number]),
+	);
+
 	console.info(`${fair.geeklistId}: Data loaded. Saving...`);
 	const upsertResult = await listWrapper.save();
 
 	if (upsertResult.isErr()) return upsertResult;
+
+	// Best-effort - a push-sending bug should never turn a successful
+	// import into a failure.
+	await notifyOutbidBidders(listWrapper.getItems(), previousHighestBids).catch(
+		(err) =>
+			console.error(`${fair.geeklistId}: push notification failed:`, err),
+	);
 
 	console.info(
 		`${fair.geeklistId}: ${upsertResult.value} upserted successfully from ${latestFile}.`,

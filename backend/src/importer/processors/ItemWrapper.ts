@@ -25,6 +25,52 @@ export class ItemWrapper {
 		this.comments = comments;
 	}
 
+	public get id(): number {
+		return this.dbObject.id;
+	}
+
+	public get objectName(): string {
+		return this.dbObject.objectName;
+	}
+
+	public get currentBid(): number | null {
+		return this.dbObject.currentBid ?? null;
+	}
+
+	// Every distinct bidder whose bid falls in [previousHighestBid,
+	// currentBid) - i.e. everyone who was winning or placed a losing bid
+	// within this same update window, now superseded. Includes the
+	// previous highest bidder (their comment isn't new, but they only just
+	// became outbid) and excludes the new highest bidder, including their
+	// own earlier, now-superseded bids if they raised their own price.
+	public getOutbidBidders(previousHighestBid: number): string[] {
+		const newHighestBidder = this.dbObject.highestBidder;
+		const newHighestBid = this.dbObject.currentBid ?? Infinity;
+
+		const seen = new Set<string>();
+		const bidders: string[] = [];
+		for (const comment of this.comments) {
+			const bid = comment.bid;
+			if (bid == null || bid < previousHighestBid || bid >= newHighestBid) {
+				continue;
+			}
+
+			const username = comment.username;
+			const key = username.toLowerCase();
+			if (newHighestBidder && key === newHighestBidder.toLowerCase()) {
+				continue;
+			}
+			if (seen.has(key)) {
+				continue;
+			}
+
+			seen.add(key);
+			bidders.push(username);
+		}
+
+		return bidders;
+	}
+
 	public static fromXml(
 		listId: number,
 		source: Record<string, any>,

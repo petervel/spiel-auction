@@ -23,6 +23,10 @@ export class ListWrapper {
 		this.items = items;
 	}
 
+	public getItems(): ItemWrapper[] {
+		return this.items;
+	}
+
 	public static async fromXml(
 		fairId: number,
 		source: Record<string, any>,

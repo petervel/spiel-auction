@@ -5,6 +5,7 @@ import {
 	Snackbar,
 	Stack,
 	TextField,
+	Typography,
 } from '@mui/material';
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -15,6 +16,7 @@ import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useCurrentFair } from '../../hooks/useCurrentFair';
 import { useFairs } from '../../hooks/useFairs';
+import { usePushSubscription } from '../../hooks/usePushSubscription';
 import { useUser } from '../../hooks/useUser';
 
 export const SettingsPage = () => {
@@ -27,6 +29,15 @@ export const SettingsPage = () => {
 	const { data: fairs } = useFairs();
 	const { currentFairId, switchFair, saving: switchingFair } =
 		useCurrentFair();
+
+	const {
+		supported: pushSupported,
+		permission: pushPermission,
+		subscribed: pushSubscribed,
+		saving: pushSaving,
+		subscribe: subscribePush,
+		unsubscribe: unsubscribePush,
+	} = usePushSubscription();
 
 	const [switchedToastMessage, setSwitchedToastMessage] = useState<
 		string | null
@@ -123,6 +134,44 @@ export const SettingsPage = () => {
 							</Stack>
 						</Stack>
 					</form>
+					{pushSupported && (
+						<>
+							<Divider sx={{ width: '100%' }} />
+							<Stack gap={1} alignItems="start">
+								<Typography variant="body2">
+									Get notified when you're outbid. On iOS,
+									add this app to your home screen first
+									for notifications to work.
+								</Typography>
+								{pushPermission === 'denied' ? (
+									<Typography
+										variant="body2"
+										color="text.secondary"
+									>
+										Notifications are blocked for this
+										site in your browser settings.
+									</Typography>
+								) : pushSubscribed ? (
+									<Button
+										type="button"
+										disabled={pushSaving}
+										onClick={unsubscribePush}
+									>
+										Turn off notifications
+									</Button>
+								) : (
+									<Button
+										type="button"
+										variant="contained"
+										disabled={pushSaving}
+										onClick={subscribePush}
+									>
+										Enable notifications
+									</Button>
+								)}
+							</Stack>
+						</>
+					)}
 				</Stack>
 			</Stack>
 			<Snackbar

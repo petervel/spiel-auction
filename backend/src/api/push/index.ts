@@ -4,6 +4,7 @@ import {
 	authenticateUser,
 } from "../../../middleware/auth";
 import prisma from "../../prismaClient";
+import { sendPushToUser } from "../../push/webPushClient";
 
 const router = express.Router();
 
@@ -82,6 +83,29 @@ router.post(
 		} catch (err) {
 			console.error(err);
 			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.post(
+	"/test",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			if (!req.user?.id) {
+				res.status(401).json({ error: "Not authenticated" });
+				return;
+			}
+
+			await sendPushToUser(req.user.id, {
+				title: "Test notification",
+				body: "If you can see this, push notifications are working.",
+			});
+
+			res.status(200).json({ success: true });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Failed to send test notification" });
 		}
 	},
 );

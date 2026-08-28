@@ -6,12 +6,24 @@ const supported =
 	'serviceWorker' in navigator &&
 	'PushManager' in window;
 
+// iOS Safari only exposes push notifications to a site that's been added
+// to the home screen (since iOS 16.4) - a regular browser tab can't
+// subscribe at all, unlike Android where it just works. `standalone` is
+// iOS's own flag for "running as an installed home-screen app."
+const isIos =
+	typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+const isStandalone =
+	typeof navigator !== 'undefined' &&
+	(navigator as unknown as { standalone?: boolean }).standalone === true;
+const needsHomeScreenInstall = isIos && !isStandalone;
+
 export const usePushSubscription = () => {
 	const [permission, setPermission] = useState<NotificationPermission>(
 		supported ? Notification.permission : 'denied'
 	);
 	const [subscribed, setSubscribed] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [testSending, setTestSending] = useState(false);
 
 	useEffect(() => {
 		if (!supported) return;
@@ -88,5 +100,31 @@ export const usePushSubscription = () => {
 		}
 	}, []);
 
-	return { supported, permission, subscribed, saving, subscribe, unsubscribe };
+	const sendTest = useCallback(async () => {
+		setTestSending(true);
+		try {
+			const res = await fetch('/api/push/test', {
+				method: 'POST',
+				credentials: 'include',
+			});
+			return res.ok;
+		} catch (err) {
+			console.error(err);
+			return false;
+		} finally {
+			setTestSending(false);
+		}
+	}, []);
+
+	return {
+		supported,
+		needsHomeScreenInstall,
+		permission,
+		subscribed,
+		saving,
+		subscribe,
+		unsubscribe,
+		testSending,
+		sendTest,
+	};
 };

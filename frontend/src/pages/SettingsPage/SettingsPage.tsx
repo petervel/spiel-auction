@@ -32,25 +32,33 @@ export const SettingsPage = () => {
 
 	const {
 		supported: pushSupported,
+		needsHomeScreenInstall,
 		permission: pushPermission,
 		subscribed: pushSubscribed,
 		saving: pushSaving,
 		subscribe: subscribePush,
 		unsubscribe: unsubscribePush,
+		testSending: pushTestSending,
+		sendTest: sendTestPush,
 	} = usePushSubscription();
 
-	const [switchedToastMessage, setSwitchedToastMessage] = useState<
-		string | null
-	>(null);
+	const [toastMessage, setToastMessage] = useState<string | null>(null);
 
 	const handleFairChange = async (fairId: number) => {
 		const succeeded = await switchFair(fairId);
 		if (succeeded) {
 			const fair = fairs?.find((f) => f.id === fairId);
-			setSwitchedToastMessage(
-				fair ? `Switched to ${fair.name}` : 'Fair switched'
-			);
+			setToastMessage(fair ? `Switched to ${fair.name}` : 'Fair switched');
 		}
+	};
+
+	const handleTestPush = async () => {
+		const succeeded = await sendTestPush();
+		setToastMessage(
+			succeeded
+				? 'Test notification sent'
+				: 'Failed to send test notification'
+		);
 	};
 
 	const [editUsername, setEditUsername] = useState(bggUsername ?? '');
@@ -139,10 +147,18 @@ export const SettingsPage = () => {
 							<Divider sx={{ width: '100%' }} />
 							<Stack gap={1} alignItems="start">
 								<Typography variant="body2">
-									Get notified when you're outbid. On iOS,
-									add this app to your home screen first
-									for notifications to work.
+									Get notified when you're outbid.
 								</Typography>
+								{needsHomeScreenInstall && (
+									<Typography
+										variant="body2"
+										color="text.secondary"
+									>
+										Add this app to your home screen
+										first - iOS only allows
+										notifications for installed apps.
+									</Typography>
+								)}
 								{pushPermission === 'denied' ? (
 									<Typography
 										variant="body2"
@@ -152,13 +168,31 @@ export const SettingsPage = () => {
 										site in your browser settings.
 									</Typography>
 								) : pushSubscribed ? (
-									<Button
-										type="button"
-										disabled={pushSaving}
-										onClick={unsubscribePush}
-									>
-										Turn off notifications
-									</Button>
+									<>
+										<Typography
+											variant="body2"
+											color="text.secondary"
+										>
+											Notifications are enabled on this
+											device.
+										</Typography>
+										<Stack gap={2} direction="row">
+											<Button
+												type="button"
+												disabled={pushTestSending}
+												onClick={handleTestPush}
+											>
+												Send test notification
+											</Button>
+											<Button
+												type="button"
+												disabled={pushSaving}
+												onClick={unsubscribePush}
+											>
+												Turn off notifications
+											</Button>
+										</Stack>
+									</>
 								) : (
 									<Button
 										type="button"
@@ -175,10 +209,10 @@ export const SettingsPage = () => {
 				</Stack>
 			</Stack>
 			<Snackbar
-				open={!!switchedToastMessage}
+				open={!!toastMessage}
 				autoHideDuration={4000}
-				onClose={() => setSwitchedToastMessage(null)}
-				message={switchedToastMessage}
+				onClose={() => setToastMessage(null)}
+				message={toastMessage}
 			/>
 		</Stack>
 	);

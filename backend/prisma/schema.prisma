@@ -27,6 +27,10 @@ model User {
   currentUserFairId Int?
   currentUserFair   UserFair?   @relation("CurrentUserFair", fields: [currentUserFairId], references: [id])
 
+  notifyOnOutbid     Boolean @default(true)
+  notifyOnNewBid     Boolean @default(true)
+  notifyOnAuctionWon Boolean @default(true)
+
   fairs             UserFair[]
   UserStarredItem   UserStarredItem[]
   PushSubscription  PushSubscription[]

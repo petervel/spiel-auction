@@ -3,7 +3,7 @@ import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
 import prisma from "../prismaClient";
-import { notifyOutbidBidders } from "./notifications/outbidNotifier";
+import { notifyBidUpdates } from "./notifications/outbidNotifier";
 import { ListWrapper } from "./processors/ListWrapper";
 import { Result, err, ok } from "./util/result";
 
@@ -105,17 +105,22 @@ async function update(fair: Fair, updateTime: number) {
 		fair.eventDate.getFullYear(),
 	);
 
-	// Snapshot the previous highest bid per item before it gets overwritten
-	// below - save() batches upserts as array-form transactions, so there's
-	// no way to read "before" state from inside that write.
+	// Snapshot each item's previous bid/ended state before it gets
+	// overwritten below - save() batches upserts as array-form
+	// transactions, so there's no way to read "before" state from inside
+	// that write. Keep an entry for every row (don't filter out null
+	// currentBid) - dropping the entry would also drop isEnded, and a
+	// missing map entry reads as "wasn't ended before", which would
+	// spuriously fire a "won" notification for any item lacking a prior bid.
 	const previousBids = await prisma.item.findMany({
 		where: { listId: fair.id, deleted: false },
-		select: { id: true, currentBid: true },
+		select: { id: true, currentBid: true, isEnded: true },
 	});
-	const previousHighestBids = new Map(
-		previousBids
-			.filter((item) => item.currentBid != null)
-			.map((item) => [item.id, item.currentBid as number]),
+	const previousItemState = new Map(
+		previousBids.map((item) => [
+			item.id,
+			{ currentBid: item.currentBid, isEnded: item.isEnded },
+		]),
 	);
 
 	console.info(`${fair.geeklistId}: Data loaded. Saving...`);
@@ -125,7 +130,7 @@ async function update(fair: Fair, updateTime: number) {
 
 	// Best-effort - a push-sending bug should never turn a successful
 	// import into a failure.
-	await notifyOutbidBidders(listWrapper.getItems(), previousHighestBids).catch(
+	await notifyBidUpdates(listWrapper.getItems(), previousItemState).catch(
 		(err) =>
 			console.error(`${fair.geeklistId}: push notification failed:`, err),
 	);

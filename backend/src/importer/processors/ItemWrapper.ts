@@ -37,6 +37,18 @@ export class ItemWrapper {
 		return this.dbObject.currentBid ?? null;
 	}
 
+	public get username(): string {
+		return this.dbObject.username;
+	}
+
+	public get isEnded(): boolean {
+		return this.dbObject.isEnded;
+	}
+
+	public get highestBidder(): string | null {
+		return this.dbObject.highestBidder;
+	}
+
 	// Every distinct bidder whose bid falls in [previousHighestBid,
 	// currentBid) - i.e. everyone who was winning or placed a losing bid
 	// within this same update window, now superseded. Includes the

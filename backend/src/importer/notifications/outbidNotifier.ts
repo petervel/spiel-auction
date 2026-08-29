@@ -1,24 +1,46 @@
+import { User } from "@prisma/client";
 import prisma from "../../prismaClient";
 import { sendPushToUser } from "../../push/webPushClient";
 import { ItemWrapper } from "../processors/ItemWrapper";
+import {
+	computeNotificationIntents,
+	NotificationIntent,
+	NotificationType,
+	PreviousItemState,
+} from "./notificationIntents";
 
-export const notifyOutbidBidders = async (
+const PREFERENCE_FIELD: Record<
+	NotificationType,
+	"notifyOnOutbid" | "notifyOnNewBid" | "notifyOnAuctionWon"
+> = {
+	outbid: "notifyOnOutbid",
+	newBid: "notifyOnNewBid",
+	won: "notifyOnAuctionWon",
+};
+
+const buildPayload = ({ item, type }: NotificationIntent) => {
+	switch (type) {
+		case "outbid":
+			return {
+				title: item.objectName,
+				body: `New highest bid: €${item.currentBid}`,
+			};
+		case "newBid":
+			return { title: item.objectName, body: `New bid: €${item.currentBid}` };
+		case "won":
+			return {
+				title: item.objectName,
+				body: `You won! Final bid: €${item.currentBid}`,
+			};
+	}
+};
+
+export const notifyBidUpdates = async (
 	items: ItemWrapper[],
-	previousHighestBids: Map<number, number>,
+	previousState: Map<number, PreviousItemState>,
 ) => {
-	const changed = items
-		.map((item) => ({ item, previous: previousHighestBids.get(item.id) }))
-		.filter(
-			(x): x is { item: ItemWrapper; previous: number } =>
-				x.previous != null && (x.item.currentBid ?? 0) > x.previous,
-		)
-		.map(({ item, previous }) => ({
-			item,
-			bidders: item.getOutbidBidders(previous),
-		}))
-		.filter((x) => x.bidders.length > 0);
-
-	if (changed.length === 0) return;
+	const intents = computeNotificationIntents(items, previousState);
+	if (intents.length === 0) return;
 
 	// One query for the whole fair rather than one per item.
 	const users = await prisma.user.findMany({
@@ -29,16 +51,15 @@ export const notifyOutbidBidders = async (
 	);
 
 	await Promise.all(
-		changed.flatMap(({ item, bidders }) =>
-			bidders
-				.map((username) => byUsername.get(username.toLowerCase()))
-				.filter((user) => user != null)
-				.map((user) =>
-					sendPushToUser(user.id, {
-						title: item.objectName,
-						body: `New highest bid: €${item.currentBid}`,
-					}),
-				),
-		),
+		intents
+			.map((intent) => ({
+				intent,
+				user: byUsername.get(intent.username.toLowerCase()),
+			}))
+			.filter(
+				(x): x is { intent: NotificationIntent; user: User } =>
+					x.user != null && x.user[PREFERENCE_FIELD[x.intent.type]],
+			)
+			.map((x) => sendPushToUser(x.user.id, buildPayload(x.intent))),
 	);
 };

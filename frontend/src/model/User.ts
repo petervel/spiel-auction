@@ -8,6 +8,10 @@ export interface User {
 
 	accessLevel?: 'NORMAL' | 'ADMIN' | 'MODERATOR';
 	bggUsername?: string;
+
+	notifyOnOutbid?: boolean;
+	notifyOnNewBid?: boolean;
+	notifyOnAuctionWon?: boolean;
 }
 
 export interface UserFair {

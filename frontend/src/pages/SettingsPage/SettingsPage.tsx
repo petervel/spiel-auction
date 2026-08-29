@@ -1,6 +1,8 @@
 import {
 	Button,
+	Checkbox,
 	Divider,
+	FormControlLabel,
 	MenuItem,
 	Snackbar,
 	Stack,
@@ -16,6 +18,7 @@ import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useCurrentFair } from '../../hooks/useCurrentFair';
 import { useFairs } from '../../hooks/useFairs';
+import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { usePushSubscription } from '../../hooks/usePushSubscription';
 import { useUser } from '../../hooks/useUser';
 
@@ -42,6 +45,12 @@ export const SettingsPage = () => {
 		sendTest: sendTestPush,
 	} = usePushSubscription();
 
+	const {
+		preferences: notificationPreferences,
+		setPreferences: setNotificationPreferences,
+		saving: preferencesSaving,
+	} = useNotificationPreferences();
+
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
 
 	const handleFairChange = async (fairId: number) => {
@@ -51,6 +60,12 @@ export const SettingsPage = () => {
 			setToastMessage(fair ? `Switched to ${fair.name}` : 'Fair switched');
 		}
 	};
+
+	const togglePreference = (key: keyof typeof notificationPreferences) =>
+		setNotificationPreferences({
+			...notificationPreferences,
+			[key]: !notificationPreferences[key],
+		});
 
 	const handleTestPush = async () => {
 		const succeeded = await sendTestPush();
@@ -147,7 +162,7 @@ export const SettingsPage = () => {
 							<Divider sx={{ width: '100%' }} />
 							<Stack gap={1} alignItems="start">
 								<Typography variant="body2">
-									Get notified when you're outbid.
+									Get notified about your auctions.
 								</Typography>
 								{needsHomeScreenInstall && (
 									<Typography
@@ -176,6 +191,59 @@ export const SettingsPage = () => {
 											Notifications are enabled on this
 											device.
 										</Typography>
+										<Stack>
+											<Typography variant="body2">
+												Notify me about:
+											</Typography>
+											<FormControlLabel
+												control={
+													<Checkbox
+														checked={
+															notificationPreferences.notifyOnOutbid
+														}
+														disabled={preferencesSaving}
+														onChange={() =>
+															togglePreference(
+																'notifyOnOutbid'
+															)
+														}
+													/>
+												}
+												label="Outbid on an item"
+											/>
+											<FormControlLabel
+												control={
+													<Checkbox
+														checked={
+															notificationPreferences.notifyOnNewBid
+														}
+														disabled={preferencesSaving}
+														onChange={() =>
+															togglePreference(
+																'notifyOnNewBid'
+															)
+														}
+													/>
+												}
+												label="New bids on my auctions"
+											/>
+											<FormControlLabel
+												control={
+													<Checkbox
+														checked={
+															notificationPreferences.notifyOnAuctionWon
+														}
+														disabled={preferencesSaving}
+														onChange={() =>
+															togglePreference(
+																'notifyOnAuctionWon'
+															)
+														}
+													/>
+												}
+												label="Auctions I've won"
+											/>
+										</Stack>
 										<Stack gap={2} direction="row">
 											<Button
 												type="button"

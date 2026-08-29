@@ -105,6 +105,42 @@ router.post(
 );
 
 router.post(
+	"/notificationPreferences",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const { notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon } =
+				req.body;
+
+			if (
+				typeof notifyOnOutbid !== "boolean" ||
+				typeof notifyOnNewBid !== "boolean" ||
+				typeof notifyOnAuctionWon !== "boolean"
+			) {
+				return res.status(400).json({
+					error:
+						"notifyOnOutbid, notifyOnNewBid, and notifyOnAuctionWon must all be booleans",
+				});
+			}
+
+			if (!req.user?.id) {
+				return res.status(401).json({ error: "Not authenticated" });
+			}
+
+			const updatedUser = await prisma.user.update({
+				where: { id: req.user.id },
+				data: { notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon },
+			});
+
+			res.status(200).json({ user: updatedUser });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.post(
 	"/currentFair",
 	authenticateUser,
 	async (req: AuthenticatedRequest, res) => {

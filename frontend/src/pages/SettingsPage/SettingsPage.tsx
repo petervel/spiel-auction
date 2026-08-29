@@ -1,8 +1,10 @@
+import EditIcon from '@mui/icons-material/Edit';
 import {
 	Button,
 	Checkbox,
 	Divider,
 	FormControlLabel,
+	IconButton,
 	MenuItem,
 	Snackbar,
 	Stack,
@@ -10,7 +12,6 @@ import {
 	Typography,
 } from '@mui/material';
 import { FormEvent, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { Spinner } from '../../components/Spinner/Spinner';
@@ -23,15 +24,17 @@ import { usePushSubscription } from '../../hooks/usePushSubscription';
 import { useUser } from '../../hooks/useUser';
 
 export const SettingsPage = () => {
-	const nav = useNavigate();
 	const { user, isLoading: userLoading } = useUser();
 
 	const { bggUsername, setBggUsername, removeBggUsername, saving } =
 		useBggUsername();
 
 	const { data: fairs } = useFairs();
-	const { currentFairId, switchFair, saving: switchingFair } =
-		useCurrentFair();
+	const {
+		currentFairId,
+		switchFair,
+		saving: switchingFair,
+	} = useCurrentFair();
 
 	const {
 		supported: pushSupported,
@@ -57,7 +60,9 @@ export const SettingsPage = () => {
 		const succeeded = await switchFair(fairId);
 		if (succeeded) {
 			const fair = fairs?.find((f) => f.id === fairId);
-			setToastMessage(fair ? `Switched to ${fair.name}` : 'Fair switched');
+			setToastMessage(
+				fair ? `Switched to ${fair.name}` : 'Fair switched'
+			);
 		}
 	};
 
@@ -76,24 +81,37 @@ export const SettingsPage = () => {
 		);
 	};
 
+	// Editing opens automatically once we know there's nothing to display -
+	// can't derive this from useState's initializer, since bggUsername is
+	// still undefined on the first render (before the user finishes
+	// loading) and that initial value would stick forever.
+	const [editingUsername, setEditingUsername] = useState(false);
 	const [editUsername, setEditUsername] = useState(bggUsername ?? '');
 	useEffect(() => {
 		if (!saving) {
 			setEditUsername(bggUsername ?? '');
 		}
 	}, [bggUsername, saving]);
+	useEffect(() => {
+		if (!userLoading && !bggUsername) {
+			setEditingUsername(true);
+		}
+	}, [userLoading, bggUsername]);
 
-	const save = (evt: FormEvent<HTMLFormElement>) => {
+	const save = async (evt: FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();
 		if (editUsername) {
-			setBggUsername(editUsername);
+			await setBggUsername(editUsername);
 		} else {
-			removeBggUsername();
+			await removeBggUsername();
 		}
-		nav('/');
+		setEditingUsername(false);
 	};
 
-	const cancel = () => nav('/');
+	const cancel = () => {
+		setEditUsername(bggUsername ?? '');
+		setEditingUsername(false);
+	};
 
 	if (userLoading) return <Spinner />;
 
@@ -135,28 +153,51 @@ export const SettingsPage = () => {
 							<Divider sx={{ width: '100%' }} />
 						</>
 					)}
-					<form onSubmit={save} style={{ width: '100%' }}>
-						<Stack gap={3} alignItems="start">
-							<TextField
-								name="username"
-								value={editUsername}
-								onChange={(evt) =>
-									setEditUsername(evt.target.value)
-								}
-								fullWidth
-								label="BGG username"
-								variant="standard"
-							/>
-							<Stack gap={2} direction="row">
-								<Button variant="contained" type="submit">
-									Save
-								</Button>
-								<Button type="button" onClick={cancel}>
-									Cancel
-								</Button>
+					{editingUsername ? (
+						<form onSubmit={save} style={{ width: '100%' }}>
+							<Stack gap={3} alignItems="start">
+								<TextField
+									name="username"
+									value={editUsername}
+									onChange={(evt) =>
+										setEditUsername(evt.target.value)
+									}
+									autoFocus
+									fullWidth
+									label="BGG username"
+									variant="standard"
+								/>
+								<Stack gap={2} direction="row">
+									<Button variant="contained" type="submit">
+										Save
+									</Button>
+									{bggUsername && (
+										<Button type="button" onClick={cancel}>
+											Cancel
+										</Button>
+									)}
+								</Stack>
 							</Stack>
+						</form>
+					) : (
+						<Stack
+							direction="row"
+							alignItems="center"
+							gap={1}
+							width="100%"
+						>
+							<Typography flexGrow={1}>
+								BGG username: {bggUsername}
+							</Typography>
+							<IconButton
+								size="small"
+								aria-label="Edit BGG username"
+								onClick={() => setEditingUsername(true)}
+							>
+								<EditIcon fontSize="small" />
+							</IconButton>
 						</Stack>
-					</form>
+					)}
 					{pushSupported && (
 						<>
 							<Divider sx={{ width: '100%' }} />
@@ -169,9 +210,9 @@ export const SettingsPage = () => {
 										variant="body2"
 										color="text.secondary"
 									>
-										Add this app to your home screen
-										first - iOS only allows
-										notifications for installed apps.
+										Add this app to your home screen first -
+										iOS only allows notifications for
+										installed apps.
 									</Typography>
 								)}
 								{pushPermission === 'denied' ? (
@@ -179,8 +220,8 @@ export const SettingsPage = () => {
 										variant="body2"
 										color="text.secondary"
 									>
-										Notifications are blocked for this
-										site in your browser settings.
+										Notifications are blocked for this site
+										in your browser settings.
 									</Typography>
 								) : pushSubscribed ? (
 									<>
@@ -201,7 +242,9 @@ export const SettingsPage = () => {
 														checked={
 															notificationPreferences.notifyOnOutbid
 														}
-														disabled={preferencesSaving}
+														disabled={
+															preferencesSaving
+														}
 														onChange={() =>
 															togglePreference(
 																'notifyOnOutbid'
@@ -217,7 +260,9 @@ export const SettingsPage = () => {
 														checked={
 															notificationPreferences.notifyOnNewBid
 														}
-														disabled={preferencesSaving}
+														disabled={
+															preferencesSaving
+														}
 														onChange={() =>
 															togglePreference(
 																'notifyOnNewBid'
@@ -233,7 +278,9 @@ export const SettingsPage = () => {
 														checked={
 															notificationPreferences.notifyOnAuctionWon
 														}
-														disabled={preferencesSaving}
+														disabled={
+															preferencesSaving
+														}
 														onChange={() =>
 															togglePreference(
 																'notifyOnAuctionWon'

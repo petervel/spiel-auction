@@ -16,14 +16,16 @@ export const DonatePage = () => {
 					/>
 
 					<Typography variant="h4" gutterBottom>
-						Help Keep the Server Running 💖
+						Help keep the server running
 					</Typography>
 
 					<Typography variant="body1" className={styles.text}>
-						This app costs a bit to host and maintain — things like the
-						server, database access, and domain fees add up over time.
-						If you enjoy using it and would like to chip in, any small
-						donation helps a lot and is greatly appreciated!
+						I built this to make tracking Essen auctions easier. It
+						started small, with just a handful of people using it,
+						and has grown a lot since then! Hosting, the database,
+						and the domain still cost a bit every month, so if it's
+						been useful to you, even a small donation helps keep it
+						running.
 					</Typography>
 
 					<Stack
@@ -34,7 +36,7 @@ export const DonatePage = () => {
 					>
 						<Button
 							component="a"
-							href="https://tikkie.me/pay/835pppr0iink89lgjhrl"
+							href="https://tikkie.me/pay/122js27811cio9gtmqdt"
 							target="_blank"
 							rel="noopener noreferrer"
 							variant="contained"
@@ -63,8 +65,7 @@ export const DonatePage = () => {
 					</Stack>
 
 					<Typography variant="body2" className={styles.footer}>
-						Thank you so much for your support — it really means a lot!
-						❤️
+						Thanks for using it, and for the support! ❤️
 					</Typography>
 				</Paper>
 			</div>

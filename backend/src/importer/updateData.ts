@@ -113,7 +113,7 @@ async function update(fair: Fair, updateTime: number) {
 	// missing map entry reads as "wasn't ended before", which would
 	// spuriously fire a "won" notification for any item lacking a prior bid.
 	const previousBids = await prisma.item.findMany({
-		where: { listId: fair.id, deleted: false },
+		where: { listId: fair.geeklistId, deleted: false },
 		select: { id: true, currentBid: true, isEnded: true },
 	});
 	const previousItemState = new Map(

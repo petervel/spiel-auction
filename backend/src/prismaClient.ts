@@ -8,6 +8,12 @@ const prismaClientSingleton = () => {
 		user: process.env.DATABASE_USER,
 		password: process.env.DATABASE_PASSWORD,
 		database: process.env.DATABASE_NAME,
+		// Idle connections in this pool can go dead (server-side close, network
+		// blip) without either side noticing. Without these, a stale connection
+		// gets handed to a query and fails with "socket unexpectedly closed"
+		// instead of being detected and replaced.
+		keepAliveDelay: 30_000,
+		minDelayValidation: 0,
 	});
 	return new PrismaClient({ adapter });
 };

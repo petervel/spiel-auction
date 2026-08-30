@@ -126,7 +126,19 @@ export class ItemCommentWrapper {
 	}
 
 	public static saveAll(comments: ItemCommentWrapper[]) {
-		const upserts: PrismaPromise<any>[] = comments.map((comment) => {
+		// Two comments can legitimately share the same (itemId, username,
+		// postTimestamp) - BGG's timestamp granularity is per-second, so rapid
+		// same-second bids from one user collide. Since these run as one
+		// $transaction batch rather than truly sequentially, two upserts for
+		// the same key can race as concurrent inserts instead of insert-then-
+		// update, so we de-dupe here rather than relying on execution order.
+		const deduped = new Map<string, ItemCommentWrapper>();
+		for (const comment of comments) {
+			const key = `${comment.dbObject.itemId}|${comment.dbObject.username}|${comment.dbObject.postTimestamp}`;
+			deduped.set(key, comment);
+		}
+
+		const upserts: PrismaPromise<any>[] = Array.from(deduped.values()).map((comment) => {
 			const upsert = prisma.itemComment.upsert({
 				where: {
 					itemId_username_postTimestamp: {

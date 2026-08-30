@@ -49,7 +49,20 @@ async function runUpdate(fair: Fair, now: number) {
 		data: { lastResult: JobResult.RUNNING, startedAt: now },
 	});
 
-	const result = await update(fair, now);
+	// update() can throw instead of returning an Err (e.g. a transaction
+	// timeout) - without this catch, that leaves lastResult stuck at RUNNING,
+	// locking the fair out of retries for the full LOCK_TIMEOUT_SECONDS.
+	let result;
+	try {
+		result = await update(fair, now);
+	} catch (error) {
+		await prisma.fair.update({
+			where: { id: fair.id },
+			data: { lastResult: JobResult.FAILURE },
+		});
+		console.log(`Processing fair ${fair.geeklistId} unsuccessful: ${error}`);
+		return;
+	}
 
 	if (result.isErr()) {
 		await prisma.fair.update({

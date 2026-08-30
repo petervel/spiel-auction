@@ -6,7 +6,11 @@ import { ok } from "../util/result";
 import { ItemWrapper } from "./ItemWrapper";
 import { ListCommentWrapper } from "./ListCommentWrapper";
 
-const BATCH_SIZE = 1000;
+// Prisma's array-form $transaction has a fixed 5s timeout that can no
+// longer be overridden under the mariadb driver adapter (only the
+// interactive-callback form accepts a timeout option). Keep batches small
+// enough to comfortably finish within that regardless of per-query overhead.
+const BATCH_SIZE = 200;
 
 export class ListWrapper {
 	private dbObject: List;

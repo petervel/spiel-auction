@@ -45,7 +45,16 @@ export class ListCommentWrapper {
 	}
 
 	public static saveAll(comments: ListCommentWrapper[]) {
-		const upserts: PrismaPromise<any>[] = comments.map((comment) => {
+		// See ItemCommentWrapper.saveAll for why this de-dupe is needed: same-
+		// second duplicate keys within one $transaction batch can race as
+		// concurrent inserts rather than insert-then-update.
+		const deduped = new Map<string, ListCommentWrapper>();
+		for (const comment of comments) {
+			const key = `${comment.dbObject.listId}|${comment.dbObject.username}|${comment.dbObject.postTimestamp}`;
+			deduped.set(key, comment);
+		}
+
+		const upserts: PrismaPromise<any>[] = Array.from(deduped.values()).map((comment) => {
 			const upsert = prisma.listComment.upsert({
 				where: {
 					listId_username_postTimestamp: {

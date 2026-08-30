@@ -22,15 +22,21 @@ const buildPayload = ({ item, type }: NotificationIntent) => {
 	switch (type) {
 		case "outbid":
 			return {
-				title: item.objectName,
-				body: `New highest bid: €${item.currentBid}`,
+				title: "You've been outbid",
+				body: `The new highest bid for ${item.objectName} is now €${item.currentBid}`,
+				icon: "/icon/notify-outbid.svg",
 			};
 		case "newBid":
-			return { title: item.objectName, body: `New bid: €${item.currentBid}` };
+			return {
+				title: `Someone bid on ${item.objectName}`,
+				body: `Current bid is now €${item.currentBid}`,
+				icon: "/icon/notify-newbid.svg",
+			};
 		case "won":
 			return {
-				title: item.objectName,
-				body: `You won! Final bid: €${item.currentBid}`,
+				title: "You won an auction!",
+				body: `You've won the auction for ${item.objectName} for €${item.currentBid}`,
+				icon: "/icon/notify-won.svg",
 			};
 	}
 };

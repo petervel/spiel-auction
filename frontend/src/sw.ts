@@ -59,7 +59,8 @@ self.addEventListener('push', (event) => {
 	// A payload that isn't valid JSON (e.g. DevTools' "Push" test button,
 	// which just sends plain text) shouldn't crash the whole handler and
 	// silently show nothing - fall back to treating it as a plain body.
-	let data: { title?: string; body?: string; url?: string } = {};
+	let data: { title?: string; body?: string; url?: string; icon?: string } =
+		{};
 	try {
 		data = event.data?.json() ?? {};
 	} catch {
@@ -69,7 +70,7 @@ self.addEventListener('push', (event) => {
 	event.waitUntil(
 		self.registration.showNotification(data.title ?? 'Spiel Auction', {
 			body: data.body,
-			icon: '/icon/icon-192x192.png',
+			icon: data.icon ?? '/icon/icon-192x192.png',
 			data: { url: data.url ?? '/' },
 		})
 	);

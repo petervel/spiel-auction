@@ -10,6 +10,7 @@ webpush.setVapidDetails(
 export type PushPayload = {
 	title: string;
 	body: string;
+	icon?: string;
 };
 
 export const sendPushToUser = async (userId: number, payload: PushPayload) => {

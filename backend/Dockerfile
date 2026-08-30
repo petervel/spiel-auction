@@ -1,4 +1,8 @@
-FROM node:24-alpine
+FROM node:24-slim
+
+# Without this, Prisma can't detect the installed libssl version and
+# silently falls back to the wrong engine binary variant.
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /app

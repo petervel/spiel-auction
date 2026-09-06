@@ -16,14 +16,14 @@ import { ItemButtons } from './ItemButtons';
 interface Props {
 	item: Item;
 	allowBookmarks?: boolean;
-	allowStars?: boolean;
+	allowLikes?: boolean;
 	isOutbid?: boolean;
 }
 
 export const AuctionItem = ({
 	item,
 	allowBookmarks = false,
-	allowStars = false,
+	allowLikes = false,
 	isOutbid = false,
 }: Props) => {
 	const [expanded, setExpanded] = useState(false);
@@ -43,7 +43,7 @@ export const AuctionItem = ({
 	// mobile. Rendered in exactly one of those two spots below, instead
 	// of rendering both and hiding one with CSS.
 	const isDesktop = useMediaQuery('(min-width:768px)');
-	const showStar = allowStars && user !== null;
+	const showLike = allowLikes && user !== null;
 
 	return (
 		<div
@@ -106,7 +106,7 @@ export const AuctionItem = ({
 					<ItemButtons
 						item={item}
 						showCompare={showCompare}
-						showStar={showStar}
+						showLike={showLike}
 					/>
 				)}
 			</Stack>
@@ -115,7 +115,7 @@ export const AuctionItem = ({
 					<ItemButtons
 						item={item}
 						showCompare={showCompare}
-						showStar={showStar}
+						showLike={showLike}
 					/>
 				)}
 

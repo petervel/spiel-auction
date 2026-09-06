@@ -21,10 +21,10 @@ type ItemsPageProps = {
 	// Renders each group as its own box with its own title and sort filter,
 	// instead of one merged, sorted-together list under a shared page title
 	// - use this instead of `items` when the groups need to stay visually
-	// distinct (e.g. outbid vs. starred).
+	// distinct (e.g. outbid vs. liked).
 	sections?: ItemsSection[];
 	subTitle?: ReactNode;
-	allowStars?: boolean;
+	allowLikes?: boolean;
 	outbidItemIds?: Set<number>;
 };
 
@@ -33,7 +33,7 @@ export const ItemsPage = ({
 	items,
 	sections,
 	subTitle,
-	allowStars = false,
+	allowLikes = false,
 	outbidItemIds,
 }: ItemsPageProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.MOST_RECENT);
@@ -63,7 +63,7 @@ export const ItemsPage = ({
 						key={section.label ?? index}
 						label={section.label}
 						items={section.items}
-						allowStars={allowStars}
+						allowLikes={allowLikes}
 						outbidItemIds={outbidItemIds}
 					/>
 				))}
@@ -87,7 +87,7 @@ export const ItemsPage = ({
 			)}
 			<ItemsList
 				items={visibleItems}
-				allowStars={allowStars}
+				allowLikes={allowLikes}
 				outbidItemIds={outbidItemIds}
 			/>
 		</Container>
@@ -97,14 +97,14 @@ export const ItemsPage = ({
 type ItemsSectionBlockProps = {
 	label?: string;
 	items: Item[];
-	allowStars: boolean;
+	allowLikes: boolean;
 	outbidItemIds?: Set<number>;
 };
 
 const ItemsSectionBlock = ({
 	label,
 	items,
-	allowStars,
+	allowLikes,
 	outbidItemIds,
 }: ItemsSectionBlockProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.MOST_RECENT);
@@ -133,7 +133,7 @@ const ItemsSectionBlock = ({
 			)}
 			<ItemsList
 				items={sortedItems}
-				allowStars={allowStars}
+				allowLikes={allowLikes}
 				outbidItemIds={outbidItemIds}
 			/>
 		</Container>

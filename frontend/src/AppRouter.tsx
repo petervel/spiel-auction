@@ -7,7 +7,7 @@ import { DonatePage } from './pages/DonatePage/DonatePage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { ExportPage } from './pages/ExportPage/ExportPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
-import { StarredPage } from './pages/LatestPage/StarredPage';
+import { LikedPage } from './pages/LatestPage/LikedPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
@@ -22,7 +22,7 @@ export const AppRouter = () => {
 				<Route path="/buying/:username?" element={<BuyingPage />} />
 				<Route path="/selling/:username?" element={<SellingPage />} />
 				<Route path="/search" element={<SearchPage />} />
-				<Route path="/starred" element={<StarredPage />} />
+				<Route path="/liked" element={<LikedPage />} />
 			</Route>
 
 			<Route path="/login/verify" element={<VerifyLoginPage />} />

@@ -4,11 +4,11 @@ import deleted from "./deleted";
 import duplicates from "./duplicates";
 import fairs from "./fairs";
 import items from "./items";
+import liked from "./liked";
 import object from "./object";
 import objects from "./objects";
 import outbids from "./outbids";
 import push from "./push";
-import starred from "./starred";
 import user from "./user";
 
 export default [
@@ -23,5 +23,5 @@ export default [
 	{ path: "/outbids", object: outbids },
 	{ path: "/push", object: push },
 	{ path: "/user", object: user },
-	{ path: "/starred", object: starred },
+	{ path: "/liked", object: liked },
 ];

@@ -5,14 +5,14 @@ import css from './ItemsList.module.css';
 type ItemsListProps = {
 	items: Item[];
 	allowBookmarks?: boolean;
-	allowStars?: boolean;
+	allowLikes?: boolean;
 	outbidItemIds?: Set<number>;
 };
 
 export const ItemsList = ({
 	items,
 	allowBookmarks = false,
-	allowStars = false,
+	allowLikes = false,
 	outbidItemIds,
 }: ItemsListProps) => {
 	return (
@@ -24,7 +24,7 @@ export const ItemsList = ({
 							key={item.id}
 							item={item}
 							allowBookmarks={allowBookmarks}
-							allowStars={allowStars}
+							allowLikes={allowLikes}
 							isOutbid={outbidItemIds?.has(item.id)}
 						/>
 					);

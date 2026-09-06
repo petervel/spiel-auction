@@ -8,13 +8,13 @@ import { redisClient } from "../redisClient";
 
 const router = express.Router();
 
-// 🔹 Get all starred items for logged in user
+// 🔹 Get all liked items for logged in user
 router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	const userId = req.userId;
 	const fairId = req.user?.currentUserFair?.fairId;
-	const cacheKey = `api:starred:${userId}:${fairId}`;
+	const cacheKey = `api:liked:${userId}:${fairId}`;
 
-	// console.log("Fetching starred items for userId:", userId);
+	// console.log("Fetching liked items for userId:", userId);
 	// Check cache
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
@@ -32,15 +32,15 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		return;
 	}
 
-	const starredItems = await prisma.userStarredItem.findMany({
+	const likedItems = await prisma.userLikedItem.findMany({
 		where: { userId, fairId },
 		include: { item: true },
 		orderBy: { itemId: "desc" },
 	});
 
-	// console.log("Found starred items:", starredItems.length);
+	// console.log("Found liked items:", likedItems.length);
 
-	const result = { items: starredItems.map((star) => star.item) };
+	const result = { items: likedItems.map((like) => like.item) };
 
 	// console.log("Returning items:", result.length);
 
@@ -51,7 +51,7 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	res.status(200).json(result);
 });
 
-// 🔹 Get IDs of starred items for logged in user
+// 🔹 Get IDs of liked items for logged in user
 router.get("/ids", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	if (!req.userId) {
 		res.status(401).json({ error: "Unauthorized" });
@@ -60,7 +60,7 @@ router.get("/ids", authenticateUser, async (req: AuthenticatedRequest, res) => {
 
 	const userId = req.userId;
 	const fairId = req.user?.currentUserFair?.fairId;
-	const cacheKey = `api:starred:ids:${userId}:${fairId}`;
+	const cacheKey = `api:liked:ids:${userId}:${fairId}`;
 
 	// Check cache
 	const cache = await redisClient.get(cacheKey);
@@ -69,7 +69,7 @@ router.get("/ids", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		return;
 	}
 
-	const items = await prisma.userStarredItem.findMany({
+	const items = await prisma.userLikedItem.findMany({
 		select: { itemId: true },
 		where: { userId, fairId },
 		orderBy: { itemId: "desc" },
@@ -84,7 +84,7 @@ router.get("/ids", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	res.status(200).json(result);
 });
 
-// 🔹 Star an item
+// 🔹 Like an item
 router.post(
 	"/:itemId",
 	authenticateUser,
@@ -106,7 +106,7 @@ router.post(
 		}
 
 		try {
-			const star = await prisma.userStarredItem.upsert({
+			const like = await prisma.userLikedItem.upsert({
 				where: { userId_itemId: { userId: req.userId, itemId } },
 				update: {}, // nothing to update if it exists
 				create: {
@@ -118,18 +118,18 @@ router.post(
 
 			// Bust cache
 			await redisClient.del(
-				`api:starred:${req.userId}:${req.user?.currentUserFair?.fairId}`,
+				`api:liked:${req.userId}:${req.user?.currentUserFair?.fairId}`,
 			);
 
-			res.status(200).json({ success: true, starred: true, star });
+			res.status(200).json({ success: true, liked: true, like });
 		} catch (err) {
-			console.error("Error starring item:", err);
+			console.error("Error liking item:", err);
 			res.status(500).json({ error: "Database error" });
 		}
 	},
 );
 
-// 🔹 Unstar an item
+// 🔹 Unlike an item
 router.delete(
 	"/:itemId",
 	authenticateUser,
@@ -146,18 +146,18 @@ router.delete(
 		}
 
 		try {
-			await prisma.userStarredItem.deleteMany({
+			await prisma.userLikedItem.deleteMany({
 				where: { userId: req.userId, itemId },
 			});
 
 			// Bust cache
 			await redisClient.del(
-				`api:starred:${req.userId}:${req.user?.currentUserFair?.fairId}`,
+				`api:liked:${req.userId}:${req.user?.currentUserFair?.fairId}`,
 			);
 
-			res.status(200).json({ success: true, starred: false });
+			res.status(200).json({ success: true, liked: false });
 		} catch (err) {
-			console.error("Error unstarring item:", err);
+			console.error("Error unliking item:", err);
 			res.status(500).json({ error: "Database error" });
 		}
 	},

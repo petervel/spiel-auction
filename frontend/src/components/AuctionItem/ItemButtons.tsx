@@ -1,18 +1,18 @@
 import {
 	BarChartRounded,
-	StarOutlineRounded,
-	StarRounded,
+	FavoriteBorderRounded,
+	FavoriteRounded,
 } from '@mui/icons-material';
 import { Stack } from '@mui/material';
 import bggIcon from '../../assets/bgg.svg';
-import { useStarred } from '../../hooks/useStarred';
+import { useLiked } from '../../hooks/useLiked';
 import { Item } from '../../model/Item';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 
 interface ItemButtonsProps {
 	item: Item;
 	showCompare: boolean;
-	showStar?: boolean;
+	showLike?: boolean;
 }
 
 type ButtonConfig = {
@@ -27,29 +27,29 @@ type ButtonConfig = {
 export const ItemButtons = ({
 	item,
 	showCompare,
-	showStar = false,
+	showLike = false,
 }: ItemButtonsProps) => {
-	const { starItem, unstarItem, starred, isStarred } = useStarred();
+	const { likeItem, unlikeItem, liked, isLiked } = useLiked();
 	const iconSize = 30;
 
-	const toggleStar = (itemId: number) => {
-		if (!starred) return;
-		isStarred(itemId) ? unstarItem(itemId) : starItem(itemId);
+	const toggleLike = (itemId: number) => {
+		if (!liked) return;
+		isLiked(itemId) ? unlikeItem(itemId) : likeItem(itemId);
 	};
 
 	const buttons: ButtonConfig[] = [
-		showStar && {
-			key: 'star',
-			content: isStarred(item.id) ? (
-				<StarRounded className="icon" sx={{ fontSize: iconSize }} />
+		showLike && {
+			key: 'like',
+			content: isLiked(item.id) ? (
+				<FavoriteRounded className="icon" sx={{ fontSize: iconSize }} />
 			) : (
-				<StarOutlineRounded
+				<FavoriteBorderRounded
 					className="icon"
 					sx={{ fontSize: iconSize }}
 				/>
 			),
-			onClick: () => toggleStar(item.id),
-			tooltip: 'Add to starred items',
+			onClick: () => toggleLike(item.id),
+			tooltip: 'Add to liked items',
 		},
 		showCompare && {
 			key: 'compare',

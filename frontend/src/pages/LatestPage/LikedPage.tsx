@@ -1,14 +1,14 @@
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { NotReadyMessage } from '../../components/NotReadyMessage/NotReadyMessage';
 import { Spinner } from '../../components/Spinner/Spinner';
+import { useLiked } from '../../hooks/useLiked';
 import { useOutbids } from '../../hooks/useOutbids';
-import { useStarred } from '../../hooks/useStarred';
 import { useUser } from '../../hooks/useUser';
 import { ItemsPage } from '../ItemsPages/ItemsPage';
 
-export const StarredPage = () => {
+export const LikedPage = () => {
 	const { user, isLoading: userLoading } = useUser();
-	const { starred, isLoading: starredLoading } = useStarred();
+	const { liked, isLoading: likedLoading } = useLiked();
 	const {
 		data: outbidsData,
 		isLoading: outbidsLoading,
@@ -20,12 +20,12 @@ export const StarredPage = () => {
 	if (!user) {
 		return (
 			<div>
-				<LoginLink /> to see your outbid and starred items.
+				<LoginLink /> to see your outbid and liked items.
 			</div>
 		);
 	}
 
-	if (starredLoading || outbidsLoading) return <Spinner />;
+	if (likedLoading || outbidsLoading) return <Spinner />;
 
 	if ((outbidsError as Error)?.message === 'not_ready') {
 		return <NotReadyMessage />;
@@ -34,19 +34,19 @@ export const StarredPage = () => {
 	const outbidItems = outbidsData?.items ?? [];
 	const outbidItemIds = new Set(outbidItems.map((item) => item.id));
 
-	// An outbid item that's also starred only shows in the Outbid section.
-	const starredOnlyItems = (starred?.items ?? []).filter(
+	// An outbid item that's also liked only shows in the Outbid section.
+	const likedOnlyItems = (liked?.items ?? []).filter(
 		(item) => !outbidItemIds.has(item.id)
 	);
 
 	return (
 		<ItemsPage
-			title="Outbid & Starred"
+			title="Outbid & Liked"
 			sections={[
 				{ label: 'Outbid', items: outbidItems },
-				{ label: 'Starred', items: starredOnlyItems },
+				{ label: 'Liked', items: likedOnlyItems },
 			]}
-			allowStars={true}
+			allowLikes={true}
 			outbidItemIds={outbidItemIds}
 		/>
 	);

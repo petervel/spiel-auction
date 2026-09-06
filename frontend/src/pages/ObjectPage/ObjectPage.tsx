@@ -30,7 +30,7 @@ export const ObjectPage = () => {
 	return (
 		<Container>
 			<Title title={title} />
-			<ItemsList items={data} allowStars={true} />
+			<ItemsList items={data} allowLikes={true} />
 		</Container>
 	);
 };

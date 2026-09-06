@@ -79,7 +79,7 @@ export const LatestPage = () => {
 					<ItemsList
 						items={items}
 						allowBookmarks={true}
-						allowStars={true}
+						allowLikes={true}
 					/>
 				</div>
 			</Container>

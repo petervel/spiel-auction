@@ -25,8 +25,17 @@ const fetchItems = async ({
 	return fetchListJson<ResultType>(url);
 };
 
-export const useOutbids = (params: { bidder?: string }) => {
+export const useOutbids = ({
+	bidder,
+	poll = true,
+}: {
+	bidder?: string;
+	// Set false on a page that must show a frozen snapshot (e.g. the
+	// "Outbid & Liked" page) - fetches once on mount but never polls.
+	poll?: boolean;
+}) => {
 	const listId = useListId();
+	const params: FetchItemsParams = { bidder };
 
 	return useQuery<
 		ResultType,
@@ -34,8 +43,8 @@ export const useOutbids = (params: { bidder?: string }) => {
 		ResultType,
 		[string, number, FetchItemsParams]
 	>(['outbids', listId, params], fetchItems, {
-		enabled: Boolean(params.bidder),
-		refetchInterval: 60000, // Automatically refetch data every 60 seconds
+		enabled: Boolean(bidder),
+		refetchInterval: poll ? 60000 : false,
 		keepPreviousData: true, // Retain previous data while fetching new data
 		retry: retryUnlessNotReady,
 	});

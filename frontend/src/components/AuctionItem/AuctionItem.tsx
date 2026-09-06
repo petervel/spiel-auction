@@ -1,4 +1,3 @@
-import { HeartBroken } from '@mui/icons-material';
 import { Collapse, Skeleton, Stack, useMediaQuery } from '@mui/material';
 import classNames from 'classnames';
 import { useState } from 'react';
@@ -17,6 +16,7 @@ interface Props {
 	item: Item;
 	allowBookmarks?: boolean;
 	allowLikes?: boolean;
+	silentToggle?: boolean;
 	isOutbid?: boolean;
 }
 
@@ -24,6 +24,7 @@ export const AuctionItem = ({
 	item,
 	allowBookmarks = false,
 	allowLikes = false,
+	silentToggle = false,
 	isOutbid = false,
 }: Props) => {
 	const [expanded, setExpanded] = useState(false);
@@ -86,14 +87,6 @@ export const AuctionItem = ({
 							.join(' · ')}
 					</div>
 				</div>
-				{isOutbid && (
-					<div className={css.outbidIcon}>
-						<HeartBroken
-							sx={{ fontSize: 30 }}
-							titleAccess="You've been outbid"
-						/>
-					</div>
-				)}
 				{allowBookmarks && (
 					<div className={css.inlineBookmark}>
 						<BookmarkButton
@@ -107,6 +100,8 @@ export const AuctionItem = ({
 						item={item}
 						showCompare={showCompare}
 						showLike={showLike}
+						silentToggle={silentToggle}
+						isOutbid={isOutbid}
 					/>
 				)}
 			</Stack>
@@ -116,6 +111,8 @@ export const AuctionItem = ({
 						item={item}
 						showCompare={showCompare}
 						showLike={showLike}
+						silentToggle={silentToggle}
+						isOutbid={isOutbid}
 					/>
 				)}
 

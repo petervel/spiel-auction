@@ -31,7 +31,17 @@ const unlikeItem = async (itemId: number) => {
 	return response.json();
 };
 
-export const useLiked = () => {
+type UseLikedOptions = {
+	// Set false on a page that must show a frozen snapshot (e.g. the "Outbid
+	// & Liked" page, where unliking an item shouldn't make it disappear
+	// until the page is reloaded) - fetches once on mount but never polls.
+	poll?: boolean;
+	// Set false when this instance only needs the mutations (e.g. a
+	// per-item unlike button) and shouldn't fetch the liked list at all.
+	enabled?: boolean;
+};
+
+export const useLiked = ({ poll = true, enabled = true }: UseLikedOptions = {}) => {
 	const queryClient = useQueryClient();
 	const { user, isLoading } = useUser();
 
@@ -43,7 +53,8 @@ export const useLiked = () => {
 			return await fetchLiked();
 		},
 		{
-			refetchInterval: 60000, // refresh every 60s
+			enabled,
+			refetchInterval: poll ? 60000 : false,
 			keepPreviousData: true,
 		}
 	);
@@ -61,6 +72,13 @@ export const useLiked = () => {
 		},
 	});
 
+	// Like/unlike the item server-side but never touch the ['liked'] cache -
+	// used where the currently rendered list must stay exactly as it was
+	// until a manual reload (see `poll` above), even though the button
+	// itself still toggles between the two states locally.
+	const silentLikeMutation = useMutation(likeItem);
+	const silentUnlikeMutation = useMutation(unlikeItem);
+
 	const isLiked = (itemId: number) => {
 		return likedQuery.data?.items.some((i) => i.id === itemId) ?? false;
 	};
@@ -68,6 +86,8 @@ export const useLiked = () => {
 	return {
 		likeItem: likeMutation.mutate,
 		unlikeItem: unlikeMutation.mutate,
+		likeItemSilently: silentLikeMutation.mutate,
+		unlikeItemSilently: silentUnlikeMutation.mutate,
 		isLiking: likeMutation.isLoading,
 		isUnliking: unlikeMutation.isLoading,
 		liked: likedQuery.data,

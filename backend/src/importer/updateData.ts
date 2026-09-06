@@ -3,6 +3,7 @@ import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
 import prisma from "../prismaClient";
+import { getBidderKeys, likeItemsForNewBidders } from "./likedItems";
 import { notifyBidUpdates } from "./notifications/outbidNotifier";
 import { ListWrapper } from "./processors/ListWrapper";
 import { Result, err, ok } from "./util/result";
@@ -136,6 +137,11 @@ async function update(fair: Fair, updateTime: number) {
 		]),
 	);
 
+	// Same idea as previousItemState above, but per-bidder: lets us tell
+	// which (item, bidder) pairs are brand new this cycle, so a first-time
+	// bidder can get the item auto-added to their liked items.
+	const previousBidderKeys = await getBidderKeys(fair.geeklistId);
+
 	console.info(`${fair.geeklistId}: Data loaded. Saving...`);
 	const upsertResult = await listWrapper.save();
 
@@ -146,6 +152,14 @@ async function update(fair: Fair, updateTime: number) {
 	await notifyBidUpdates(listWrapper.getItems(), previousItemState).catch(
 		(err) =>
 			console.error(`${fair.geeklistId}: push notification failed:`, err),
+	);
+
+	await likeItemsForNewBidders(
+		fair.id,
+		fair.geeklistId,
+		previousBidderKeys,
+	).catch((err) =>
+		console.error(`${fair.geeklistId}: auto-like for new bidders failed:`, err),
 	);
 
 	console.info(

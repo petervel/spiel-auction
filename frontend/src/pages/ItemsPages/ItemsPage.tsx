@@ -11,6 +11,9 @@ import { SortButtons } from './SortButtons';
 type ItemsSection = {
 	label?: string;
 	items: Item[];
+	// Selects the broken-heart icon instead of a normal heart for a
+	// silentToggle section whose items are all currently outbid.
+	isOutbid?: boolean;
 };
 
 type ItemsPageProps = {
@@ -25,7 +28,7 @@ type ItemsPageProps = {
 	sections?: ItemsSection[];
 	subTitle?: ReactNode;
 	allowLikes?: boolean;
-	outbidItemIds?: Set<number>;
+	silentToggle?: boolean;
 };
 
 export const ItemsPage = ({
@@ -34,7 +37,7 @@ export const ItemsPage = ({
 	sections,
 	subTitle,
 	allowLikes = false,
-	outbidItemIds,
+	silentToggle = false,
 }: ItemsPageProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.MOST_RECENT);
 
@@ -64,7 +67,8 @@ export const ItemsPage = ({
 						label={section.label}
 						items={section.items}
 						allowLikes={allowLikes}
-						outbidItemIds={outbidItemIds}
+						silentToggle={silentToggle}
+						isOutbid={section.isOutbid}
 					/>
 				))}
 			</>
@@ -88,7 +92,7 @@ export const ItemsPage = ({
 			<ItemsList
 				items={visibleItems}
 				allowLikes={allowLikes}
-				outbidItemIds={outbidItemIds}
+				silentToggle={silentToggle}
 			/>
 		</Container>
 	);
@@ -98,14 +102,16 @@ type ItemsSectionBlockProps = {
 	label?: string;
 	items: Item[];
 	allowLikes: boolean;
-	outbidItemIds?: Set<number>;
+	silentToggle: boolean;
+	isOutbid?: boolean;
 };
 
 const ItemsSectionBlock = ({
 	label,
 	items,
 	allowLikes,
-	outbidItemIds,
+	silentToggle,
+	isOutbid,
 }: ItemsSectionBlockProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.MOST_RECENT);
 	const [showSort, setShowSort] = useState(false);
@@ -134,7 +140,8 @@ const ItemsSectionBlock = ({
 			<ItemsList
 				items={sortedItems}
 				allowLikes={allowLikes}
-				outbidItemIds={outbidItemIds}
+				silentToggle={silentToggle}
+				isOutbid={isOutbid}
 			/>
 		</Container>
 	);

@@ -4,16 +4,19 @@ import { Spinner } from '../../components/Spinner/Spinner';
 import { useLiked } from '../../hooks/useLiked';
 import { useOutbids } from '../../hooks/useOutbids';
 import { useUser } from '../../hooks/useUser';
+import { Item } from '../../model/Item';
 import { ItemsPage } from '../ItemsPages/ItemsPage';
 
 export const LikedPage = () => {
 	const { user, isLoading: userLoading } = useUser();
-	const { liked, isLoading: likedLoading } = useLiked();
+	// This page shows a frozen snapshot: no polling, and unliking an item
+	// doesn't refetch, so it stays put until the page is reloaded.
+	const { liked, isLoading: likedLoading } = useLiked({ poll: false });
 	const {
 		data: outbidsData,
 		isLoading: outbidsLoading,
 		error: outbidsError,
-	} = useOutbids({ bidder: user?.bggUsername });
+	} = useOutbids({ bidder: user?.bggUsername, poll: false });
 
 	if (userLoading) return <Spinner />;
 
@@ -31,23 +34,36 @@ export const LikedPage = () => {
 		return <NotReadyMessage />;
 	}
 
-	const outbidItems = outbidsData?.items ?? [];
+	// Items you're currently winning belong on the Buying tab, not here.
+	const isWinning = (item: Item) =>
+		!!user.bggUsername &&
+		item.highestBidder?.toLowerCase() === user.bggUsername.toLowerCase();
+
+	const likedItems = liked?.items ?? [];
+	const likedItemIds = new Set(likedItems.map((item) => item.id));
+
+	// Bidding auto-likes an item (see backend/src/importer/likedItems.ts),
+	// so being outbid only keeps an item here while it's still liked -
+	// unliking it removes it from both sections, not just this one.
+	const outbidItems = (outbidsData?.items ?? []).filter(
+		(item) => likedItemIds.has(item.id) && !isWinning(item)
+	);
 	const outbidItemIds = new Set(outbidItems.map((item) => item.id));
 
-	// An outbid item that's also liked only shows in the Outbid section.
-	const likedOnlyItems = (liked?.items ?? []).filter(
-		(item) => !outbidItemIds.has(item.id)
+	// Liked-only items are everything else: manually liked (or bid on),
+	// but not currently outbid or won.
+	const likedOnlyItems = likedItems.filter(
+		(item) => !outbidItemIds.has(item.id) && !isWinning(item)
 	);
 
 	return (
 		<ItemsPage
 			title="Outbid & Liked"
 			sections={[
-				{ label: 'Outbid', items: outbidItems },
+				{ label: 'Outbid', items: outbidItems, isOutbid: true },
 				{ label: 'Liked', items: likedOnlyItems },
 			]}
-			allowLikes={true}
-			outbidItemIds={outbidItemIds}
+			silentToggle={true}
 		/>
 	);
 };

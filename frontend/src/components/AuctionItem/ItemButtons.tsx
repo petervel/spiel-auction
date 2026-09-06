@@ -2,8 +2,10 @@ import {
 	BarChartRounded,
 	FavoriteBorderRounded,
 	FavoriteRounded,
+	HeartBrokenRounded,
 } from '@mui/icons-material';
 import { Stack } from '@mui/material';
+import { useState } from 'react';
 import bggIcon from '../../assets/bgg.svg';
 import { useLiked } from '../../hooks/useLiked';
 import { Item } from '../../model/Item';
@@ -13,6 +15,16 @@ interface ItemButtonsProps {
 	item: Item;
 	showCompare: boolean;
 	showLike?: boolean;
+	// Everything shown here starts out liked (e.g. the "Outbid & Liked"
+	// page) - renders a broken heart instead of the usual like/unlike
+	// toggle, and never refetches the liked list: the item stays in place
+	// even after you remove it, and clicking again re-likes it, all purely
+	// as local state until the page is reloaded.
+	silentToggle?: boolean;
+	// Within silentToggle, shows the broken heart instead of a normal one -
+	// for items you're currently outbid on, as opposed to ones you've only
+	// liked without ever bidding.
+	isOutbid?: boolean;
 }
 
 type ButtonConfig = {
@@ -28,19 +40,44 @@ export const ItemButtons = ({
 	item,
 	showCompare,
 	showLike = false,
+	silentToggle = false,
+	isOutbid = false,
 }: ItemButtonsProps) => {
-	const { likeItem, unlikeItem, liked, isLiked } = useLiked();
+	// Query is only needed to know isLiked() for the normal toggle case -
+	// skip fetching it entirely for a silentToggle button, which tracks its
+	// own liked state locally instead.
+	const { likeItem, unlikeItem, likeItemSilently, unlikeItemSilently, liked, isLiked } =
+		useLiked({ enabled: !silentToggle });
 	const iconSize = 30;
+
+	// Starts liked, since silentToggle only ever renders for items that
+	// were liked when the page loaded.
+	const [isLikedLocally, setIsLikedLocally] = useState(true);
 
 	const toggleLike = (itemId: number) => {
 		if (!liked) return;
 		isLiked(itemId) ? unlikeItem(itemId) : likeItem(itemId);
 	};
 
+	const toggleLikeSilently = (itemId: number) => {
+		isLikedLocally ? unlikeItemSilently(itemId) : likeItemSilently(itemId);
+		setIsLikedLocally((wasLiked) => !wasLiked);
+	};
+
 	const buttons: ButtonConfig[] = [
-		showLike && {
+		(showLike || silentToggle) && {
 			key: 'like',
-			content: isLiked(item.id) ? (
+			content: silentToggle ? (
+				isLikedLocally ? (
+					isOutbid ? (
+						<HeartBrokenRounded className="icon" sx={{ fontSize: iconSize }} />
+					) : (
+						<FavoriteRounded className="icon" sx={{ fontSize: iconSize }} />
+					)
+				) : (
+					<FavoriteBorderRounded className="icon" sx={{ fontSize: iconSize }} />
+				)
+			) : isLiked(item.id) ? (
 				<FavoriteRounded className="icon" sx={{ fontSize: iconSize }} />
 			) : (
 				<FavoriteBorderRounded
@@ -48,8 +85,13 @@ export const ItemButtons = ({
 					sx={{ fontSize: iconSize }}
 				/>
 			),
-			onClick: () => toggleLike(item.id),
-			tooltip: 'Add to liked items',
+			onClick: () =>
+				silentToggle ? toggleLikeSilently(item.id) : toggleLike(item.id),
+			tooltip: silentToggle
+				? isLikedLocally
+					? 'Remove from liked items'
+					: 'Add back to liked items'
+				: 'Add to liked items',
 		},
 		showCompare && {
 			key: 'compare',

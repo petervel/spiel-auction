@@ -19,6 +19,7 @@ body {
 	--colour-inactive: #666;
 	--colour-seen: #46aa55;
 	--color-error: #ef3e36;
+	--color-heart: #d42952;
 	--colour-bookmark: var(--colour-icon);
 	--bookmark-thickness: 4px;
 
@@ -40,6 +41,7 @@ body.dark {
 	--colour-inactive: #888;
 	--colour-seen: #52d064;
 	--color-error: #a5243d;
+	--color-heart: #e0507a;
 	--colour-bookmark: #88c2fc;
 	--bookmark-thickness: 5px;
 }

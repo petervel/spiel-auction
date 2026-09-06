@@ -44,7 +44,8 @@ export const LikedPage = () => {
 
 	// Bidding auto-likes an item (see backend/src/importer/likedItems.ts),
 	// so being outbid only keeps an item here while it's still liked -
-	// unliking it removes it from both sections, not just this one.
+	// unliking it removes it from this list entirely, not just the outbid
+	// part of it.
 	const outbidItems = (outbidsData?.items ?? []).filter(
 		(item) => likedItemIds.has(item.id) && !isWinning(item)
 	);
@@ -56,14 +57,16 @@ export const LikedPage = () => {
 		(item) => !outbidItemIds.has(item.id) && !isWinning(item)
 	);
 
+	// One combined, sorted-together list - outbidItemIds below is what
+	// still tells each item's heart apart (broken vs. normal).
+	const items = [...outbidItems, ...likedOnlyItems];
+
 	return (
 		<ItemsPage
 			title="Outbid & Liked"
-			sections={[
-				{ label: 'Outbid', items: outbidItems, isOutbid: true },
-				{ label: 'Liked', items: likedOnlyItems },
-			]}
+			items={items}
 			silentToggle={true}
+			outbidItemIds={outbidItemIds}
 		/>
 	);
 };

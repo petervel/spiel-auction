@@ -70,19 +70,26 @@ export const ItemButtons = ({
 			content: silentToggle ? (
 				isLikedLocally ? (
 					isOutbid ? (
-						<HeartBrokenRounded className="icon" sx={{ fontSize: iconSize }} />
+						<HeartBrokenRounded
+							sx={{ fontSize: iconSize, color: 'var(--color-heart)' }}
+						/>
 					) : (
-						<FavoriteRounded className="icon" sx={{ fontSize: iconSize }} />
+						<FavoriteRounded
+							sx={{ fontSize: iconSize, color: 'var(--color-heart)' }}
+						/>
 					)
 				) : (
-					<FavoriteBorderRounded className="icon" sx={{ fontSize: iconSize }} />
+					<FavoriteBorderRounded
+						sx={{ fontSize: iconSize, color: 'var(--color-heart)' }}
+					/>
 				)
 			) : isLiked(item.id) ? (
-				<FavoriteRounded className="icon" sx={{ fontSize: iconSize }} />
+				<FavoriteRounded
+					sx={{ fontSize: iconSize, color: 'var(--color-heart)' }}
+				/>
 			) : (
 				<FavoriteBorderRounded
-					className="icon"
-					sx={{ fontSize: iconSize }}
+					sx={{ fontSize: iconSize, color: 'var(--color-heart)' }}
 				/>
 			),
 			onClick: () =>

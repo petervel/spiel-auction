@@ -7,7 +7,7 @@ type ItemsListProps = {
 	allowBookmarks?: boolean;
 	allowLikes?: boolean;
 	silentToggle?: boolean;
-	isOutbid?: boolean;
+	outbidItemIds?: Set<number>;
 };
 
 export const ItemsList = ({
@@ -15,7 +15,7 @@ export const ItemsList = ({
 	allowBookmarks = false,
 	allowLikes = false,
 	silentToggle = false,
-	isOutbid = false,
+	outbidItemIds,
 }: ItemsListProps) => {
 	return (
 		<ul className={css.items}>
@@ -28,7 +28,7 @@ export const ItemsList = ({
 							allowBookmarks={allowBookmarks}
 							allowLikes={allowLikes}
 							silentToggle={silentToggle}
-							isOutbid={isOutbid}
+							isOutbid={outbidItemIds?.has(item.id) ?? false}
 						/>
 					);
 				})

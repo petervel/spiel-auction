@@ -1,10 +1,18 @@
 /// <reference lib="webworker" />
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
+import { clientsClaim } from 'workbox-core';
 import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { NetworkFirst } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
+
+// injectManifest hands us the whole service worker, so - unlike the default
+// generateSW strategy - nothing activates a newly installed version for us.
+// Without this, a new deploy just sits "waiting" until every open tab/PWA
+// window fully closes, which a reload or pull-to-refresh never triggers.
+self.skipWaiting();
+clientsClaim();
 
 // TypeScript's bundled webworker lib doesn't define this event type at all
 // - declared by hand rather than pulling in a separate @types package for

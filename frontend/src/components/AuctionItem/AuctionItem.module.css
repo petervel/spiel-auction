@@ -83,7 +83,7 @@
 	transition: opacity 300ms ease;
 }
 .activeBookmark,
-.container:hover .sideBookmark {
+.container .sideBookmark {
 	opacity: 1;
 }
 @media screen and (max-width: 1280px) {

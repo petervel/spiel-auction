@@ -12,15 +12,16 @@ const xmlDir = "/app/data";
 // sustained request rate, not just a floor. A production run at 15 minutes
 // held for ~8.75 hours with zero 429s (averaging ~8.76 calls/hour), so
 // there's headroom to push for more updates/hour - stepping down
-// cautiously to 12 minutes rather than jumping straight back toward the
+// cautiously to 10 minutes rather than jumping straight back toward the
 // old 4-minute value that did cause bans.
-const MIN_INTERVAL_MS = 720_000;   // 12 minutes — reset to this on any change
-const MAX_INTERVAL_MS = 720_000;   // 12 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
+const MIN_INTERVAL_MS = 600_000;   // 10 minutes — reset to this on any change
+const MAX_INTERVAL_MS = 600_000;   // 10 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
 // Traced a production run at 30s spacing: every single retry that ever
 // succeeded resolved on the 3rd attempt, never the 2nd - so the 2nd attempt
 // was consistently too early to matter. Widening to 45s pushes the 3rd
 // attempt out to 90s after the first (was 60s), which should catch updates
-// that finish resolving a bit later, without adding a 4th call.
+// that finish resolving a bit later. Added a 4th attempt (135s after the
+// first) as extra headroom for stragglers past that.
 const RETRY_INTERVAL_MS = 45_000;  // 45 seconds between quick queued-retries - these deliberately skip the global gate below (see runLoop), so this spacing is real, not just a floor
 
 // Traced a production log of 429s: every ban lasted almost exactly 60
@@ -38,7 +39,7 @@ const RATE_LIMIT_INTERVAL_MS = 3_600_000; // 60 minutes, flat
 // rebuilding, so continuing to poll every RETRY_INTERVAL_MS indefinitely
 // just burns requests chasing a moving target. Try a few times quickly in
 // case it settles, then give it real time before trying again.
-const QUEUED_RETRY_LIMIT = 3;
+const QUEUED_RETRY_LIMIT = 4;
 const STILL_NOT_READY_INTERVAL_MS = 30 * 60_000; // 30 minutes
 
 // BGG's rate limit is evaluated across the whole app's combined request

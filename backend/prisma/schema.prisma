@@ -34,6 +34,7 @@ model User {
 
   fairs            UserFair[]
   likedItems       UserLikedItem[]
+  wishlistItems    UserWishlistItem[]
   PushSubscription PushSubscription[]
 }
 
@@ -72,6 +73,31 @@ model UserLikedItem {
   itemId Int
 
   @@unique([userId, itemId])
+}
+
+// A BGG "thing" (board game, expansion, etc), keyed by its BGG object id.
+// Populated lazily from whichever source sees it first - a geeklist item
+// being imported, or a user's BGG collection being imported for their
+// wishlist - so only the fields both of those sources actually provide
+// belong here.
+model BggObject {
+  objectId      Int    @id
+  objectType    String
+  objectSubtype String
+  objectName    String @db.Text
+
+  wishlistedBy UserWishlistItem[]
+}
+
+model UserWishlistItem {
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  object    BggObject @relation(fields: [objectId], references: [objectId])
+  objectId  Int
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, objectId])
 }
 
 model PushSubscription {

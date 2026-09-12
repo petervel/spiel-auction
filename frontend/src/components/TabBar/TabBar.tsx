@@ -1,7 +1,8 @@
 import {
-	FavoriteRounded,
+	HeartBrokenRounded,
 	Sell,
 	ShoppingBasket,
+	StarRounded,
 	WatchLaterRounded,
 } from '@mui/icons-material';
 import { Button, Stack, Tooltip } from '@mui/material';
@@ -13,7 +14,7 @@ import { usePageId } from '../../hooks/usePageId';
 import css from './TabBar.module.css';
 
 type PageData = {
-	id: 'latest' | 'search' | 'selling' | 'buying' | 'liked';
+	id: 'latest' | 'search' | 'selling' | 'buying' | 'wishlist' | 'liked';
 	label: string;
 	renderIcon: () => ReactNode;
 	url: string;
@@ -53,8 +54,14 @@ export const TabBar = () => {
 		{
 			id: 'liked',
 			label: 'Outbid & Liked',
-			renderIcon: () => <FavoriteRounded />,
+			renderIcon: () => <HeartBrokenRounded />,
 			url: `/liked`,
+		},
+		{
+			id: 'wishlist',
+			label: 'Wishlist',
+			renderIcon: () => <StarRounded />,
+			url: `/wishlist`,
 		},
 	];
 

@@ -3,6 +3,7 @@ import {
 	AuthenticatedRequest,
 	authenticateUser,
 } from "../../../middleware/auth";
+import { fetchWishlist } from "../../bggCollection";
 import prisma from "../../prismaClient";
 
 const router = express.Router();
@@ -191,6 +192,27 @@ router.post(
 		} catch (err) {
 			console.error(err);
 			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.get(
+	"/bggWishlist",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		const username = req.user?.bggUsername;
+		if (!username) {
+			res.status(400).json({ error: "No BGG username set" });
+			return;
+		}
+
+		try {
+			const items = await fetchWishlist(username);
+			res.status(200).json({ items });
+		} catch (err) {
+			console.error("Failed to fetch BGG wishlist:", err);
+			const message = err instanceof Error ? err.message : "Unknown error";
+			res.status(502).json({ error: message });
 		}
 	},
 );

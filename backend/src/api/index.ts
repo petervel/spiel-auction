@@ -10,6 +10,7 @@ import objects from "./objects";
 import outbids from "./outbids";
 import push from "./push";
 import user from "./user";
+import wishlist from "./wishlist";
 
 export default [
 	{ path: "/auth", object: auth },
@@ -24,4 +25,5 @@ export default [
 	{ path: "/push", object: push },
 	{ path: "/user", object: user },
 	{ path: "/liked", object: liked },
+	{ path: "/wishlist", object: wishlist },
 ];

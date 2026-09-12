@@ -2,7 +2,10 @@
 	display: grid;
 	grid-template-columns: 1fr auto 1fr;
 	align-items: center;
-	padding-block: 8px;
+	/* 58px matches the left/right buttons' own height (see TitleButton,
+	   BackButton) so they fill the row exactly, with no extra padding
+	   stacked on top of their own height. */
+	min-height: 58px;
 }
 
 .left {

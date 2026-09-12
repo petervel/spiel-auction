@@ -12,6 +12,7 @@ import {
 	Typography,
 } from '@mui/material';
 import { FormEvent, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { Spinner } from '../../components/Spinner/Spinner';
@@ -321,6 +322,21 @@ export const SettingsPage = () => {
 							</Stack>
 						</>
 					)}
+					<Divider sx={{ width: '100%' }} />
+					<Stack gap={1} alignItems="start" width="100%">
+						<Typography variant="body2">
+							Import your BGG wishlist to build your wishlist here.
+						</Typography>
+						<Button
+							type="button"
+							variant="contained"
+							disabled={!bggUsername}
+							component={Link}
+							to="/wishlist/import"
+						>
+							Import from BGG
+						</Button>
+					</Stack>
 				</Stack>
 			</Stack>
 			<Snackbar

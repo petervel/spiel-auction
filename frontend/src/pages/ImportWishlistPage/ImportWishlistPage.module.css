@@ -1,0 +1,49 @@
+ul.items {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.item {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.25rem 0.75rem;
+	border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.item:last-child {
+	border-bottom: none;
+}
+
+.selectAll {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding-bottom: 0.5rem;
+	font-weight: 600;
+	border-bottom: 2px solid rgba(128, 128, 128, 0.3);
+}
+
+/* Each priority section gets its own outlined box so it reads as a
+   distinct group, rather than just another run of rows in one long list.
+   overflow:hidden lets the header's background tint below fill the box
+   edge-to-edge while still respecting the rounded corners. */
+.group {
+	border: 1px solid rgba(128, 128, 128, 0.3);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+/* Shaded background plus a thick, high-contrast rule (vs. the thin 1px
+   dividers between items) so this reads as a section header, not just
+   another row in the list. */
+.groupHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	font-weight: 600;
+	background: rgba(128, 128, 128, 0.12);
+	border-bottom: 3px solid rgba(128, 128, 128, 0.5);
+}

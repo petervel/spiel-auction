@@ -6,12 +6,14 @@ import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DonatePage } from './pages/DonatePage/DonatePage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { ExportPage } from './pages/ExportPage/ExportPage';
+import { ImportWishlistPage } from './pages/ImportWishlistPage/ImportWishlistPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { LikedPage } from './pages/LatestPage/LikedPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
 import { VerifyLoginPage } from './pages/VerifyLoginPage/VerifyLoginPage';
+import { WishlistPage } from './pages/WishlistPage/WishlistPage';
 
 export const AppRouter = () => {
 	return (
@@ -23,6 +25,7 @@ export const AppRouter = () => {
 				<Route path="/selling/:username?" element={<SellingPage />} />
 				<Route path="/search" element={<SearchPage />} />
 				<Route path="/liked" element={<LikedPage />} />
+				<Route path="/wishlist" element={<WishlistPage />} />
 			</Route>
 
 			<Route path="/login/verify" element={<VerifyLoginPage />} />
@@ -31,6 +34,7 @@ export const AppRouter = () => {
 			<Route path="/deleted" element={<DeletedPage />} />
 			<Route path="/export" element={<ExportPage />} />
 			<Route path="/donate" element={<DonatePage />} />
+			<Route path="/wishlist/import" element={<ImportWishlistPage />} />
 		</Routes>
 	);
 };

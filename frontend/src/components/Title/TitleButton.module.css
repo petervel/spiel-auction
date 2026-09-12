@@ -2,6 +2,9 @@
 	z-index: 1;
 }
 
-.button > svg {
+/* :where() keeps this at zero specificity, so an icon with its own
+   explicit `color` prop (e.g. the wishlist star) still wins over this
+   default - no !important tug-of-war needed. */
+:where(.button) > svg {
 	color: var(--colour-active);
 }

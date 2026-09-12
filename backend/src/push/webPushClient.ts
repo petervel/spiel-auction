@@ -11,6 +11,9 @@ export type PushPayload = {
 	title: string;
 	body: string;
 	icon?: string;
+	// Opened by the service worker's notificationclick handler; falls back
+	// to '/' there if omitted.
+	url?: string;
 };
 
 export const sendPushToUser = async (userId: number, payload: PushPayload) => {

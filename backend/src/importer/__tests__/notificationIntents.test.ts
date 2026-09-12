@@ -2,6 +2,7 @@ import { XMLParser } from "fast-xml-parser";
 import { describe, expect, it } from "vitest";
 import {
 	computeNotificationIntents,
+	findNewlyListedItems,
 	PreviousItemState,
 } from "../notifications/notificationIntents";
 import { ItemWrapper } from "../processors/ItemWrapper";
@@ -131,5 +132,24 @@ describe("computeNotificationIntents", () => {
 		const item = buildItem({ bids: [{ username: "alice", text: "€10" }] });
 
 		expect(computeNotificationIntents([item], new Map())).toEqual([]);
+	});
+});
+
+describe("findNewlyListedItems", () => {
+	it("returns items with no previous state entry", () => {
+		const item = buildItem({});
+
+		expect(findNewlyListedItems([item], new Map())).toEqual([item]);
+	});
+
+	it("excludes items that already had a previous state entry", () => {
+		const item = buildItem({});
+
+		expect(
+			findNewlyListedItems(
+				[item],
+				previousState({ currentBid: null, isEnded: false }),
+			),
+		).toEqual([]);
 	});
 });

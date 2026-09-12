@@ -3,6 +3,7 @@ import bids from "./bids";
 import deleted from "./deleted";
 import duplicates from "./duplicates";
 import fairs from "./fairs";
+import item from "./item";
 import items from "./items";
 import liked from "./liked";
 import object from "./object";
@@ -18,6 +19,7 @@ export default [
 	{ path: "/deleted", object: deleted },
 	{ path: "/duplicates", object: duplicates },
 	{ path: "/fairs", object: fairs },
+	{ path: "/item", object: item },
 	{ path: "/items", object: items },
 	{ path: "/object", object: object },
 	{ path: "/objects", object: objects },

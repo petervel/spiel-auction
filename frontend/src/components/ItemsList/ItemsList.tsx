@@ -8,6 +8,7 @@ type ItemsListProps = {
 	allowLikes?: boolean;
 	silentToggle?: boolean;
 	outbidItemIds?: Set<number>;
+	startExpanded?: boolean;
 };
 
 export const ItemsList = ({
@@ -16,6 +17,7 @@ export const ItemsList = ({
 	allowLikes = false,
 	silentToggle = false,
 	outbidItemIds,
+	startExpanded = false,
 }: ItemsListProps) => {
 	return (
 		<ul className={css.items}>
@@ -29,6 +31,7 @@ export const ItemsList = ({
 							allowLikes={allowLikes}
 							silentToggle={silentToggle}
 							isOutbid={outbidItemIds?.has(item.id) ?? false}
+							startExpanded={startExpanded}
 						/>
 					);
 				})

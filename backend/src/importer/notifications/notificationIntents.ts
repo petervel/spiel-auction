@@ -60,3 +60,13 @@ export const computeNotificationIntents = (
 
 	return intents;
 };
+
+// Items that weren't present in previousState at all this cycle - i.e.
+// brand new auction listings, not just updates to ones already tracked.
+// Kept alongside computeNotificationIntents (rather than in
+// wishlistNotifier.ts, which imports webPushClient) so it stays importable
+// in tests without webPushClient's eager VAPID setup.
+export const findNewlyListedItems = (
+	items: ItemWrapper[],
+	previousState: Map<number, PreviousItemState>,
+): ItemWrapper[] => items.filter((item) => !previousState.has(item.id));

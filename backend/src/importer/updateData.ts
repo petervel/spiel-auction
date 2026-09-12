@@ -5,6 +5,7 @@ import * as path from "path";
 import prisma from "../prismaClient";
 import { getBidderKeys, likeItemsForNewBidders } from "./likedItems";
 import { notifyBidUpdates } from "./notifications/outbidNotifier";
+import { notifyWishlistedItems } from "./notifications/wishlistNotifier";
 import { ListWrapper } from "./processors/ListWrapper";
 import { Result, err, ok } from "./util/result";
 
@@ -160,6 +161,14 @@ async function update(fair: Fair, updateTime: number) {
 		previousBidderKeys,
 	).catch((err) =>
 		console.error(`${fair.geeklistId}: auto-like for new bidders failed:`, err),
+	);
+
+	await notifyWishlistedItems(listWrapper.getItems(), previousItemState).catch(
+		(err) =>
+			console.error(
+				`${fair.geeklistId}: wishlist listing notification failed:`,
+				err,
+			),
 	);
 
 	console.info(

@@ -12,6 +12,7 @@ export interface User {
 	notifyOnOutbid?: boolean;
 	notifyOnNewBid?: boolean;
 	notifyOnAuctionWon?: boolean;
+	notifyOnWishlistItemListed?: boolean;
 }
 
 export interface UserFair {

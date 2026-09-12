@@ -18,6 +18,10 @@ interface Props {
 	allowLikes?: boolean;
 	silentToggle?: boolean;
 	isOutbid?: boolean;
+	// The single-item page has nothing else to show, so it starts this
+	// open rather than making the user click to reveal the auction body -
+	// still toggle-able afterwards like any other row.
+	startExpanded?: boolean;
 }
 
 export const AuctionItem = ({
@@ -26,8 +30,9 @@ export const AuctionItem = ({
 	allowLikes = false,
 	silentToggle = false,
 	isOutbid = false,
+	startExpanded = false,
 }: Props) => {
-	const [expanded, setExpanded] = useState(false);
+	const [expanded, setExpanded] = useState(startExpanded);
 	const pageId = usePageId();
 	const showCompare = pageId !== 'object'; // Already in compare view.
 

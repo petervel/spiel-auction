@@ -19,24 +19,28 @@ const PREFERENCE_FIELD: Record<
 };
 
 const buildPayload = ({ item, type }: NotificationIntent) => {
+	const url = `/item/${item.id}`;
 	switch (type) {
 		case "outbid":
 			return {
 				title: "You've been outbid",
 				body: `The new highest bid for ${item.objectName} is now €${item.currentBid}`,
 				icon: "/icon/notify-outbid.svg",
+				url,
 			};
 		case "newBid":
 			return {
 				title: `Someone bid on ${item.objectName}`,
 				body: `Current bid is now €${item.currentBid}`,
 				icon: "/icon/notify-newbid.svg",
+				url,
 			};
 		case "won":
 			return {
 				title: "You won an auction!",
 				body: `You've won the auction for ${item.objectName} for €${item.currentBid}`,
 				icon: "/icon/notify-won.svg",
+				url,
 			};
 	}
 };

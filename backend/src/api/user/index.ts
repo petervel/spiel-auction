@@ -110,17 +110,22 @@ router.post(
 	authenticateUser,
 	async (req: AuthenticatedRequest, res) => {
 		try {
-			const { notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon } =
-				req.body;
+			const {
+				notifyOnOutbid,
+				notifyOnNewBid,
+				notifyOnAuctionWon,
+				notifyOnWishlistItemListed,
+			} = req.body;
 
 			if (
 				typeof notifyOnOutbid !== "boolean" ||
 				typeof notifyOnNewBid !== "boolean" ||
-				typeof notifyOnAuctionWon !== "boolean"
+				typeof notifyOnAuctionWon !== "boolean" ||
+				typeof notifyOnWishlistItemListed !== "boolean"
 			) {
 				return res.status(400).json({
 					error:
-						"notifyOnOutbid, notifyOnNewBid, and notifyOnAuctionWon must all be booleans",
+						"notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon, and notifyOnWishlistItemListed must all be booleans",
 				});
 			}
 
@@ -130,7 +135,12 @@ router.post(
 
 			const updatedUser = await prisma.user.update({
 				where: { id: req.user.id },
-				data: { notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon },
+				data: {
+					notifyOnOutbid,
+					notifyOnNewBid,
+					notifyOnAuctionWon,
+					notifyOnWishlistItemListed,
+				},
 			});
 
 			res.status(200).json({ user: updatedUser });

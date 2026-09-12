@@ -291,6 +291,24 @@ export const SettingsPage = () => {
 												}
 												label="Auctions I've won"
 											/>
+											<FormControlLabel
+												control={
+													<Checkbox
+														checked={
+															notificationPreferences.notifyOnWishlistItemListed
+														}
+														disabled={
+															preferencesSaving
+														}
+														onChange={() =>
+															togglePreference(
+																'notifyOnWishlistItemListed'
+															)
+														}
+													/>
+												}
+												label="New listing for a wishlisted game"
+											/>
 										</Stack>
 										<Stack gap={2} direction="row">
 											<Button

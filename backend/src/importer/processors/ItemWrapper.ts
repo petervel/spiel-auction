@@ -29,6 +29,10 @@ export class ItemWrapper {
 		return this.dbObject.id;
 	}
 
+	public get objectId(): number {
+		return this.dbObject.objectId;
+	}
+
 	public get objectName(): string {
 		return this.dbObject.objectName;
 	}

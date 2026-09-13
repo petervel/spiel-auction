@@ -7,6 +7,7 @@ import { WishlistObject } from '../../hooks/useWishlist';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import css from './AuctionItem.module.css';
 import { WishlistStarButton } from './WishlistStarButton';
+import rowCss from './WishlistObjectRow.module.css';
 
 type Props = {
 	object: WishlistObject;
@@ -27,44 +28,67 @@ export const WishlistObjectRow = ({
 
 	return (
 		<div className={css.container}>
-			<Stack direction="row" gap={1}>
-				{hasItems && (
-					<AuctionItemButton
-						link={onToggleExpand}
-						tooltip={expanded ? 'Collapse' : 'Expand'}
-					>
-						{expanded ? (
+			<Stack
+				direction="row"
+				gap={1}
+				className={classNames(rowCss.header, {
+					[rowCss.expandable]: hasItems,
+				})}
+			>
+				{/* Always rendered, even with nothing to expand - omitting it
+				    entirely would shift the star/bgg icons after it out of
+				    alignment with rows that do have this button. */}
+				<AuctionItemButton
+					link={hasItems ? onToggleExpand : () => {}}
+					tooltip={hasItems ? (expanded ? 'Collapse' : 'Expand') : undefined}
+				>
+					{hasItems ? (
+						expanded ? (
 							<ExpandLessRounded sx={{ fontSize: '30px' }} />
 						) : (
 							<ExpandMoreRounded sx={{ fontSize: '30px' }} />
-						)}
-					</AuctionItemButton>
-				)}
+						)
+					) : (
+						<ExpandMoreRounded
+							sx={{ fontSize: '30px', visibility: 'hidden' }}
+						/>
+					)}
+				</AuctionItemButton>
 
 				<a
 					href={`/object/${object.objectId}`}
 					className={classNames(
 						css.objectName,
 						css.hideOverflow,
-						css.displayName
+						css.displayName,
+						rowCss.name
 					)}
 				>
 					{object.objectName}
 				</a>
 
-				<WishlistStarButton objectId={object.objectId} />
+				{/* No gap here (unlike the outer Stack) - matches ItemButtons,
+				    which relies on each button's own padding for spacing
+				    between adjacent icons rather than adding an extra gap. */}
+				<Stack direction="row">
+					<WishlistStarButton objectId={object.objectId} />
 
-				<AuctionItemButton
-					link={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
-					tooltip="Look up on BGG"
-				>
-					<img src={bggIcon} width="30" height="30" />
-				</AuctionItemButton>
+					<AuctionItemButton
+						link={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
+						tooltip="Look up on BGG"
+					>
+						<img src={bggIcon} width="30" height="30" />
+					</AuctionItemButton>
+				</Stack>
 			</Stack>
 
 			{hasItems && (
 				<Collapse in={expanded}>
-					<ItemsList items={object.items} allowLikes={true} />
+					<ItemsList
+						items={object.items}
+						allowLikes={true}
+						allowObjectActions={false}
+					/>
 				</Collapse>
 			)}
 		</div>

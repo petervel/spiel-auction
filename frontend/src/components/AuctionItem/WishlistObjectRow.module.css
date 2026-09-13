@@ -1,0 +1,14 @@
+/* Shaded background and bold name so this reads as a header for the items
+   below it (when expandable), not just another auction row in the list. */
+.header {
+	padding: 0.5rem 0.75rem;
+	background: rgba(128, 128, 128, 0.08);
+}
+
+.header.expandable {
+	border-bottom: 2px solid rgba(128, 128, 128, 0.3);
+}
+
+.name {
+	font-weight: 600;
+}

@@ -22,6 +22,11 @@ interface Props {
 	// open rather than making the user click to reveal the auction body -
 	// still toggle-able afterwards like any other row.
 	startExpanded?: boolean;
+	// Off for the wishlist page's nested items - the compare/BGG links are
+	// object-level (same for every listing of that game) and already shown
+	// once on the object header above, so repeating them per item here
+	// would just be redundant.
+	allowObjectActions?: boolean;
 }
 
 export const AuctionItem = ({
@@ -31,10 +36,12 @@ export const AuctionItem = ({
 	silentToggle = false,
 	isOutbid = false,
 	startExpanded = false,
+	allowObjectActions = true,
 }: Props) => {
 	const [expanded, setExpanded] = useState(startExpanded);
 	const pageId = usePageId();
-	const showCompare = pageId !== 'object'; // Already in compare view.
+	// Already in compare view.
+	const showCompare = allowObjectActions && pageId !== 'object';
 
 	const { user } = useUser();
 
@@ -104,6 +111,7 @@ export const AuctionItem = ({
 					<ItemButtons
 						item={item}
 						showCompare={showCompare}
+						showBgg={allowObjectActions}
 						showLike={showLike}
 						silentToggle={silentToggle}
 						isOutbid={isOutbid}
@@ -115,6 +123,7 @@ export const AuctionItem = ({
 					<ItemButtons
 						item={item}
 						showCompare={showCompare}
+						showBgg={allowObjectActions}
 						showLike={showLike}
 						silentToggle={silentToggle}
 						isOutbid={isOutbid}

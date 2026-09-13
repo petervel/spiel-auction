@@ -14,6 +14,10 @@ import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 interface ItemButtonsProps {
 	item: Item;
 	showCompare: boolean;
+	// Off on the wishlist page's nested items - the object-level compare/BGG
+	// links are already shown once, on the object header above them, so
+	// repeating a BGG link per listing would just be redundant there.
+	showBgg?: boolean;
 	showLike?: boolean;
 	// Everything shown here starts out liked (e.g. the "Outbid & Liked"
 	// page) - renders a broken heart instead of the usual like/unlike
@@ -39,6 +43,7 @@ type ButtonConfig = {
 export const ItemButtons = ({
 	item,
 	showCompare,
+	showBgg = true,
 	showLike = false,
 	silentToggle = false,
 	isOutbid = false,
@@ -56,11 +61,19 @@ export const ItemButtons = ({
 
 	const toggleLike = (itemId: number) => {
 		if (!liked) return;
-		isLiked(itemId) ? unlikeItem(itemId) : likeItem(itemId);
+		if (isLiked(itemId)) {
+			unlikeItem(itemId);
+		} else {
+			likeItem(itemId);
+		}
 	};
 
 	const toggleLikeSilently = (itemId: number) => {
-		isLikedLocally ? unlikeItemSilently(itemId) : likeItemSilently(itemId);
+		if (isLikedLocally) {
+			unlikeItemSilently(itemId);
+		} else {
+			likeItemSilently(itemId);
+		}
 		setIsLikedLocally((wasLiked) => !wasLiked);
 	};
 
@@ -108,7 +121,7 @@ export const ItemButtons = ({
 			link: `/object/${item.objectId}`,
 			tooltip: 'Compare with other auctions',
 		},
-		{
+		showBgg && {
 			key: 'bgg',
 			content: <img src={bggIcon} width={iconSize} height={iconSize} />,
 			link: `https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`,

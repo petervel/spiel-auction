@@ -45,16 +45,21 @@ export const ObjectItem = ({
 					{object.objectName}
 				</a>
 
-				{allowWishlistToggle && (
-					<WishlistStarButton objectId={object.objectId} />
-				)}
+				{/* No gap here (unlike the outer Stack) - matches ItemButtons,
+				    which relies on each button's own padding for spacing
+				    between adjacent icons rather than adding an extra gap. */}
+				<Stack direction="row">
+					{allowWishlistToggle && (
+						<WishlistStarButton objectId={object.objectId} />
+					)}
 
-				<AuctionItemButton
-					link={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
-					tooltip="Look up on BGG"
-				>
-					<img src={bggIcon} width="30" height="30" />
-				</AuctionItemButton>
+					<AuctionItemButton
+						link={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
+						tooltip="Look up on BGG"
+					>
+						<img src={bggIcon} width="30" height="30" />
+					</AuctionItemButton>
+				</Stack>
 			</Stack>
 		</div>
 	);

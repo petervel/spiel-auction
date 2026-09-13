@@ -9,6 +9,7 @@ type ItemsListProps = {
 	silentToggle?: boolean;
 	outbidItemIds?: Set<number>;
 	startExpanded?: boolean;
+	allowObjectActions?: boolean;
 };
 
 export const ItemsList = ({
@@ -18,6 +19,7 @@ export const ItemsList = ({
 	silentToggle = false,
 	outbidItemIds,
 	startExpanded = false,
+	allowObjectActions = true,
 }: ItemsListProps) => {
 	return (
 		<ul className={css.items}>
@@ -32,6 +34,7 @@ export const ItemsList = ({
 							silentToggle={silentToggle}
 							isOutbid={outbidItemIds?.has(item.id) ?? false}
 							startExpanded={startExpanded}
+							allowObjectActions={allowObjectActions}
 						/>
 					);
 				})

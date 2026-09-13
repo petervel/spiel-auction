@@ -1,7 +1,7 @@
 ul.items {
 	list-style: none;
 	margin: 0;
-	padding-inline: 0.75rem;
+	padding: 0;
 }
 
 /* Each section (with/without auctions) gets its own outlined box so the

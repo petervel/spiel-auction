@@ -17,7 +17,10 @@ export const getBidderKeys = async (listId: number): Promise<Set<BidderKey>> => 
 };
 
 export type BidderPair = { itemId: number; username: string };
-export type UserByUsername = Map<string, number>; // lowercased username -> userId
+// lowercased username -> userIds. A value array rather than a single id
+// because bggUsername isn't unique on User - two people can register the
+// same BGG username, and both must get credited for the same bid.
+export type UserByUsername = Map<string, number[]>;
 
 // Pure: given the full current set of (item, bidder) pairs and a snapshot of
 // which pairs already existed before this import cycle, works out which
@@ -26,7 +29,7 @@ export type UserByUsername = Map<string, number>; // lowercased username -> user
 export const computeNewLikes = (
 	currentPairs: BidderPair[],
 	previousBidderKeys: Set<BidderKey>,
-	userIdByUsername: UserByUsername,
+	userIdsByUsername: UserByUsername,
 	fairId: number,
 ): { userId: number; itemId: number; fairId: number }[] => {
 	const newPairs = currentPairs.filter(
@@ -35,9 +38,11 @@ export const computeNewLikes = (
 
 	const likes: { userId: number; itemId: number; fairId: number }[] = [];
 	for (const pair of newPairs) {
-		const userId = userIdByUsername.get(pair.username.toLowerCase());
-		if (userId === undefined) continue;
-		likes.push({ userId, itemId: pair.itemId, fairId });
+		const userIds = userIdsByUsername.get(pair.username.toLowerCase());
+		if (!userIds) continue;
+		for (const userId of userIds) {
+			likes.push({ userId, itemId: pair.itemId, fairId });
+		}
 	}
 	return likes;
 };
@@ -73,14 +78,18 @@ export const likeItemsForNewBidders = async (
 	});
 	if (users.length === 0) return;
 
-	const userIdByUsername: UserByUsername = new Map(
-		users.map((u) => [u.bggUsername!.toLowerCase(), u.id]),
-	);
+	const userIdsByUsername: UserByUsername = new Map();
+	for (const u of users) {
+		const key = u.bggUsername!.toLowerCase();
+		const existing = userIdsByUsername.get(key);
+		if (existing) existing.push(u.id);
+		else userIdsByUsername.set(key, [u.id]);
+	}
 
 	const data = computeNewLikes(
 		currentPairs,
 		previousBidderKeys,
-		userIdByUsername,
+		userIdsByUsername,
 		fairId,
 	);
 	if (data.length === 0) return;

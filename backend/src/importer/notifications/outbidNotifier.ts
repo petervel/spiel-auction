@@ -56,20 +56,23 @@ export const notifyBidUpdates = async (
 	const users = await prisma.user.findMany({
 		where: { bggUsername: { not: null } },
 	});
-	const byUsername = new Map(
-		users.map((user) => [user.bggUsername!.toLowerCase(), user]),
-	);
+
+	// lowercased username -> users. A list rather than a single user because
+	// bggUsername isn't unique on User - two people can register the same
+	// BGG username, and both must be notified about the same bid.
+	const byUsername = new Map<string, User[]>();
+	for (const user of users) {
+		const key = user.bggUsername!.toLowerCase();
+		const existing = byUsername.get(key);
+		if (existing) existing.push(user);
+		else byUsername.set(key, [user]);
+	}
 
 	await Promise.all(
-		intents
-			.map((intent) => ({
-				intent,
-				user: byUsername.get(intent.username.toLowerCase()),
-			}))
-			.filter(
-				(x): x is { intent: NotificationIntent; user: User } =>
-					x.user != null && x.user[PREFERENCE_FIELD[x.intent.type]],
-			)
-			.map((x) => sendPushToUser(x.user.id, buildPayload(x.intent))),
+		intents.flatMap((intent) =>
+			(byUsername.get(intent.username.toLowerCase()) ?? [])
+				.filter((user) => user[PREFERENCE_FIELD[intent.type]])
+				.map((user) => sendPushToUser(user.id, buildPayload(intent))),
+		),
 	);
 };

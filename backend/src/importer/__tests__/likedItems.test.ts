@@ -6,7 +6,7 @@ describe("computeNewLikes", () => {
 		const likes = computeNewLikes(
 			[{ itemId: 1, username: "alice" }],
 			new Set(),
-			new Map([["alice", 42]]),
+			new Map([["alice", [42]]]),
 			7,
 		);
 
@@ -17,7 +17,7 @@ describe("computeNewLikes", () => {
 		const likes = computeNewLikes(
 			[{ itemId: 1, username: "alice" }],
 			new Set(["1:alice"]),
-			new Map([["alice", 42]]),
+			new Map([["alice", [42]]]),
 			7,
 		);
 
@@ -28,7 +28,7 @@ describe("computeNewLikes", () => {
 		const likes = computeNewLikes(
 			[{ itemId: 1, username: "stranger" }],
 			new Set(),
-			new Map([["alice", 42]]),
+			new Map([["alice", [42]]]),
 			7,
 		);
 
@@ -39,7 +39,7 @@ describe("computeNewLikes", () => {
 		const likes = computeNewLikes(
 			[{ itemId: 1, username: "Alice" }],
 			new Set(),
-			new Map([["alice", 42]]),
+			new Map([["alice", [42]]]),
 			7,
 		);
 
@@ -55,8 +55,8 @@ describe("computeNewLikes", () => {
 			],
 			new Set(["2:alice"]),
 			new Map([
-				["alice", 42],
-				["bob", 43],
+				["alice", [42]],
+				["bob", [43]],
 			]),
 			7,
 		);
@@ -64,6 +64,20 @@ describe("computeNewLikes", () => {
 		expect(likes).toEqual([
 			{ userId: 42, itemId: 1, fairId: 7 },
 			{ userId: 43, itemId: 2, fairId: 7 },
+		]);
+	});
+
+	it("likes the item for every registered user sharing the same bggUsername", () => {
+		const likes = computeNewLikes(
+			[{ itemId: 1, username: "alice" }],
+			new Set(),
+			new Map([["alice", [42, 99]]]),
+			7,
+		);
+
+		expect(likes).toEqual([
+			{ userId: 42, itemId: 1, fairId: 7 },
+			{ userId: 99, itemId: 1, fairId: 7 },
 		]);
 	});
 });

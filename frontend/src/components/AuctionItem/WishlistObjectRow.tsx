@@ -1,4 +1,8 @@
-import { ExpandLessRounded, ExpandMoreRounded } from '@mui/icons-material';
+import {
+	BarChartRounded,
+	ExpandLessRounded,
+	ExpandMoreRounded,
+} from '@mui/icons-material';
 import { Collapse, Stack } from '@mui/material';
 import classNames from 'classnames';
 import bggIcon from '../../assets/bgg.svg';
@@ -35,12 +39,20 @@ export const WishlistObjectRow = ({
 					[rowCss.expandable]: hasItems,
 				})}
 			>
-				{/* Always rendered, even with nothing to expand - omitting it
-				    entirely would shift the star/bgg icons after it out of
-				    alignment with rows that do have this button. */}
+				{/* With auction items, this expands/collapses them inline.
+				    Without any yet, it's just a compare-page link instead
+				    (like ObjectItem's), even though that page will be empty
+				    for now - keeps this slot filled either way so the star/
+				    bgg icons after it stay aligned with rows that do expand. */}
 				<AuctionItemButton
-					link={hasItems ? onToggleExpand : () => {}}
-					tooltip={hasItems ? (expanded ? 'Collapse' : 'Expand') : undefined}
+					link={hasItems ? onToggleExpand : `/object/${object.objectId}`}
+					tooltip={
+						hasItems
+							? expanded
+								? 'Collapse'
+								: 'Expand'
+							: 'Compare with other auctions'
+					}
 				>
 					{hasItems ? (
 						expanded ? (
@@ -49,9 +61,7 @@ export const WishlistObjectRow = ({
 							<ExpandMoreRounded sx={{ fontSize: '30px' }} />
 						)
 					) : (
-						<ExpandMoreRounded
-							sx={{ fontSize: '30px', visibility: 'hidden' }}
-						/>
+						<BarChartRounded sx={{ fontSize: '30px' }} />
 					)}
 				</AuctionItemButton>
 

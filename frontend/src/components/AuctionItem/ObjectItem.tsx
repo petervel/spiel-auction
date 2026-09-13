@@ -1,16 +1,11 @@
-import {
-	BarChartRounded,
-	StarBorderRounded,
-	StarRounded,
-} from '@mui/icons-material';
+import { BarChartRounded } from '@mui/icons-material';
 import { Stack } from '@mui/material';
 import classNames from 'classnames';
-import { useState } from 'react';
 import bggIcon from '../../assets/bgg.svg';
 import { BggObject } from '../../hooks/useInfiniteObjects';
-import { useWishlist } from '../../hooks/useWishlist';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
 import css from './AuctionItem.module.css';
+import { WishlistStarButton } from './WishlistStarButton';
 
 interface ObjectItemProps {
 	object: BggObject;
@@ -26,19 +21,6 @@ export const ObjectItem = ({
 	object,
 	allowWishlistToggle = false,
 }: ObjectItemProps) => {
-	const { addToWishlistSilently, removeFromWishlistSilently } =
-		useWishlist();
-	const [isWishlistedLocally, setIsWishlistedLocally] = useState(true);
-
-	const toggleWishlist = () => {
-		if (isWishlistedLocally) {
-			removeFromWishlistSilently(object.objectId);
-		} else {
-			addToWishlistSilently(object.objectId);
-		}
-		setIsWishlistedLocally((wasWishlisted) => !wasWishlisted);
-	};
-
 	return (
 		<div className={css.container}>
 			<Stack direction="row" gap={1}>
@@ -64,26 +46,7 @@ export const ObjectItem = ({
 				</a>
 
 				{allowWishlistToggle && (
-					<AuctionItemButton
-						link={toggleWishlist}
-						tooltip={
-							isWishlistedLocally
-								? 'Remove from wishlist'
-								: 'Add back to wishlist'
-						}
-					>
-						{isWishlistedLocally ? (
-							<StarRounded
-								sx={{ fontSize: '30px' }}
-								color="warning"
-							/>
-						) : (
-							<StarBorderRounded
-								sx={{ fontSize: '30px' }}
-								color="warning"
-							/>
-						)}
-					</AuctionItemButton>
+					<WishlistStarButton objectId={object.objectId} />
 				)}
 
 				<AuctionItemButton

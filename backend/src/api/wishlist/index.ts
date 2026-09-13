@@ -24,12 +24,20 @@ const isValidMeta = (body: any): body is ObjectMeta =>
 const isValidImportItem = (item: any): item is ImportItem =>
 	typeof item?.objectId === "number" && isValidMeta(item);
 
-const cacheKeyFor = (userId: number) => `api:wishlist:${userId}`;
+const cacheKeyFor = (userId: number, listId: number | undefined) =>
+	`api:wishlist:${userId}:${listId}`;
 
-// 🔹 Get the logged-in user's wishlist
+const currentListId = (req: AuthenticatedRequest): number | undefined =>
+	req.user?.currentUserFair?.fair?.geeklistId;
+
+// 🔹 Get the logged-in user's wishlist, each object annotated with its
+// current-fair auction items (if any), so the wishlist page can split
+// "has an active auction" from "nothing listed yet" without an extra
+// round trip per object.
 router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 	const userId = req.userId!;
-	const cacheKey = cacheKeyFor(userId);
+	const listId = currentListId(req);
+	const cacheKey = cacheKeyFor(userId, listId);
 
 	const cache = await redisClient.get(cacheKey);
 	if (cache) {
@@ -43,10 +51,31 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		orderBy: { object: { objectName: "asc" } },
 	});
 
-	const result = { objects: wishlistItems.map((w) => w.object) };
+	const objectIds = wishlistItems.map((w) => w.objectId);
+
+	const items = listId
+		? await prisma.item.findMany({
+				where: { listId, objectId: { in: objectIds }, deleted: false },
+				orderBy: { postDate: "desc" },
+			})
+		: [];
+
+	const itemsByObjectId = new Map<number, typeof items>();
+	for (const item of items) {
+		const existing = itemsByObjectId.get(item.objectId);
+		if (existing) existing.push(item);
+		else itemsByObjectId.set(item.objectId, [item]);
+	}
+
+	const objects = wishlistItems.map((w) => ({
+		...w.object,
+		items: itemsByObjectId.get(w.objectId) ?? [],
+	}));
+
+	const result = { objects };
 
 	await redisClient.set(cacheKey, JSON.stringify(result));
-	await redisClient.expire(cacheKey, 60);
+	await redisClient.expire(cacheKey, 30);
 
 	res.status(200).json(result);
 });
@@ -81,7 +110,7 @@ router.post(
 				});
 			}
 
-			await redisClient.del(cacheKeyFor(userId));
+			await redisClient.del(cacheKeyFor(userId, currentListId(req)));
 
 			res.status(200).json({ success: true, added: items.length });
 		} catch (err) {
@@ -126,7 +155,7 @@ router.post(
 				create: { userId, objectId },
 			});
 
-			await redisClient.del(cacheKeyFor(userId));
+			await redisClient.del(cacheKeyFor(userId, currentListId(req)));
 
 			res.status(200).json({ success: true, wishlisted: true });
 		} catch (err) {
@@ -153,7 +182,7 @@ router.delete(
 				where: { userId, objectId },
 			});
 
-			await redisClient.del(cacheKeyFor(userId));
+			await redisClient.del(cacheKeyFor(userId, currentListId(req)));
 
 			res.status(200).json({ success: true, wishlisted: false });
 		} catch (err) {

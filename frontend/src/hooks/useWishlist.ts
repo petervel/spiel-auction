@@ -1,8 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { BggObject } from '../model/BggObject';
+import { Item } from '../model/Item';
 import { useUser } from './useUser';
 
-const fetchWishlist = async (): Promise<{ objects: BggObject[] }> => {
+// Each wishlisted object annotated with its current-fair auction items (if
+// any) - lets the wishlist page split "has an active auction" from
+// "nothing listed yet" without an extra fetch per object.
+export type WishlistObject = BggObject & { items: Item[] };
+
+const fetchWishlist = async (): Promise<{ objects: WishlistObject[] }> => {
 	const response = await fetch('/api/wishlist', { credentials: 'include' });
 	if (!response.ok) {
 		throw new Error('Failed to fetch wishlist');
@@ -62,7 +68,7 @@ export const useWishlist = () => {
 	const queryClient = useQueryClient();
 	const { user, isLoading: userLoading } = useUser();
 
-	const wishlistQuery = useQuery<{ objects: BggObject[] } | undefined>(
+	const wishlistQuery = useQuery<{ objects: WishlistObject[] } | undefined>(
 		['wishlist'],
 		async () => {
 			if (!userLoading && !user) return undefined; // not logged in

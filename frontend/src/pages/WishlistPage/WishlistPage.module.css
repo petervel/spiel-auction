@@ -1,3 +1,28 @@
+ul.items {
+	list-style: none;
+	margin: 0;
+	padding-inline: 0.75rem;
+}
+
+/* Each section (with/without auctions) gets its own outlined box so the
+   two read as clearly separate blocks. overflow:hidden lets the header's
+   background tint below fill the box edge-to-edge while still respecting
+   the rounded corners. */
+.section {
+	border: 1px solid rgba(128, 128, 128, 0.3);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.sectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5rem 0.75rem;
+	background: rgba(128, 128, 128, 0.12);
+	border-bottom: 3px solid rgba(128, 128, 128, 0.5);
+}
+
 .empty {
 	padding: 3rem 1rem;
 	text-align: center;

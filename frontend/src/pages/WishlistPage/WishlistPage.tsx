@@ -19,12 +19,9 @@ export const WishlistPage = () => {
 
 	if (!user) {
 		return (
-			<Container>
-				<Title title="Wishlist" />
-				<p>
-					<LoginLink /> to see your wishlist.
-				</p>
-			</Container>
+			<div>
+				<LoginLink /> to see your wishlist.
+			</div>
 		);
 	}
 

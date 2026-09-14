@@ -228,7 +228,7 @@ export class ItemWrapper {
 
 		const _condition = extractString(
 			text,
-			/(?:\[b\])?\s*condition(?:\[\/b\])?\s*:?\s*(?:\[[^\]]*])*([^[\n]*)/i,
+			/(?:\[b\])?\s*condition(?:\[\/b\])?\s*:?\s*(?:\s*\[[^\]]*])*([^[\n]*)/i,
 		);
 		const condition = _condition
 			? _condition?.replace(/:[a-z]+:/g, "").trim()
@@ -237,31 +237,31 @@ export class ItemWrapper {
 		const startingBid =
 			extractNumber(
 				text,
-				/(?:\[b\])?\s*starting\s*(?:bid)?(?:price)?\s*(?:\([^\)]*\))?(?:\[\/b\])?(?:\s*:\s*)?(?:\[[^\]]*])*\s*€?(?:euro)?\s*(\d+)(?:,-)?€?(?:euro)?(?:[^[\n]*)/i,
+				/(?:\[b\])?\s*starting\s*(?:bid)?(?:price)?\s*(?:\([^\)]*\))?(?:\[\/b\])?(?:\s*:\s*)?(?:\s*\[[^\]]*])*\s*€?(?:euro)?\s*(\d+)(?:,-)?€?(?:euro)?(?:[^[\n]*)/i,
 			) ?? null;
 
 		const softReserve =
 			extractNumber(
 				text,
-				/(?:\[b\])?\s*soft\s*(?:reserve)?(?:\[\/b\])?(?:\s*:\s*)?(?:\[[^\]]*])*€\s*(\d+)(?:,-)?(?:[^[\n]*)/i,
+				/(?:\[b\])?\s*soft\s*(?:reserve)?(?:\[\/b\])?(?:\s*:\s*)?(?:\s*\[[^\]]*])*€\s*(\d+)(?:,-)?(?:[^[\n]*)/i,
 			) ?? null;
 
 		const hardReserve =
 			extractNumber(
 				text,
-				/(?:\[b\])?\s*hard\s*(?:reserve)?(?:\[\/b\])?(?:\s*:\s*)?(?:\[[^\]]*])*€\s*(\d+)(?:,-)?(?:[^[\n]*)/i,
+				/(?:\[b\])?\s*hard\s*(?:reserve)?(?:\[\/b\])?(?:\s*:\s*)?(?:\s*\[[^\]]*])*€\s*(\d+)(?:,-)?(?:[^[\n]*)/i,
 			) ?? null;
 
 		const binPrice =
 			extractNumber(
 				text,
-				/(?:\[b\])?\s*bin\s*(?:price)?(?:\[\/b\])?(?:\s*:\s*)?(?:\[[^\]]*])*€?(?:euro)?\s*(\d+)(?:,-)?(?:[^[\n]*)/i,
+				/(?:\[b\])?\s*bin\s*(?:price)?(?:\[\/b\])?(?:\s*:\s*)?(?:\s*\[[^\]]*])*€?(?:euro)?\s*(\d+)(?:,-)?(?:[^[\n]*)/i,
 			) ?? null;
 
 		const _auctionEnd =
 			extractString(
 				text,
-				/(?:\[b\])?\s*auction ends(?:\[\/b\])?\s*:?\s*(?:\[[^\]]*])*([^[\n]*)/i,
+				/(?:\[b\])?\s*auction ends(?:\[\/b\])?\s*:?\s*(?:\s*\[[^\]]*])*([^[\n]*)/i,
 			) ?? null;
 
 		const auctionEnd = _auctionEnd

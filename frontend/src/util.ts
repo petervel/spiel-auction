@@ -9,9 +9,18 @@ export enum SORTING {
 
 export const sortItems = (
 	items: Item[],
-	sorting: SORTING = SORTING.MOST_RECENT
+	sorting: SORTING = SORTING.MOST_RECENT,
+	// Buying/Selling want ended auctions pushed to the bottom regardless of
+	// which sort the user picked - applied as a primary comparison ahead of
+	// the chosen sort, which then only breaks ties within each group.
+	endedLast: boolean = false
 ) => {
-	return items.sort(sortingLookup[sorting]);
+	const compare = sortingLookup[sorting];
+	const comparator = endedLast
+		? (a: Item, b: Item) =>
+				isOver(a) != isOver(b) ? (isOver(a) ? 1 : -1) : compare(a, b)
+		: compare;
+	return items.sort(comparator);
 };
 
 const isOver = (item: Item) => item.isEnded || item.isSold;

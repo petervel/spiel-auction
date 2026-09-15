@@ -7,6 +7,7 @@ export const BuyingPage = () => (
 		title="Buying"
 		hook={useBids}
 		paramMapper={(username) => ({ buyer: username })}
+		extraProps={{ endedLast: true }}
 		formatSubtitle={(data, isOwnPage) =>
 			isOwnPage && data && (
 				<BidAmount

@@ -17,6 +17,9 @@ type ItemsPageProps = {
 	// Which of `items` are currently outbid - only meaningful together with
 	// silentToggle, to pick the broken-heart icon for those specific items.
 	outbidItemIds?: Set<number>;
+	// Buying/Selling want ended auctions pushed to the bottom regardless of
+	// the chosen sort - see sortItems.
+	endedLast?: boolean;
 };
 
 export const ItemsPage = ({
@@ -26,6 +29,7 @@ export const ItemsPage = ({
 	allowLikes = false,
 	silentToggle = false,
 	outbidItemIds,
+	endedLast = false,
 }: ItemsPageProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.MOST_RECENT);
 
@@ -33,8 +37,8 @@ export const ItemsPage = ({
 	const toggleSort = () => setShowSort((v) => !v);
 
 	const visibleItems = useMemo(
-		() => sortItems(items ?? [], sorting),
-		[items, sorting]
+		() => sortItems(items ?? [], sorting, endedLast),
+		[items, sorting, endedLast]
 	);
 
 	return (

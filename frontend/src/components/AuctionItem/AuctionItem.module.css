@@ -3,9 +3,20 @@
 	position: relative;
 }
 
+/* :global(.dark) - plain .dark here would get scoped by CSS Modules like
+   any other class in this file, but the dark-mode toggle adds a literal,
+   unscoped "dark" class straight to <body> (see useDarkMode.ts), so the
+   scoped version would never match it. */
+body:global(.dark) .container {
+	border-top: 1px solid #666;
+}
+
 .info {
 	cursor: pointer;
 	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
 	padding: 8px 0px;
 	overflow: hidden;
 }
@@ -25,6 +36,7 @@
 
 .name {
 	font-weight: 400;
+	font-size: 0.9em;
 }
 
 .objectName {

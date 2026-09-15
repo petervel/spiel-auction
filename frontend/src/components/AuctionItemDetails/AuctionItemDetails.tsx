@@ -1,6 +1,6 @@
 import parse from 'html-react-parser';
 import { Item } from '../../model/Item';
-import './AuctionItemDetails.css';
+import css from './AuctionItemDetails.module.css';
 
 interface Props {
 	item: Item;
@@ -8,7 +8,7 @@ interface Props {
 
 const AuctionItemDetails = ({ item }: Props) => {
 	return (
-		<div className="bgg-text">
+		<div className={css.bggText}>
 			{item ? (
 				<div>
 					<div>

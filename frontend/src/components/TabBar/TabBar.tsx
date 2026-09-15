@@ -81,6 +81,7 @@ export const TabBar = () => {
 								[css.active]: pageData.id === pageId,
 								[css.disabled]: pageData.disabled,
 							})}
+							sx={{ minWidth: '50px' }}
 							aria-label={pageData.label}
 							disabled={pageData.disabled}
 						>

@@ -52,7 +52,7 @@ export const NavBar = () => {
 					sx={{
 						marginInlineStart: 'auto',
 						borderRadius: '4px',
-						minWidth: '64px',
+						minWidth: '50px',
 					}}
 					// mousedown fires before the search input's blur, so
 					// toggling here (rather than onClick) avoids a race
@@ -70,7 +70,7 @@ export const NavBar = () => {
 					<Search />
 				</IconButton>
 
-				<Button onClick={openMenu}>
+				<Button onClick={openMenu} sx={{ minWidth: '50px' }}>
 					<MenuRounded />
 				</Button>
 				<MainMenu anchorEl={anchorEl} close={() => setAnchorEl(null)} />

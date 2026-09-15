@@ -1,0 +1,59 @@
+.price {
+	border: 1px solid #e2d5d5;
+	background-color: #f6f0ed;
+	color: #6c4b4c;
+	border-radius: 20%;
+	line-height: 40px;
+	text-decoration: none !important;
+	font-size: 11pt;
+	width: 40px;
+	text-align: center;
+	font-weight: 500;
+}
+
+.hasBids {
+	border: 1px solid #e09600;
+	background-color: #ffad0a;
+	color: #fff;
+}
+
+/* You're the highest bidder - --colour-title itself is pure white in dark
+   mode, so filling the badge with it looked like a jarring bright-white
+   block rather than "blue". --colour-main is the same blue value in light
+   mode but a proper dark navy blue (not white) in dark mode, and
+   --colour-on-main is already the text colour chosen to contrast against
+   it (same pairing the navbar itself uses). Defined after .hasBids so it
+   wins on specificity ties without needing !important. */
+.winning {
+	border: 1px solid var(--colour-main);
+	background-color: var(--colour-main);
+	color: var(--colour-on-main);
+}
+
+/* :global(.dark) - plain .dark here would get scoped by CSS Modules like
+   any other class in this file, but the dark-mode toggle adds a literal,
+   unscoped "dark" class straight to <body> (see useDarkMode.ts), so the
+   scoped version would never match it. */
+body:global(.dark) .price {
+	border: 1px solid #926049;
+	background-color: #6c4b4c;
+	color: #f6f0ed;
+}
+
+body:global(.dark) .hasBids {
+	border: 1px solid #f5a300;
+	background-color: #cc8800;
+	color: #f6f0ed;
+}
+
+/* --colour-main (dark navy, hsl(210, 95%, 15%)) is too close to the dark
+   page background to read as a highlight, so this diverges from the shared
+   .winning rule above rather than just reusing its dark-mode CSS var
+   values - same hue/saturation as --colour-main (and --colour-on-main,
+   which is the same hue at 97% lightness), just lightened enough to read
+   clearly against the page, with the border lighter still. */
+body:global(.dark) .winning {
+	border: 1px solid hsl(210, 95%, 55%);
+	background-color: hsl(210, 95%, 35%);
+	color: var(--colour-on-main);
+}

@@ -1,4 +1,4 @@
-.bgg-text {
+.bggText {
 	font-size: 0.8em;
 	margin-top: 10px;
 	margin-bottom: 15px;
@@ -7,6 +7,6 @@
 	padding: 10px;
 }
 
-.bgg-text a {
+.bggText a {
 	color: var(--colour-active);
 }

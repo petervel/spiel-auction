@@ -65,8 +65,8 @@ export const LikedPage = () => {
 		<ItemsPage
 			title="Outbid & Liked"
 			items={items}
-			silentToggle={true}
 			outbidItemIds={outbidItemIds}
+			options={{ silentToggle: true }}
 		/>
 	);
 };

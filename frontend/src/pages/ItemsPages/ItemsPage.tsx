@@ -1,5 +1,6 @@
 import { Sort } from '@mui/icons-material';
 import { ReactNode, useMemo, useState } from 'react';
+import { ItemDisplayOptions } from '../../components/AuctionItem/ItemDisplayOptions';
 import { Container } from '../../components/Container/Container';
 import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Title } from '../../components/Title/Title';
@@ -12,24 +13,23 @@ type ItemsPageProps = {
 	title: string;
 	items?: Item[];
 	subTitle?: ReactNode;
-	allowLikes?: boolean;
-	silentToggle?: boolean;
 	// Which of `items` are currently outbid - only meaningful together with
-	// silentToggle, to pick the broken-heart icon for those specific items.
+	// options.silentToggle, to pick the broken-heart icon for those items.
 	outbidItemIds?: Set<number>;
 	// Buying/Selling want ended auctions pushed to the bottom regardless of
-	// the chosen sort - see sortItems.
+	// the chosen sort - see sortItems. Not part of `options`: it's a sort
+	// concern consumed entirely here, and never reaches ItemsList/AuctionItem.
 	endedLast?: boolean;
+	options?: ItemDisplayOptions;
 };
 
 export const ItemsPage = ({
 	title,
 	items,
 	subTitle,
-	allowLikes = false,
-	silentToggle = false,
 	outbidItemIds,
 	endedLast = false,
+	options,
 }: ItemsPageProps) => {
 	const [sorting, setSorting] = useState<SORTING>(SORTING.MOST_RECENT);
 
@@ -57,9 +57,8 @@ export const ItemsPage = ({
 			)}
 			<ItemsList
 				items={visibleItems}
-				allowLikes={allowLikes}
-				silentToggle={silentToggle}
 				outbidItemIds={outbidItemIds}
+				options={options}
 			/>
 		</Container>
 	);

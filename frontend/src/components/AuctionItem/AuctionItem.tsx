@@ -11,33 +11,25 @@ import AuctionItemDetails from '../AuctionItemDetails/AuctionItemDetails';
 import AuctionPrice from '../AuctionPrice/AuctionPrice';
 import css from './AuctionItem.module.css';
 import BookmarkButton from './BookmarkButton';
+import { ItemDisplayOptions } from './ItemDisplayOptions';
 import { ItemButtons } from './ItemButtons';
 interface Props {
 	item: Item;
-	allowBookmarks?: boolean;
-	allowLikes?: boolean;
-	silentToggle?: boolean;
+	// Which of `items` are currently outbid - only meaningful together with
+	// silentToggle, to pick the broken-heart icon for this specific item.
 	isOutbid?: boolean;
-	// The single-item page has nothing else to show, so it starts this
-	// open rather than making the user click to reveal the auction body -
-	// still toggle-able afterwards like any other row.
-	startExpanded?: boolean;
-	// Off for the wishlist page's nested items - the compare/BGG links are
-	// object-level (same for every listing of that game) and already shown
-	// once on the object header above, so repeating them per item here
-	// would just be redundant.
-	allowObjectActions?: boolean;
+	options?: ItemDisplayOptions;
 }
 
-export const AuctionItem = ({
-	item,
-	allowBookmarks = false,
-	allowLikes = false,
-	silentToggle = false,
-	isOutbid = false,
-	startExpanded = false,
-	allowObjectActions = true,
-}: Props) => {
+export const AuctionItem = ({ item, isOutbid = false, options = {} }: Props) => {
+	const {
+		allowBookmarks = false,
+		allowLikes = false,
+		silentToggle = false,
+		startExpanded = false,
+		allowObjectActions = true,
+	} = options;
+
 	const [expanded, setExpanded] = useState(startExpanded);
 	const pageId = usePageId();
 	// Already in compare view.

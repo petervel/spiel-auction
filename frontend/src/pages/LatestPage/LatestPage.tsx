@@ -78,8 +78,7 @@ export const LatestPage = () => {
 				>
 					<ItemsList
 						items={items}
-						allowBookmarks={true}
-						allowLikes={true}
+						options={{ allowBookmarks: true, allowLikes: true }}
 					/>
 				</div>
 			</Container>

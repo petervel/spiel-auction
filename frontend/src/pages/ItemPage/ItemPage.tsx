@@ -31,7 +31,10 @@ export const ItemPage = () => {
 	return (
 		<Container>
 			<Title title={item.objectName} />
-			<ItemsList items={[item]} allowLikes={true} startExpanded />
+			<ItemsList
+				items={[item]}
+				options={{ allowLikes: true, startExpanded: true }}
+			/>
 		</Container>
 	);
 };

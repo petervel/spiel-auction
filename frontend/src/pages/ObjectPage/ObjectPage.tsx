@@ -65,7 +65,7 @@ export const ObjectPage = () => {
 					)
 				}
 			/>
-			<ItemsList items={data} allowLikes={true} />
+			<ItemsList items={data} options={{ allowLikes: true }} />
 		</Container>
 	);
 };

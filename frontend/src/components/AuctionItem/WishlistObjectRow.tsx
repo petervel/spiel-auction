@@ -96,8 +96,7 @@ export const WishlistObjectRow = ({
 				<Collapse in={expanded}>
 					<ItemsList
 						items={object.items}
-						allowLikes={true}
-						allowObjectActions={false}
+						options={{ allowLikes: true, allowObjectActions: false }}
 					/>
 				</Collapse>
 			)}

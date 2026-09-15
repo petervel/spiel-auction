@@ -71,6 +71,14 @@ body:global(.dark) .container {
 	border-top: var(--bookmark-thickness) solid var(--colour-bookmark);
 }
 
+/* Same specificity fight as body:global(.dark) .container above: that rule
+   is more specific than plain .bookmarked, so without this the bookmark's
+   coloured border-top was getting silently overridden by the dark-mode
+   container border the moment that rule started actually working. */
+body:global(.dark) .bookmarked {
+	border-top: var(--bookmark-thickness) solid var(--colour-bookmark);
+}
+
 .bigScreen .bookmark {
 	transition: opacity 300ms ease;
 	display: flex;

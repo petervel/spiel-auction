@@ -70,11 +70,9 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 					</MenuItem>
 					<MenuItem
 						className={css.menuItem}
-						component="a"
-						href="https://boardgamegeek.com/thread/3753367/auction-tool-2026-discussion-thread"
-						target="_blank"
-						rel="noopener noreferrer"
+						component={NavLink}
 						onClick={close}
+						to="/help"
 					>
 						<ListItemIcon>
 							<ForumRounded className={css.menuIcon} />

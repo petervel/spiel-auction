@@ -6,6 +6,7 @@ import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DonatePage } from './pages/DonatePage/DonatePage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
 import { ExportPage } from './pages/ExportPage/ExportPage';
+import { HelpPage } from './pages/HelpPage/HelpPage';
 import { ImportWishlistPage } from './pages/ImportWishlistPage/ImportWishlistPage';
 import { ItemPage } from './pages/ItemPage/ItemPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
@@ -36,6 +37,7 @@ export const AppRouter = () => {
 			<Route path="/deleted" element={<DeletedPage />} />
 			<Route path="/export" element={<ExportPage />} />
 			<Route path="/donate" element={<DonatePage />} />
+			<Route path="/help" element={<HelpPage />} />
 			<Route path="/wishlist/import" element={<ImportWishlistPage />} />
 		</Routes>
 	);

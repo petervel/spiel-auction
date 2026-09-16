@@ -66,7 +66,7 @@ export const WishlistPage = () => {
 
 	if (!user) {
 		return (
-			<div>
+			<div style={{ padding: '2rem' }}>
 				<LoginLink /> to see your wishlist.
 			</div>
 		);

@@ -1,12 +1,35 @@
+.tabBar {
+	position: relative;
+}
+
+/* The active-tab highlight itself - positioned/sized via inline style
+   (TabBar.tsx measures the active tab's actual box) and transitioned so it
+   slides/resizes to the new tab instead of jumping. Sits behind the tab
+   buttons (.button has z-index:1) so their icons stay visible on top of it. */
+.indicator {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	border-radius: 4px;
+	background-color: var(--colour-main);
+	box-shadow: #00000038 0px 6px 10px 0px;
+	transition:
+		left 250ms ease,
+		width 250ms ease;
+	z-index: 0;
+	pointer-events: none;
+}
+
 .button {
+	position: relative;
+	z-index: 1;
 	color: var(--colour-inactive) !important;
 	margin-left: 3px;
+	transition: color 200ms ease;
 }
 
 .button.active {
-	background-color: var(--colour-main) !important;
 	color: var(--colour-on-main) !important;
-	box-shadow: #00000038 0px 6px 10px 0px;
 }
 
 .button.disabled {

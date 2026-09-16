@@ -66,6 +66,20 @@ const sortingLookup = {
 	[SORTING.PRICE]: sortByPrice,
 };
 
+// Only treated as a swipe when the horizontal movement clearly dominates
+// over vertical (so normal vertical list-scrolling isn't hijacked) and
+// exceeds threshold. Used by TabLayout to turn a touch gesture into
+// tab navigation.
+export const getSwipeDirection = (
+	deltaX: number,
+	deltaY: number,
+	threshold: number = 60
+): 'left' | 'right' | null => {
+	if (Math.abs(deltaX) < threshold) return null;
+	if (Math.abs(deltaX) < Math.abs(deltaY) * 1.5) return null;
+	return deltaX < 0 ? 'left' : 'right';
+};
+
 // Standard Web Push boilerplate: the browser's applicationServerKey option
 // needs the VAPID public key as a Uint8Array, not the base64url string it's
 // generated/transmitted as.

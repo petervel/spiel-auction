@@ -1,0 +1,7 @@
+/* Swipe-to-change-tab needs something to actually touch. Pages with little
+   content (e.g. a logged-out "log in to see this" message) would otherwise
+   shrink this wrapper down to a single line, leaving most of the screen
+   with nothing under a finger to catch the gesture. */
+.content {
+	min-height: 100vh;
+}

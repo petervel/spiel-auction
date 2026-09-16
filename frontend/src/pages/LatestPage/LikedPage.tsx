@@ -22,7 +22,7 @@ export const LikedPage = () => {
 
 	if (!user) {
 		return (
-			<div>
+			<div style={{ padding: '2rem' }}>
 				<LoginLink /> to see your outbid and liked items.
 			</div>
 		);

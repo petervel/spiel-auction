@@ -1,69 +1,36 @@
-import {
-	HeartBrokenRounded,
-	Sell,
-	ShoppingBasket,
-	StarRounded,
-	WatchLaterRounded,
-} from '@mui/icons-material';
 import { Button, Stack, Tooltip } from '@mui/material';
 import classNames from 'classnames';
-import { ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { useBggUsername } from '../../hooks/useBggUsername';
-import { usePageId } from '../../hooks/usePageId';
+import { useTabPages } from '../../hooks/useTabPages';
 import css from './TabBar.module.css';
 
-type PageData = {
-	id: 'latest' | 'search' | 'selling' | 'buying' | 'wishlist' | 'liked';
-	label: string;
-	renderIcon: () => ReactNode;
-	url: string;
-	disabled?: boolean;
-};
+type IndicatorRect = { left: number; width: number };
 
 export const TabBar = () => {
-	const pageId = usePageId();
-	const { bggUsername } = useBggUsername();
+	const { pages, pageId, activeIndex } = useTabPages();
+	const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+	const [indicator, setIndicator] = useState<IndicatorRect | null>(null);
 
-	const pages: PageData[] = [
-		{
-			id: 'latest',
-			label: 'Latest',
-			renderIcon: () => <WatchLaterRounded />,
-			url: '/',
-		},
-		// {
-		// 	id: 'search',
-		// 	label: 'Search',
-		// 	disabled: true,
-		// 	renderIcon: () => <Search />,
-		// 	url: `/search`,
-		// },
-		{
-			id: 'selling',
-			label: 'Selling',
-			renderIcon: () => <Sell />,
-			url: `/selling${bggUsername ? `/${bggUsername}` : ''}`,
-		},
-		{
-			id: 'buying',
-			label: 'Buying',
-			renderIcon: () => <ShoppingBasket />,
-			url: `/buying${bggUsername ? `/${bggUsername}` : ''}`,
-		},
-		{
-			id: 'liked',
-			label: 'Outbid & Liked',
-			renderIcon: () => <HeartBrokenRounded />,
-			url: `/liked`,
-		},
-		{
-			id: 'wishlist',
-			label: 'Wishlist',
-			renderIcon: () => <StarRounded />,
-			url: `/wishlist`,
-		},
-	];
+	// Re-measure the active tab's actual box (not just its icon) whenever it
+	// changes or the window resizes, so the indicator can slide/resize to
+	// match it - tabs aren't fixed-width, so this can't be computed from CSS
+	// alone.
+	useLayoutEffect(() => {
+		const measure = () => {
+			const activeLink = linkRefs.current[activeIndex];
+			if (activeLink) {
+				setIndicator({
+					left: activeLink.offsetLeft,
+					width: activeLink.offsetWidth,
+				});
+			}
+		};
+
+		measure();
+		window.addEventListener('resize', measure);
+		return () => window.removeEventListener('resize', measure);
+	}, [activeIndex]);
 
 	return (
 		<Stack
@@ -72,8 +39,15 @@ export const TabBar = () => {
 			marginBlock={3}
 			marginBottom={3}
 			justifyContent="center"
+			className={css.tabBar}
 		>
-			{pages.map((pageData) => {
+			{indicator && (
+				<div
+					className={css.indicator}
+					style={{ left: indicator.left, width: indicator.width }}
+				/>
+			)}
+			{pages.map((pageData, index) => {
 				const button = (
 					<Tooltip title={pageData.label} key={pageData.id}>
 						<Button
@@ -96,6 +70,9 @@ export const TabBar = () => {
 					button
 				) : (
 					<Link
+						ref={(el) => {
+							linkRefs.current[index] = el;
+						}}
 						to={pageData.url}
 						key={pageData.id}
 						style={{ textDecoration: 'none' }}

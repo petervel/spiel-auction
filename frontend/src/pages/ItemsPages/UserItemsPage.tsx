@@ -46,7 +46,7 @@ export const UserItemsPage = <TParams, TData extends { items: any[] }>({
 	if (!activeName) {
 		if (!user)
 			return (
-				<div>
+				<div style={{ padding: '2rem' }}>
 					<LoginLink /> to see your items.
 				</div>
 			);

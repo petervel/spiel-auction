@@ -32,8 +32,10 @@ export const AuctionItem = ({ item, isOutbid = false, options = {} }: Props) => 
 
 	const [expanded, setExpanded] = useState(startExpanded);
 	const pageId = usePageId();
-	// Already in compare view.
-	const showCompare = allowObjectActions && pageId !== 'object';
+	// The "Outbid & Liked" page wants only the heart, never the object-level
+	// compare/BGG links - already in compare view for the object-page case.
+	const showCompare = !silentToggle && allowObjectActions && pageId !== 'object';
+	const showBgg = !silentToggle && allowObjectActions;
 
 	const { user } = useUser();
 
@@ -48,6 +50,10 @@ export const AuctionItem = ({ item, isOutbid = false, options = {} }: Props) => 
 	// mobile. Rendered in exactly one of those two spots below, instead
 	// of rendering both and hiding one with CSS.
 	const isDesktop = useMediaQuery('(min-width:768px)');
+	// The "Outbid & Liked" page's whole point is seeing at a glance what's
+	// what, so its (broken) heart always shows inline there, even on mobile
+	// where every other page hides these buttons until the row is expanded.
+	const showButtonsInline = isDesktop || silentToggle;
 	const showLike = allowLikes && user !== null;
 
 	return (
@@ -99,11 +105,11 @@ export const AuctionItem = ({ item, isOutbid = false, options = {} }: Props) => 
 						/>
 					</div>
 				)}
-				{isDesktop && (
+				{showButtonsInline && (
 					<ItemButtons
 						item={item}
 						showCompare={showCompare}
-						showBgg={allowObjectActions}
+						showBgg={showBgg}
 						showLike={showLike}
 						silentToggle={silentToggle}
 						isOutbid={isOutbid}
@@ -111,11 +117,11 @@ export const AuctionItem = ({ item, isOutbid = false, options = {} }: Props) => 
 				)}
 			</Stack>
 			<Collapse in={expanded}>
-				{!isDesktop && (
+				{!showButtonsInline && (
 					<ItemButtons
 						item={item}
 						showCompare={showCompare}
-						showBgg={allowObjectActions}
+						showBgg={showBgg}
 						showLike={showLike}
 						silentToggle={silentToggle}
 						isOutbid={isOutbid}

@@ -20,16 +20,34 @@
 	pointer-events: none;
 }
 
+/* Colour itself is set via sx on the Button in TabBar.tsx (MUI's own Button
+   base style sets it at the same precedence a plain class here would have,
+   so it'd just lose to MUI's default). Both transition rules below need
+   the same win against that MUI rule - :not(.active) and .active each
+   combine two selectors, giving them higher specificity than MUI's plain
+   single-class rule, no sx/!important needed. Relying on MUI's own default
+   transition for the un-delayed direction isn't safe here: it ties with a
+   plain .button rule on specificity, so which one actually wins is down to
+   injection order rather than anything we control. */
 .button {
 	position: relative;
 	z-index: 1;
-	color: var(--colour-inactive) !important;
 	margin-left: 3px;
+}
+
+/* A tab losing active should fade back immediately - the sliding highlight
+   is already leaving it, waiting would make it look like it's lagging
+   behind. */
+.button:not(.active) {
 	transition: color 200ms ease;
 }
 
+/* Shorter than .indicator's 250ms slide, not equal to it - with `ease`
+   timing the slide's motion decelerates near the end, so it visually reads
+   as "arrived" well before the literal 250ms mark. Waiting the full
+   duration made the colour change look late. */
 .button.active {
-	color: var(--colour-on-main) !important;
+	transition: color 200ms ease 50ms;
 }
 
 .button.disabled {

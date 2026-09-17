@@ -48,14 +48,20 @@ export const TabBar = () => {
 				/>
 			)}
 			{pages.map((pageData, index) => {
+				const isActive = pageData.id === pageId;
 				const button = (
 					<Tooltip title={pageData.label} key={pageData.id}>
 						<Button
 							className={classNames(css.button, {
-								[css.active]: pageData.id === pageId,
+								[css.active]: isActive,
 								[css.disabled]: pageData.disabled,
 							})}
-							sx={{ minWidth: '50px' }}
+							sx={{
+								minWidth: '50px',
+								color: isActive
+									? 'var(--colour-on-main)'
+									: 'var(--colour-inactive)',
+							}}
 							aria-label={pageData.label}
 							disabled={pageData.disabled}
 						>

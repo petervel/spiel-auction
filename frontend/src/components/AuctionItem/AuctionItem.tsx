@@ -32,10 +32,13 @@ export const AuctionItem = ({ item, isOutbid = false, options = {} }: Props) => 
 
 	const [expanded, setExpanded] = useState(startExpanded);
 	const pageId = usePageId();
-	// The "Outbid & Liked" page wants only the heart, never the object-level
-	// compare/BGG links - already in compare view for the object-page case.
-	const showCompare = !silentToggle && allowObjectActions && pageId !== 'object';
-	const showBgg = !silentToggle && allowObjectActions;
+	// The "Outbid & Liked" page wants only the heart while collapsed - the
+	// object-level compare/BGG links would just be noise in an at-a-glance
+	// list - but restores them once a row is expanded, alongside the
+	// auction details. Already in compare view for the object-page case.
+	const showObjectActions = allowObjectActions && (!silentToggle || expanded);
+	const showCompare = showObjectActions && pageId !== 'object';
+	const showBgg = showObjectActions;
 
 	const { user } = useUser();
 

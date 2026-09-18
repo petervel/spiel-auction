@@ -7,16 +7,13 @@ import { getBidderKeys, likeItemsForNewBidders } from "./likedItems";
 import { notifyBidUpdates } from "./notifications/outbidNotifier";
 import { notifyWishlistedItems } from "./notifications/wishlistNotifier";
 import { ListWrapper } from "./processors/ListWrapper";
+import { isLocked, notLockedFilter } from "./util/lock";
 import { Result, err, ok } from "./util/result";
 
 const STALE_SECONDS = 60;
-const LOCK_TIMEOUT_SECONDS = 10 * 60;
 
 const isDue = (lastUpdated: number, now: number) =>
 	lastUpdated < now - STALE_SECONDS;
-
-const isLocked = (lastResult: JobResult, startedAt: number, now: number) =>
-	lastResult === JobResult.RUNNING && startedAt >= now - LOCK_TIMEOUT_SECONDS;
 
 export const updateData = async () => {
 	console.log("Update data.");
@@ -27,10 +24,7 @@ export const updateData = async () => {
 		where: {
 			status: FairStatus.ACTIVE,
 			lastUpdated: { lt: now - STALE_SECONDS },
-			OR: [
-				{ lastResult: { not: JobResult.RUNNING } },
-				{ startedAt: { lt: now - LOCK_TIMEOUT_SECONDS } },
-			],
+			...notLockedFilter(now),
 		},
 	});
 
@@ -62,7 +56,9 @@ async function runUpdate(fair: Fair, now: number) {
 			where: { id: fair.id },
 			data: { lastResult: JobResult.FAILURE },
 		});
-		console.log(`Processing fair ${fair.geeklistId} unsuccessful: ${error}`);
+		console.log(
+			`Processing fair ${fair.geeklistId} unsuccessful: ${error}`,
+		);
 		return;
 	}
 
@@ -160,15 +156,20 @@ async function update(fair: Fair, updateTime: number) {
 		fair.geeklistId,
 		previousBidderKeys,
 	).catch((err) =>
-		console.error(`${fair.geeklistId}: auto-like for new bidders failed:`, err),
+		console.error(
+			`${fair.geeklistId}: auto-like for new bidders failed:`,
+			err,
+		),
 	);
 
-	await notifyWishlistedItems(listWrapper.getItems(), previousItemState).catch(
-		(err) =>
-			console.error(
-				`${fair.geeklistId}: wishlist listing notification failed:`,
-				err,
-			),
+	await notifyWishlistedItems(
+		listWrapper.getItems(),
+		previousItemState,
+	).catch((err) =>
+		console.error(
+			`${fair.geeklistId}: wishlist listing notification failed:`,
+			err,
+		),
 	);
 
 	console.info(
@@ -180,7 +181,12 @@ async function update(fair: Fair, updateTime: number) {
 
 const XML_DIR = path.join("/app/xml-data");
 
-const getLatestXmlFilename = (filePrefix: string, geeklistId: number) => {
+// Exported for reuse by updateRssData.ts, which looks up rss-page{n}-*.xml
+// files on the same shared volume the same way.
+export const getLatestXmlFilename = (
+	filePrefix: string,
+	geeklistId: number,
+) => {
 	const files = fs
 		.readdirSync(XML_DIR)
 		.filter(
@@ -204,7 +210,7 @@ const getLatestXmlFilename = (filePrefix: string, geeklistId: number) => {
 	return ok(latestFile);
 };
 
-const getXml = async (fileName: string) => {
+export const getXml = async (fileName: string) => {
 	try {
 		const latestFilePath = path.join(XML_DIR, fileName);
 		const xmlContent = fs.readFileSync(latestFilePath, "utf-8");

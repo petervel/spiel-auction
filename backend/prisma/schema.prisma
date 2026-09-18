@@ -135,6 +135,10 @@ model Fair {
   list        List?      @relation(fields: [listId], references: [id])
   listId      Int?       @unique
   latestFile  String?
+  // Newest RSS activity feed pubDate (unix seconds) imported so far by the
+  // RSS fast path (updateRssData.ts) - also read by xml-fetcher to decide
+  // how many RSS pages deep it needs to paginate each cycle to catch up.
+  rssLastSeenTimestamp Int @default(0)
 
   UserFair   UserFair[]
   likedItems UserLikedItem[]

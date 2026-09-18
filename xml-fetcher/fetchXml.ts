@@ -65,6 +65,23 @@ const waitForGlobalGap = async () => {
   lastGlobalRequestAt = Date.now();
 };
 
+// RSS is unauthenticated and, per manual testing, notably more tolerant
+// than the token-gated xmlapi endpoint above - it gets its own short gate
+// so it never has to wait on (or slow down) xmlapi's 90s floor. This is
+// just enough to keep one fair's own catch-up pagination from bursting all
+// of pages 1-10 in the same instant.
+const RSS_MIN_GAP_MS = 1_000;
+let lastRssRequestAt = 0;
+
+const waitForRssGap = async () => {
+  while (true) {
+    const wait = RSS_MIN_GAP_MS - (Date.now() - lastRssRequestAt);
+    if (wait <= 0) break;
+    await sleep(wait);
+  }
+  lastRssRequestAt = Date.now();
+};
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // docker's own --timestamps flag only shows up when someone remembers to
@@ -83,8 +100,13 @@ const logError = (message: string) =>
 // single source. The backend's items-only import pass (updateData.ts)
 // is left in place but now permanently idle (never gets a items-data-*
 // file to import) rather than removed, to keep this a small change.
+// "rss" sources (below) are a second, independent tier: the geeklist RSS
+// activity feed. It's unauthenticated and - per manual testing - notably
+// more tolerant than this token-gated xmlapi endpoint, so it gets its own
+// gate/cadence entirely (see waitForRssGap/RSS_INTERVAL_MS) rather than
+// sharing xmlapi's tuned-from-bans backoff.
 type Source = {
-  name: "comments";
+  tier: "xmlapi" | "rss";
   label: string; // for logging - includes the geeklist id, e.g. "comments #319165"
   url: string;
   filePrefix: string;
@@ -93,13 +115,28 @@ type Source = {
 
 const sourcesFor = (geeklistId: number): Source[] => [
   {
-    name: "comments",
+    tier: "xmlapi",
     label: `comments #${geeklistId}`,
     url: `https://boardgamegeek.com/xmlapi/geeklist/${geeklistId}?comments=1`,
     filePrefix: "data",
     geeklistId,
   },
 ];
+
+// RSS activity pages are fetched newest-first (page 1 = most recent ~100
+// events); this is the ceiling on how far back a single fetch cycle will
+// paginate to catch up to the last-seen cursor, covering cold start
+// (cursor = 0) and any pathological burst without risking unbounded
+// pagination.
+const RSS_MAX_PAGES = 10;
+
+const rssSource = (geeklistId: number, page: number): Source => ({
+  tier: "rss",
+  label: `rss page ${page} #${geeklistId}`,
+  url: `https://boardgamegeek.com/rss/geeklist/${geeklistId}?page=${page}&comments=1`,
+  filePrefix: `rss-page${page}`,
+  geeklistId,
+});
 
 // Axios errors carry the full request/response (headers, sockets, retry
 // config, ...) - logging one raw drowns the log in noise. Reduce it to the
@@ -131,24 +168,32 @@ const fetchXML = async (
   source: Source,
   options?: { skipGlobalGate?: boolean },
 ): Promise<FetchResult> => {
-  if (!BGG_API_TOKEN) {
-    logError("BGG_API_TOKEN is not set");
-    return { ok: false, rateLimited: false };
+  // RSS is unauthenticated and doesn't share xmlapi's token requirement or
+  // its 90s global gate (see rssSource's comment) - only xmlapi requests go
+  // through those.
+  if (source.tier === "xmlapi") {
+    if (!BGG_API_TOKEN) {
+      logError("BGG_API_TOKEN is not set");
+      return { ok: false, rateLimited: false };
+    }
+
+    // Skipped for quick queued-chase retries (see runLoop) - those are
+    // rechecking the same single request in a narrow window, not a fresh
+    // request competing with other sources/fairs for the shared budget.
+    if (!options?.skipGlobalGate) {
+      await waitForGlobalGap();
+    }
   }
 
-  // Skipped for quick queued-chase retries (see runLoop) - those are
-  // rechecking the same single request in a narrow window, not a fresh
-  // request competing with other sources/fairs for the shared budget.
-  if (!options?.skipGlobalGate) {
-    await waitForGlobalGap();
-  }
-
-  log(`[${source.label}] Fetching geeklist from BGG...`);
+  log(`[${source.label}] Fetching from BGG...`);
 
   try {
     const response = await axios.get(source.url, {
       responseType: "text",
-      headers: { Authorization: `Bearer ${BGG_API_TOKEN}` },
+      headers:
+        source.tier === "xmlapi"
+          ? { Authorization: `Bearer ${BGG_API_TOKEN}` }
+          : undefined,
     });
     return { ok: true, xml: response.data };
   } catch (error) {
@@ -174,6 +219,26 @@ const checkXML = (xmlContent: string): null | "queued" | string => {
     ) {
       result = "queued";
     }
+  });
+
+  return result;
+};
+
+// RSS activity entries are newest-first, so the last <item> on a page is
+// its oldest. Returns null for an empty/unparseable page (e.g. a page
+// number past the end of a small geeklist's activity).
+const getOldestPubDateMs = (xmlContent: string): number | null => {
+  const parser = new xml2js.Parser();
+  let result: number | null = null;
+
+  parser.parseString(xmlContent, (err, parsed) => {
+    if (err) return;
+    const items = parsed?.rss?.channel?.[0]?.item;
+    if (!Array.isArray(items) || items.length === 0) return;
+    const pubDate = items[items.length - 1]?.pubDate?.[0];
+    if (!pubDate) return;
+    const ms = Date.parse(pubDate);
+    if (!Number.isNaN(ms)) result = ms;
   });
 
   return result;
@@ -295,12 +360,82 @@ const runLoop = async (source: Source) => {
   runningLoops.delete(source.geeklistId);
 };
 
-const startFairLoops = (geeklistId: number, name: string) => {
+const RSS_INTERVAL_MS = 60_000; // flat - no backoff/tiering needed, RSS has shown no queued/rate-limit behavior yet
+
+// geeklistId -> ms timestamp to resume after a 429. Never observed on RSS
+// in practice, but the xmlapi ban history above is exactly the kind of
+// surprise this should guard against.
+const rssBackoffUntil = new Map<number, number>();
+
+// Paginates from page 1 forward, stopping as soon as a page's oldest entry
+// is at or before the fair's rssLastSeenTimestamp cursor (i.e. we've now
+// covered everything newer than what the importer last processed), or the
+// RSS_MAX_PAGES safety cap is hit. A quiet fair costs one page fetch; a
+// bursty one pulls as many as it needs to catch up.
+const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
+  const [rows] = await pool.query<mysql.RowDataPacket[]>(
+    "SELECT rssLastSeenTimestamp FROM Fair WHERE geeklistId = ?",
+    [geeklistId],
+  );
+  const cursorSeconds = (rows[0]?.rssLastSeenTimestamp as number) ?? 0;
+
+  for (let page = 1; page <= RSS_MAX_PAGES; page++) {
+    const source = rssSource(geeklistId, page);
+
+    await waitForRssGap();
+    const result = await fetchXML(source, { skipGlobalGate: true });
+    if (!result.ok) {
+      if (result.rateLimited) {
+        rssBackoffUntil.set(geeklistId, Date.now() + RATE_LIMIT_INTERVAL_MS);
+        logError(
+          `[${source.label}] Rate limited, pausing RSS fetching for #${geeklistId} for ${RATE_LIMIT_INTERVAL_MS / 60000}min.`,
+        );
+      }
+      return;
+    }
+
+    const status = checkXML(result.xml);
+    if (status !== null) {
+      log(`[${source.label}] Unexpected response: ${status}`);
+      return;
+    }
+
+    if (result.xml !== getMostRecentXML(source)) {
+      saveXML(source, result.xml);
+      cleanupOldFiles(source);
+    }
+
+    const oldestMs = getOldestPubDateMs(result.xml);
+    if (oldestMs === null) return; // empty/unparseable page - nothing further to chase
+    if (Math.floor(oldestMs / 1000) <= cursorSeconds) return; // caught up to the cursor
+  }
+};
+
+const runRssLoop = async (geeklistId: number, pool: mysql.Pool) => {
+  while (activeGeeklistIds.has(geeklistId)) {
+    const backoffUntil = rssBackoffUntil.get(geeklistId) ?? 0;
+    if (Date.now() >= backoffUntil) {
+      try {
+        await fetchRssPages(geeklistId, pool);
+      } catch (error) {
+        logError(`[rss #${geeklistId}] Unexpected error: ${describeError(error)}`);
+      }
+    }
+    await sleep(RSS_INTERVAL_MS);
+  }
+
+  log(`[rss #${geeklistId}] Fair no longer active, stopping.`);
+  rssBackoffUntil.delete(geeklistId);
+  runningLoops.delete(geeklistId);
+};
+
+const startFairLoops = (geeklistId: number, name: string, pool: mysql.Pool) => {
   log(`Starting fetch loops for "${name}" (geeklist #${geeklistId}).`);
   runningLoops.add(geeklistId);
   for (const source of sourcesFor(geeklistId)) {
     runLoop(source);
   }
+  runRssLoop(geeklistId, pool);
 };
 
 type ActiveFair = { id: number; geeklistId: number; name: string };
@@ -320,7 +455,7 @@ const reconcileFairs = async (pool: mysql.Pool): Promise<boolean> => {
 
     for (const fair of fairs) {
       if (!runningLoops.has(fair.geeklistId)) {
-        startFairLoops(fair.geeklistId, fair.name);
+        startFairLoops(fair.geeklistId, fair.name, pool);
       }
     }
     return true;

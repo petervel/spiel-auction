@@ -367,17 +367,26 @@ const RSS_INTERVAL_MS = 60_000; // flat - no backoff/tiering needed, RSS has sho
 // surprise this should guard against.
 const rssBackoffUntil = new Map<number, number>();
 
-// Paginates from page 1 forward, stopping as soon as a page's oldest entry
-// is at or before the fair's rssLastSeenTimestamp cursor (i.e. we've now
-// covered everything newer than what the importer last processed), or the
-// RSS_MAX_PAGES safety cap is hit. A quiet fair costs one page fetch; a
-// bursty one pulls as many as it needs to catch up.
+// Paginates from page 1 forward, stopping only once a page's oldest entry
+// is strictly OLDER than the fair's rssLastSeenTimestamp cursor - not
+// merely equal to it. pubDate has 1-second resolution, so a burst can put
+// several entries on the same second; stopping as soon as a page's oldest
+// entry *equals* the cursor risks leaving sibling entries at that exact
+// second stranded on the next, unfetched page, and since the importer's
+// own "new" filter is a strict >, they'd never be picked up on any later
+// cycle either. Pulling one extra page past the equal-timestamp boundary
+// is a cheap price for never missing one. RSS_MAX_PAGES is the safety cap
+// (cold start, or a pathological burst). A quiet fair costs one page
+// fetch; a bursty one pulls as many as it needs to catch up.
 const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
   const [rows] = await pool.query<mysql.RowDataPacket[]>(
     "SELECT rssLastSeenTimestamp FROM Fair WHERE geeklistId = ?",
     [geeklistId],
   );
   const cursorSeconds = (rows[0]?.rssLastSeenTimestamp as number) ?? 0;
+
+  let pagesFetched = 0;
+  let stopReason = `hit the ${RSS_MAX_PAGES}-page cap`;
 
   for (let page = 1; page <= RSS_MAX_PAGES; page++) {
     const source = rssSource(geeklistId, page);
@@ -391,14 +400,18 @@ const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
           `[${source.label}] Rate limited, pausing RSS fetching for #${geeklistId} for ${RATE_LIMIT_INTERVAL_MS / 60000}min.`,
         );
       }
-      return;
+      stopReason = "a fetch error";
+      break;
     }
 
     const status = checkXML(result.xml);
     if (status !== null) {
       log(`[${source.label}] Unexpected response: ${status}`);
-      return;
+      stopReason = "an unexpected response";
+      break;
     }
+
+    pagesFetched++;
 
     if (result.xml !== getMostRecentXML(source)) {
       saveXML(source, result.xml);
@@ -406,9 +419,17 @@ const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
     }
 
     const oldestMs = getOldestPubDateMs(result.xml);
-    if (oldestMs === null) return; // empty/unparseable page - nothing further to chase
-    if (Math.floor(oldestMs / 1000) <= cursorSeconds) return; // caught up to the cursor
+    if (oldestMs === null) {
+      stopReason = "an empty/unparseable page";
+      break;
+    }
+    if (Math.floor(oldestMs / 1000) < cursorSeconds) {
+      stopReason = "caught up to the cursor";
+      break;
+    }
   }
+
+  log(`[rss #${geeklistId}] Fetched ${pagesFetched} page(s) this cycle (${stopReason}).`);
 };
 
 const runRssLoop = async (geeklistId: number, pool: mysql.Pool) => {

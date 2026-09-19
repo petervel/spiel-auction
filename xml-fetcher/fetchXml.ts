@@ -158,22 +158,48 @@ const rssSource = (geeklistId: number, page: number): Source => ({
 // config, ...) - logging one raw drowns the log in noise. Reduce it to the
 // status and response body, which is what actually explains the failure
 // (e.g. BGG's rate-limit message arrives as a normal response body on a
-// 429, not as a distinct error type).
+// 429, not as a distinct error type). A Cloudflare JS-challenge page
+// ("Just a moment...") is HTML, not XML - the generic tag-strip below
+// removes the <script>/<style> *tags* but leaves their inline CSS/JS
+// content behind, which is most of what actually shows up in the log, so
+// strip those blocks (tag and content) first, and cap the length as a
+// backstop regardless of what kind of error body shows up next.
 const describeError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
     const body =
       typeof error.response?.data === "string"
         ? error.response.data
+            .replace(/<script[\s\S]*?<\/script>/gi, "")
+            .replace(/<style[\s\S]*?<\/style>/gi, "")
             .replace(/<\?xml[^>]*\?>/g, "")
             .replace(/<[^>]+>/g, "")
             .replace(/\s+/g, " ")
             .trim()
+            .slice(0, 300)
         : undefined;
     if (status) return body ? `HTTP ${status}: ${body}` : `HTTP ${status}`;
     return error.message;
   }
   return error instanceof Error ? error.message : String(error);
+};
+
+// A default axios User-Agent (e.g. "axios/1.9.0") is an easy, obvious bot
+// signal. Cloudflare (which sits in front of both boardgamegeek.com and
+// api.geekdo.com) scores that far more harshly from a datacenter/VPS IP
+// than a residential one - which is exactly why this can look fine during
+// local manual testing (curl with an explicit UA, from a home IP) while a
+// production host gets served a JS-challenge page instead of real content.
+// A realistic browser UA + Accept headers can't defeat an actual JS
+// challenge (there's no JS engine here to solve it), but they measurably
+// lower how often one gets triggered in the first place - applied to every
+// outbound request in this file, not just the ones that have hit this so
+// far.
+const BROWSER_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
 };
 
 type FetchResult =
@@ -206,10 +232,12 @@ const fetchXML = async (
   try {
     const response = await axios.get(source.url, {
       responseType: "text",
-      headers:
-        source.tier === "xmlapi"
+      headers: {
+        ...BROWSER_HEADERS,
+        ...(source.tier === "xmlapi"
           ? { Authorization: `Bearer ${BGG_API_TOKEN}` }
-          : undefined,
+          : {}),
+      },
     });
     return { ok: true, xml: response.data };
   } catch (error) {
@@ -451,6 +479,7 @@ const resolveUsername = async (authorId: number): Promise<string | null> => {
   try {
     const response = await axios.get(`https://api.geekdo.com/api/user/${authorId}`, {
       responseType: "json",
+      headers: BROWSER_HEADERS,
     });
     const username = response.data?.username;
     if (typeof username !== "string") return null;
@@ -479,6 +508,7 @@ const fetchAndSaveNewItem = async (geeklistId: number, itemId: number) => {
   try {
     response = await axios.get(`https://api.geekdo.com/api/listitem/${itemId}`, {
       responseType: "json",
+      headers: BROWSER_HEADERS,
     });
   } catch (error) {
     logError(`[newitem #${itemId}] Failed to fetch: ${describeError(error)}`);

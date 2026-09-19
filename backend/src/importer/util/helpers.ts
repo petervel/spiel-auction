@@ -192,6 +192,15 @@ export const allSettledWithRetries = async (
 export const toArray = <T>(item: T): T[] =>
 	Array.isArray(item) ? item : [item];
 
+// Shared between ListWrapper.save() and updateRssData.ts - both batch
+// upserts into $transaction calls, and Prisma's array-form $transaction has
+// a fixed 5s timeout under the mariadb driver adapter that can't be
+// overridden. A busy real-world auction (~19k item/comment rows) pushed a
+// 200-row batch to 26.79s under memory pressure and blew that cap - a
+// smaller shared limit keeps every batch well under it regardless of how
+// comment-heavy a given chunk of items happens to be.
+export const IMPORT_BATCH_SIZE = 50;
+
 export const queryWithTimeout = async (
 	queryFn: () => Promise<any>,
 	timeoutMs: number,

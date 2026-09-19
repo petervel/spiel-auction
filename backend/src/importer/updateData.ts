@@ -1,4 +1,4 @@
-import { Fair, FairStatus, JobResult } from "@prisma/client";
+import { Fair, JobResult } from "@prisma/client";
 import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,39 +7,16 @@ import { getBidderKeys, likeItemsForNewBidders } from "./likedItems";
 import { notifyBidUpdates } from "./notifications/outbidNotifier";
 import { notifyWishlistedItems } from "./notifications/wishlistNotifier";
 import { ListWrapper } from "./processors/ListWrapper";
-import { isLocked, notLockedFilter } from "./util/lock";
 import { Result, err, ok } from "./util/result";
 
 const STALE_SECONDS = 60;
 
-const isDue = (lastUpdated: number, now: number) =>
+// Exported for runImportCycle.ts, which interleaves this per-fair, rather
+// than looping all fairs' full updates before any fair's RSS update.
+export const isDue = (lastUpdated: number, now: number) =>
 	lastUpdated < now - STALE_SECONDS;
 
-export const updateData = async () => {
-	console.log("Update data.");
-
-	const now = Math.floor(Date.now() / 1000);
-
-	const fairs = await prisma.fair.findMany({
-		where: {
-			status: FairStatus.ACTIVE,
-			lastUpdated: { lt: now - STALE_SECONDS },
-			...notLockedFilter(now),
-		},
-	});
-
-	for (const fair of fairs) {
-		if (
-			isDue(fair.lastUpdated, now) &&
-			!isLocked(fair.lastResult, fair.startedAt, now)
-		) {
-			await runUpdate(fair, now);
-		}
-	}
-	return true;
-};
-
-async function runUpdate(fair: Fair, now: number) {
+export async function runUpdate(fair: Fair, now: number) {
 	await prisma.fair.update({
 		where: { id: fair.id },
 		data: { lastResult: JobResult.RUNNING, startedAt: now },

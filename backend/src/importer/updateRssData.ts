@@ -1,4 +1,4 @@
-import { Fair, FairStatus, Item, JobResult } from "@prisma/client";
+import { Fair, Item, JobResult } from "@prisma/client";
 import { XMLParser } from "fast-xml-parser";
 import prisma from "../prismaClient";
 import { getBidderKeys, likeItemsForNewBidders } from "./likedItems";
@@ -7,8 +7,11 @@ import { ItemCommentWrapper } from "./processors/ItemCommentWrapper";
 import { ItemWrapper } from "./processors/ItemWrapper";
 import { parseRssPage, RssActivityEntry } from "./processors/RssCommentWrapper";
 import { getLatestXmlFilename, getXml } from "./updateData";
-import { formatTimeToDate, queryWithTimeout } from "./util/helpers";
-import { isLocked, notLockedFilter } from "./util/lock";
+import {
+	formatTimeToDate,
+	IMPORT_BATCH_SIZE,
+	queryWithTimeout,
+} from "./util/helpers";
 
 // Same ceiling as xml-fetcher's own RSS_MAX_PAGES (kept as a separate
 // constant - the two are independent processes/services, not a shared
@@ -16,33 +19,10 @@ import { isLocked, notLockedFilter } from "./util/lock";
 // just bounds how many page files we'll ever scan in one cycle.
 const RSS_MAX_PAGES = 10;
 
-// Same as ListWrapper.save()'s BATCH_SIZE - see its comment.
-const BATCH_SIZE = 200;
-
-export const updateRssData = async () => {
-	console.log("Update RSS data.");
-
-	const now = Math.floor(Date.now() / 1000);
-
-	// No STALE_SECONDS-style "due" gate here (unlike updateData.ts) - this
-	// runs from the same per-minute cron tick and is cheap to no-op when
-	// there's nothing new, so the lock check below is the only gate needed.
-	const fairs = await prisma.fair.findMany({
-		where: {
-			status: FairStatus.ACTIVE,
-			...notLockedFilter(now),
-		},
-	});
-
-	for (const fair of fairs) {
-		if (!isLocked(fair.lastResult, fair.startedAt, now)) {
-			await runRssUpdate(fair, now);
-		}
-	}
-	return true;
-};
-
-async function runRssUpdate(fair: Fair, now: number) {
+// Exported for runImportCycle.ts, which interleaves this per-fair (right
+// after that fair's own full update, if one ran) rather than looping all
+// fairs' RSS updates as a separate pass.
+export async function runRssUpdate(fair: Fair, now: number) {
 	// Shares Fair.lastResult/startedAt with updateData.ts's own lock - see
 	// the plan/schema comment on rssLastSeenTimestamp for why: it's what
 	// keeps this job and the full importer from ever computing/firing the
@@ -212,8 +192,8 @@ async function update(fair: Fair, updateTime: number): Promise<number | null> {
 	// RSS batches are normally tiny, but a mega-burst catch-up pass across
 	// many pages could touch enough items to matter.
 	const upserts = [...commentUpserts, ...itemUpdates];
-	for (let offset = 0; offset < upserts.length; offset += BATCH_SIZE) {
-		const batch = upserts.slice(offset, offset + BATCH_SIZE);
+	for (let offset = 0; offset < upserts.length; offset += IMPORT_BATCH_SIZE) {
+		const batch = upserts.slice(offset, offset + IMPORT_BATCH_SIZE);
 		await queryWithTimeout(() => prisma.$transaction(batch), 30000);
 	}
 

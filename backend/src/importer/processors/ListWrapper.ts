@@ -1,16 +1,10 @@
 import { List, PrismaPromise } from "@prisma/client";
 import { decode } from "html-entities";
 import prisma from "../../prismaClient";
-import { queryWithTimeout } from "../util/helpers";
+import { IMPORT_BATCH_SIZE, queryWithTimeout } from "../util/helpers";
 import { ok } from "../util/result";
 import { ItemWrapper } from "./ItemWrapper";
 import { ListCommentWrapper } from "./ListCommentWrapper";
-
-// Prisma's array-form $transaction has a fixed 5s timeout that can no
-// longer be overridden under the mariadb driver adapter (only the
-// interactive-callback form accepts a timeout option). Keep batches small
-// enough to comfortably finish within that regardless of per-query overhead.
-const BATCH_SIZE = 200;
 
 export class ListWrapper {
 	private dbObject: List;
@@ -87,28 +81,39 @@ export class ListWrapper {
 	}
 
 	public async save() {
-		let upserts: PrismaPromise<any>[] = [];
-
-		upserts.push(
+		// List + its own comments are small and bounded - one batch, upfront.
+		const listUpserts: PrismaPromise<any>[] = [
 			prisma.list.upsert({
 				where: { id: this.dbObject.id },
 				create: this.dbObject,
 				update: this.dbObject,
 			}),
-		);
+			...ListCommentWrapper.saveAll(this.comments),
+		];
+		await queryWithTimeout(() => prisma.$transaction(listUpserts), 30000);
+		let totalUpserts = listUpserts.length;
 
-		upserts = upserts.concat(ListCommentWrapper.saveAll(this.comments));
-
-		upserts = upserts.concat(ItemWrapper.saveAll(this.items));
-
-		let offset = 0;
-		while (offset < upserts.length) {
-			const batch = upserts.slice(offset, offset + BATCH_SIZE);
-			await queryWithTimeout(() => prisma.$transaction(batch), 30000); // 30s timeout
-			console.log(`Batch ${offset}-${offset + BATCH_SIZE} done.`);
-			offset += BATCH_SIZE;
+		// Items (and their own comments) are the potentially-huge part for a
+		// busy auction - build each chunk's upserts just-in-time and transact
+		// it immediately, rather than materializing every item's (and every
+		// item's comments') upsert - each holding a full data payload - into
+		// one array before batching. That's what let peak memory scale with
+		// the whole list's size instead of one chunk's.
+		for (
+			let offset = 0;
+			offset < this.items.length;
+			offset += IMPORT_BATCH_SIZE
+		) {
+			const chunk = this.items.slice(offset, offset + IMPORT_BATCH_SIZE);
+			const chunkUpserts = ItemWrapper.saveAll(chunk);
+			await queryWithTimeout(
+				() => prisma.$transaction(chunkUpserts),
+				30000,
+			);
+			console.log(`Batch ${offset}-${offset + IMPORT_BATCH_SIZE} done.`);
+			totalUpserts += chunkUpserts.length;
 		}
 
-		return ok(upserts.length);
+		return ok(totalUpserts);
 	}
 }

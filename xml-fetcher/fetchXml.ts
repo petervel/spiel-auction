@@ -184,23 +184,15 @@ const describeError = (error: unknown): string => {
   return error instanceof Error ? error.message : String(error);
 };
 
-// A default axios User-Agent (e.g. "axios/1.9.0") is an easy, obvious bot
-// signal. Cloudflare (which sits in front of both boardgamegeek.com and
-// api.geekdo.com) scores that far more harshly from a datacenter/VPS IP
-// than a residential one - which is exactly why this can look fine during
-// local manual testing (curl with an explicit UA, from a home IP) while a
-// production host gets served a JS-challenge page instead of real content.
-// A realistic browser UA + Accept headers can't defeat an actual JS
-// challenge (there's no JS engine here to solve it), but they measurably
-// lower how often one gets triggered in the first place - applied to every
-// outbound request in this file, not just the ones that have hit this so
-// far.
-const BROWSER_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-  "Accept-Language": "en-US,en;q=0.9",
-};
+// Deliberately NOT setting a spoofed browser User-Agent here. Confirmed by
+// direct A/B testing (curl) against boardgamegeek.com: a "real Chrome" UA
+// gets a Cloudflare JS challenge (403), while axios's own honest default
+// UA ("axios/x.x.x") and no UA at all both get a normal 200. Cloudflare's
+// bot detection is evidently flagging the *mismatch* between "claims to be
+// Chrome" and the actual TLS/HTTP fingerprint (which obviously isn't real
+// Chrome) as more suspicious than a client that isn't pretending to be
+// something it's not - so leave every request's headers as axios's own
+// defaults unless a specific one (like xmlapi's Authorization) is needed.
 
 type FetchResult =
   | { ok: true; xml: string }
@@ -232,12 +224,10 @@ const fetchXML = async (
   try {
     const response = await axios.get(source.url, {
       responseType: "text",
-      headers: {
-        ...BROWSER_HEADERS,
-        ...(source.tier === "xmlapi"
+      headers:
+        source.tier === "xmlapi"
           ? { Authorization: `Bearer ${BGG_API_TOKEN}` }
-          : {}),
-      },
+          : undefined,
     });
     return { ok: true, xml: response.data };
   } catch (error) {
@@ -479,7 +469,6 @@ const resolveUsername = async (authorId: number): Promise<string | null> => {
   try {
     const response = await axios.get(`https://api.geekdo.com/api/user/${authorId}`, {
       responseType: "json",
-      headers: BROWSER_HEADERS,
     });
     const username = response.data?.username;
     if (typeof username !== "string") return null;
@@ -508,7 +497,6 @@ const fetchAndSaveNewItem = async (geeklistId: number, itemId: number) => {
   try {
     response = await axios.get(`https://api.geekdo.com/api/listitem/${itemId}`, {
       responseType: "json",
-      headers: BROWSER_HEADERS,
     });
   } catch (error) {
     logError(`[newitem #${itemId}] Failed to fetch: ${describeError(error)}`);

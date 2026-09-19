@@ -565,12 +565,14 @@ const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
     await waitForRssGap();
     const result = await fetchXML(source, { skipGlobalGate: true });
     if (!result.ok) {
-      if (result.rateLimited) {
-        rssBackoffUntil.set(geeklistId, Date.now() + RATE_LIMIT_INTERVAL_MS);
-        logError(
-          `[${source.label}] Rate limited, pausing RSS fetching for #${geeklistId} for ${RATE_LIMIT_INTERVAL_MS / 60000}min.`,
-        );
-      }
+      // Back off on any fetch failure, not just a 429 - retrying a 403
+      // (e.g. a Cloudflare challenge) every 60s is exactly the kind of
+      // pattern that could prolong one, and there's nothing to gain from
+      // hammering an endpoint that just failed regardless of why.
+      rssBackoffUntil.set(geeklistId, Date.now() + RATE_LIMIT_INTERVAL_MS);
+      logError(
+        `[${source.label}] Fetch failed${result.rateLimited ? " (rate limited)" : ""}, pausing RSS fetching for #${geeklistId} for ${RATE_LIMIT_INTERVAL_MS / 60000}min.`,
+      );
       stopReason = "a fetch error";
       break;
     }

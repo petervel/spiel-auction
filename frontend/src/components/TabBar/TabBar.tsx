@@ -9,13 +9,14 @@ type IndicatorRect = { left: number; width: number };
 
 export const TabBar = () => {
 	const { pages, pageId, activeIndex } = useTabPages();
+	const containerRef = useRef<HTMLDivElement | null>(null);
 	const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 	const [indicator, setIndicator] = useState<IndicatorRect | null>(null);
 
 	// Re-measure the active tab's actual box (not just its icon) whenever it
-	// changes or the window resizes, so the indicator can slide/resize to
-	// match it - tabs aren't fixed-width, so this can't be computed from CSS
-	// alone.
+	// changes or the row itself resizes, so the indicator can slide/resize
+	// to match it - tabs aren't fixed-width, so this can't be computed from
+	// CSS alone.
 	useLayoutEffect(() => {
 		const measure = () => {
 			const activeLink = linkRefs.current[activeIndex];
@@ -28,12 +29,30 @@ export const TabBar = () => {
 		};
 
 		measure();
+
+		// A window "resize" event isn't the only thing that can move this
+		// centered row after the first measurement - the page content below
+		// the tab bar (Outlet in TabLayout) loads asynchronously, and once
+		// it's tall enough to grow a scrollbar, the shrunk available width
+		// re-centers this row without the window's own size ever changing.
+		// That's why the indicator used to land in the wrong place on load
+		// but self-correct on the next tab switch (which re-measures anyway)
+		// - observing the container itself catches that shift too, whatever
+		// caused it.
+		const container = containerRef.current;
+		const resizeObserver = container ? new ResizeObserver(measure) : null;
+		if (container && resizeObserver) resizeObserver.observe(container);
+
 		window.addEventListener('resize', measure);
-		return () => window.removeEventListener('resize', measure);
+		return () => {
+			window.removeEventListener('resize', measure);
+			resizeObserver?.disconnect();
+		};
 	}, [activeIndex]);
 
 	return (
 		<Stack
+			ref={containerRef}
 			direction="row"
 			spacing={1}
 			marginBlock={3}

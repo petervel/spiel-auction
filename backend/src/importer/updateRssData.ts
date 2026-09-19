@@ -59,7 +59,10 @@ export async function runRssUpdate(fair: Fair, now: number) {
 // RSS page for this fair yet) - a no-op, not a failure.
 async function update(fair: Fair, updateTime: number): Promise<number | null> {
 	const entries = await loadRssEntries(fair.geeklistId);
-	if (entries.length === 0) return null;
+	if (entries.length === 0) {
+		console.log(`${fair.geeklistId}: RSS - no pages found on disk yet.`);
+		return null;
+	}
 
 	const maxPubDateSeconds = Math.max(
 		fair.rssLastSeenTimestamp,
@@ -79,8 +82,15 @@ async function update(fair: Fair, updateTime: number): Promise<number | null> {
 	);
 
 	if (newCommentEntries.length === 0) {
+		console.log(
+			`${fair.geeklistId}: RSS - ${entries.length} entries scanned, nothing new since the last cursor.`,
+		);
 		return maxPubDateSeconds;
 	}
+
+	console.log(
+		`${fair.geeklistId}: RSS - ${newCommentEntries.length} new comment(s) found since the last cursor.`,
+	);
 
 	// RSS can't originate new items (no body text, see the plan) - only
 	// entries for items the xmlapi importer already created are usable.
@@ -108,6 +118,9 @@ async function update(fair: Fair, updateTime: number): Promise<number | null> {
 	}
 
 	if (newWrappersByItemId.size === 0) {
+		console.log(
+			`${fair.geeklistId}: RSS - ${newCommentEntries.length} new comment(s) found, but none matched an already-known item.`,
+		);
 		return maxPubDateSeconds;
 	}
 
@@ -214,6 +227,10 @@ async function update(fair: Fair, updateTime: number): Promise<number | null> {
 			`${fair.geeklistId}: RSS auto-like for new bidders failed:`,
 			err,
 		),
+	);
+
+	console.log(
+		`${fair.geeklistId}: RSS - ${commentUpserts.length} comment(s) across ${newWrappersByItemId.size} item(s) processed.`,
 	);
 
 	return maxPubDateSeconds;

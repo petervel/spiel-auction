@@ -82,9 +82,7 @@ async function update(fair: Fair, updateTime: number): Promise<number | null> {
 	);
 
 	if (newCommentEntries.length === 0) {
-		console.log(
-			`${fair.geeklistId}: RSS - ${entries.length} entries scanned, nothing new since the last cursor.`,
-		);
+		console.log(`${fair.geeklistId}: RSS - Nothing new.`);
 		return maxPubDateSeconds;
 	}
 

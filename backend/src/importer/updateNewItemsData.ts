@@ -55,6 +55,22 @@ async function update(fair: Fair, updateTime: number) {
 	const existingIds = new Set(existing.map((item) => item.id));
 
 	const newFiles = files.filter((file) => !existingIds.has(file.itemId));
+	const alreadyKnownFiles = files.filter((file) =>
+		existingIds.has(file.itemId),
+	);
+
+	// A newitem file is a single-use seed, not a rolling window like the
+	// rss-page/data files (which keep "3 newest" and get re-scanned on
+	// purpose every cycle) - once an item is known, whether that happened
+	// here or via the full importer in the meantime, its file has served
+	// its only purpose. Deleting it is what keeps this (and every other
+	// fair's) directory scan below from growing without bound over the
+	// life of a fair - left alone, it just keeps re-reading the same
+	// already-consumed files forever.
+	for (const file of alreadyKnownFiles) {
+		deleteNewItemFile(file.fileName);
+	}
+
 	if (newFiles.length === 0) {
 		console.log(
 			`${fair.geeklistId}: New items - ${files.length} file(s) found, all already known.`,
@@ -63,6 +79,7 @@ async function update(fair: Fair, updateTime: number) {
 	}
 
 	const wrappers: ItemWrapper[] = [];
+	const consumedFiles: NewItemFile[] = [];
 	for (const file of newFiles) {
 		let payload: NewItemPayload;
 		try {
@@ -70,8 +87,12 @@ async function update(fair: Fair, updateTime: number) {
 				fs.readFileSync(path.join(XML_DIR, file.fileName), "utf-8"),
 			);
 		} catch (error) {
+			// Left in place (not deleted) - a permanently-corrupt file would
+			// otherwise retry-fail forever, but this way it's at least
+			// inspectable rather than silently vanishing. Rare in practice:
+			// this is local-volume JSON xml-fetcher itself just wrote.
 			console.warn(
-				`${fair.geeklistId}: Could not read/parse ${file.fileName}: ${error}`,
+				`${fair.geeklistId}: Could not read/parse ${file.fileName}, leaving it in place: ${error}`,
 			);
 			continue;
 		}
@@ -85,12 +106,17 @@ async function update(fair: Fair, updateTime: number) {
 				fair.eventDate.getFullYear(),
 			),
 		);
+		consumedFiles.push(file);
 	}
 
 	if (wrappers.length === 0) return;
 
 	const upserts = ItemWrapper.saveAll(wrappers);
 	await queryWithTimeout(() => prisma.$transaction(upserts), 30000);
+
+	for (const file of consumedFiles) {
+		deleteNewItemFile(file.fileName);
+	}
 
 	// Every wrapper here is, by construction, an item that wasn't already in
 	// the DB (see the existingIds filter above) - an empty previousState
@@ -111,6 +137,14 @@ async function update(fair: Fair, updateTime: number) {
 		`${fair.geeklistId}: New items - ${wrappers.length} new item(s) created from ${files.length} file(s) found.`,
 	);
 }
+
+const deleteNewItemFile = (fileName: string) => {
+	try {
+		fs.unlinkSync(path.join(XML_DIR, fileName));
+	} catch (error) {
+		console.warn(`Could not delete ${fileName}: ${error}`);
+	}
+};
 
 type NewItemFile = { itemId: number; fileName: string };
 

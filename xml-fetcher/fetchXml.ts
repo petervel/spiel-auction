@@ -408,6 +408,16 @@ const scanForNewItemIds = (xmlContent: string): number[] => {
 // item only gets fetched once for the life of this process, without
 // re-scanning the (growing) shared directory on every single itemid, the
 // way a naive per-id fs.readdirSync check would.
+//
+// The backend deletes a newitem-*.json file once it's consumed it (see
+// updateNewItemsData.ts) - that's fine here, since this Set is only ever
+// re-seeded from disk once per fair, on this process's first use of it. A
+// restart of this process, though, would lose that in-memory state and
+// re-seed from whatever files still exist - which, for an item the backend
+// already consumed and deleted, means none - so a restart can cause a
+// harmless one-off re-fetch of an already-known item (the backend will
+// just find it already in the DB and delete the file again). Accepted
+// trade-off: restarts are rare, unbounded file growth every cycle isn't.
 const knownNewItemIdsByFair = new Map<number, Set<number>>();
 
 const getKnownNewItemIds = (geeklistId: number): Set<number> => {

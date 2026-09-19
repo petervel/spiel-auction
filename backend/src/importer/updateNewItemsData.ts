@@ -2,6 +2,7 @@ import { Fair, JobResult } from "@prisma/client";
 import * as fs from "fs";
 import * as path from "path";
 import prisma from "../prismaClient";
+import { notifyWishlistedItems } from "./notifications/wishlistNotifier";
 import { ItemWrapper } from "./processors/ItemWrapper";
 import {
 	NewItemPayload,
@@ -90,6 +91,21 @@ async function update(fair: Fair, updateTime: number) {
 
 	const upserts = ItemWrapper.saveAll(wrappers);
 	await queryWithTimeout(() => prisma.$transaction(upserts), 30000);
+
+	// Every wrapper here is, by construction, an item that wasn't already in
+	// the DB (see the existingIds filter above) - an empty previousState
+	// map is correct, not a shortcut: it's what makes findNewlyListedItems
+	// (inside notifyWishlistedItems) treat all of them as newly listed. This
+	// is the notification the full importer would otherwise have fired for
+	// these items, except that by the time it next sees them, they're no
+	// longer new from its own previousItemState diff. Best-effort, same as
+	// every other notification call in this pipeline.
+	await notifyWishlistedItems(wrappers, new Map()).catch((err) =>
+		console.error(
+			`${fair.geeklistId}: New-item wishlist notification failed:`,
+			err,
+		),
+	);
 
 	console.log(
 		`${fair.geeklistId}: New items - ${wrappers.length} new item(s) created from ${files.length} file(s) found.`,

@@ -82,6 +82,22 @@ const waitForRssGap = async () => {
   lastRssRequestAt = Date.now();
 };
 
+// api.geekdo.com (BGG's own internal JSON API, not the public xmlapi/RSS)
+// is a completely separate, undocumented domain - no empirical throttling
+// observed, but treat it as unknown and give it its own conservative gate
+// rather than assuming it shares either of the above two.
+const NEW_ITEM_MIN_GAP_MS = 1_000;
+let lastNewItemRequestAt = 0;
+
+const waitForNewItemGap = async () => {
+  while (true) {
+    const wait = NEW_ITEM_MIN_GAP_MS - (Date.now() - lastNewItemRequestAt);
+    if (wait <= 0) break;
+    await sleep(wait);
+  }
+  lastNewItemRequestAt = Date.now();
+};
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // docker's own --timestamps flag only shows up when someone remembers to
@@ -360,6 +376,133 @@ const runLoop = async (source: Source) => {
   runningLoops.delete(source.geeklistId);
 };
 
+// Scans an RSS page's raw XML for "GeekList Item: ... " entries (item
+// added/edited - see rssSource's own comment on why RSS can't tell those
+// apart) and returns each one's itemid. This is a small, deliberately
+// separate scan from checkXML/getOldestPubDateMs above - it doesn't share
+// code with the backend's own (more thorough) RssCommentWrapper, since the
+// two services are independent yarn projects with no shared package.
+const scanForNewItemIds = (xmlContent: string): number[] => {
+  const parser = new xml2js.Parser();
+  const itemIds: number[] = [];
+
+  parser.parseString(xmlContent, (err, parsed) => {
+    if (err) return;
+    const items = parsed?.rss?.channel?.[0]?.item;
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      const title = item?.title?.[0];
+      if (typeof title !== "string" || !title.includes("GeekList Item:")) continue;
+      const link = item?.guid?.[0] ?? item?.link?.[0];
+      const match = typeof link === "string" ? link.match(/itemid=(\d+)/) : null;
+      if (match) itemIds.push(Number(match[1]));
+    }
+  });
+
+  return itemIds;
+};
+
+// geeklistId -> itemids we've already fetched full data for, ever. Seeded
+// once per fair (lazily, on first use) from whatever newitem-*.json files
+// already exist on the shared volume, then kept in sync in memory - so an
+// item only gets fetched once for the life of this process, without
+// re-scanning the (growing) shared directory on every single itemid, the
+// way a naive per-id fs.readdirSync check would.
+const knownNewItemIdsByFair = new Map<number, Set<number>>();
+
+const getKnownNewItemIds = (geeklistId: number): Set<number> => {
+  let known = knownNewItemIdsByFair.get(geeklistId);
+  if (!known) {
+    known = new Set<number>();
+    const prefix = `newitem-`;
+    const suffix = `-${geeklistId}-`;
+    for (const file of fs.readdirSync(xmlDir)) {
+      if (!file.startsWith(prefix) || !file.endsWith(".json")) continue;
+      const rest = file.slice(prefix.length);
+      const suffixIndex = rest.indexOf(suffix);
+      if (suffixIndex === -1) continue;
+      const itemId = Number(rest.slice(0, suffixIndex));
+      if (!Number.isNaN(itemId)) known.add(itemId);
+    }
+    knownNewItemIdsByFair.set(geeklistId, known);
+  }
+  return known;
+};
+
+// geekdo user id -> username, cached for the process's lifetime - repeat
+// sellers list many items, no need to re-resolve the same author each time.
+const usernameCache = new Map<number, string>();
+
+const resolveUsername = async (authorId: number): Promise<string | null> => {
+  const cached = usernameCache.get(authorId);
+  if (cached) return cached;
+
+  await waitForNewItemGap();
+  try {
+    const response = await axios.get(`https://api.geekdo.com/api/user/${authorId}`, {
+      responseType: "json",
+    });
+    const username = response.data?.username;
+    if (typeof username !== "string") return null;
+    usernameCache.set(authorId, username);
+    return username;
+  } catch (error) {
+    logError(`[newitem] Failed to resolve username for author ${authorId}: ${describeError(error)}`);
+    return null;
+  }
+};
+
+// xmlapi/RSS use the same "boardgame"/"boardgameexpansion"/"boardgameaccessory"
+// vocabulary for objectSubtype as BGG's own URL paths do - derive it from
+// the leading path segment of the item's href (e.g. "/boardgame/1/foo").
+const deriveSubtype = (href: string): string => {
+  const match = href.match(/^\/([a-z]+)\//);
+  return match ? match[1] : "boardgame";
+};
+
+const fetchAndSaveNewItem = async (geeklistId: number, itemId: number) => {
+  const known = getKnownNewItemIds(geeklistId);
+  if (known.has(itemId)) return;
+
+  await waitForNewItemGap();
+  let response;
+  try {
+    response = await axios.get(`https://api.geekdo.com/api/listitem/${itemId}`, {
+      responseType: "json",
+    });
+  } catch (error) {
+    logError(`[newitem #${itemId}] Failed to fetch: ${describeError(error)}`);
+    return;
+  }
+
+  const data = response.data;
+  const authorId = data?.author;
+  const username = typeof authorId === "number" ? await resolveUsername(authorId) : null;
+  if (!username) {
+    logError(`[newitem #${itemId}] Could not resolve author username, will retry next cycle.`);
+    return; // no file written yet, so this stays un-known and gets retried
+  }
+
+  const payload = {
+    itemId,
+    objectType: data?.item?.type ?? "thing",
+    objectSubtype: deriveSubtype(data?.item?.href ?? ""),
+    objectId: Number(data?.item?.id),
+    objectName: data?.item?.name,
+    username,
+    postDate: data?.postdate,
+    editDate: data?.editdate,
+    imageId: data?.imageid,
+    body: data?.body ?? "",
+  };
+
+  const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+  const fileName = `newitem-${itemId}-${geeklistId}-${timestamp}.json`;
+  fs.writeFileSync(path.join(xmlDir, fileName), JSON.stringify(payload));
+  known.add(itemId);
+  log(`[newitem #${itemId}] Saved "${payload.objectName}" for geeklist #${geeklistId}.`);
+};
+
 const RSS_INTERVAL_MS = 60_000; // flat - no backoff/tiering needed, RSS has shown no queued/rate-limit behavior yet
 
 // geeklistId -> ms timestamp to resume after a 429. Never observed on RSS
@@ -416,6 +559,10 @@ const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
     if (result.xml !== getMostRecentXML(source)) {
       saveXML(source, result.xml);
       cleanupOldFiles(source);
+    }
+
+    for (const itemId of scanForNewItemIds(result.xml)) {
+      await fetchAndSaveNewItem(geeklistId, itemId);
     }
 
     const oldestMs = getOldestPubDateMs(result.xml);

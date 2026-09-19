@@ -156,7 +156,10 @@ async function update(fair: Fair, updateTime: number) {
 	return ok({ latestFile });
 }
 
-const XML_DIR = path.join("/app/xml-data");
+// Exported for reuse by updateRssData.ts (via getLatestXmlFilename/getXml
+// below) and updateNewItemsData.ts, which lists newitem-*.json files here
+// directly.
+export const XML_DIR = path.join("/app/xml-data");
 
 // Exported for reuse by updateRssData.ts, which looks up rss-page{n}-*.xml
 // files on the same shared volume the same way.

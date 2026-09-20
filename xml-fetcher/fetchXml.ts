@@ -11,56 +11,31 @@ const xmlDir = "/app/data";
 // Cloudflare hard-blocks this IP on /rss/ (seen in production).
 const RSS_ENABLED = process.env.RSS_ENABLED !== "false";
 
-// Equal on purpose: during high-churn periods most cycles come back
-// "changed" and reset straight to this interval, so it's effectively the
-// sustained request rate, not just a floor. A production run at 15 minutes
-// held for ~8.75 hours with zero 429s (averaging ~8.76 calls/hour), so
-// there's headroom to push for more updates/hour - stepping down
-// cautiously to 10 minutes rather than jumping straight back toward the
-// old 4-minute value that did cause bans.
+// Production held 15min intervals for 8.75h with zero 429s - 10min is a
+// conservative step down from that, not back to the old 4min that banned us.
 const MIN_INTERVAL_MS = 600_000;   // 10 minutes — reset to this on any change
 const MAX_INTERVAL_MS = 600_000;   // 10 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
-// Traced a production run at 30s spacing: every single retry that ever
-// succeeded resolved on the 3rd attempt, never the 2nd - so the 2nd attempt
-// was consistently too early to matter. Widening to 45s pushes the 3rd
-// attempt out to 90s after the first (was 60s), which should catch updates
-// that finish resolving a bit later. Added a 4th attempt (135s after the
-// first) as extra headroom for stragglers past that.
-const RETRY_INTERVAL_MS = 45_000;  // 45 seconds between quick queued-retries - these deliberately skip the global gate below (see runLoop), so this spacing is real, not just a floor
+// Production trace: successful retries always resolved on the 3rd attempt,
+// never the 2nd - 45s spacing pushes that out to 90s (4th at 135s for stragglers).
+const RETRY_INTERVAL_MS = 45_000;  // between quick queued-retries; skips the global gate below (see runLoop)
 
-// Traced a production log of 429s: every ban lasted almost exactly 60
-// minutes from the first 429 to the first non-429 response after it,
-// regardless of how many requests happened during the ban or how long
-// the previous backoff had climbed to. It's a fixed-duration lockout, not
-// a decaying one - so there's no benefit to escalating further on repeat
-// 429s, and no benefit to trying again sooner either. Just wait out the
-// known duration.
+// Production 429s traced at a flat ~60min lockout regardless of retry
+// count - no benefit to escalating or retrying sooner.
 const RATE_LIMIT_INTERVAL_MS = 3_600_000; // 60 minutes, flat
 
-// "Still processing" means someone changed the list since BGG last built
-// it - during high-churn periods (mostly European daytime, since that's
-// when bidders are active) it can invalidate faster than BGG can finish
-// rebuilding, so continuing to poll every RETRY_INTERVAL_MS indefinitely
-// just burns requests chasing a moving target. Try a few times quickly in
-// case it settles, then give it real time before trying again.
+// A few quick retries in case the list settles, then back off for real
+// instead of burning requests chasing a moving target.
 const QUEUED_RETRY_LIMIT = 4;
 const STILL_NOT_READY_INTERVAL_MS = 30 * 60_000; // 30 minutes
 
-// BGG's rate limit is evaluated across the whole app's combined request
-// volume (same IP/token), not per-fair or per-endpoint - confirmed this
-// session when two sources firing close together both got 429'd, even
-// though either alone might have succeeded. Every actual HTTP request,
-// regardless of which fair or source it's for, waits out this minimum
-// gap since the last request from anywhere before firing.
+// BGG's rate limit applies across the whole app's request volume, not per-
+// fair/endpoint (confirmed: two sources firing close together both got 429'd).
 const MIN_GAP_BETWEEN_REQUESTS_MS = 90_000;
 let lastGlobalRequestAt = 0;
 
 const waitForGlobalGap = async () => {
-  // Loop rather than a single check-then-sleep: when several callers are
-  // all waiting on the same stale lastGlobalRequestAt, they'd otherwise
-  // all wake up and fire within milliseconds of each other. Re-checking
-  // after every wake-up re-serializes them, since whichever one runs
-  // first updates lastGlobalRequestAt before the next one's turn.
+  // Loop, not check-then-sleep, so concurrent callers re-serialize instead
+  // of all waking at once.
   while (true) {
     const wait = MIN_GAP_BETWEEN_REQUESTS_MS - (Date.now() - lastGlobalRequestAt);
     if (wait <= 0) break;
@@ -69,11 +44,8 @@ const waitForGlobalGap = async () => {
   lastGlobalRequestAt = Date.now();
 };
 
-// RSS is unauthenticated and, per manual testing, notably more tolerant
-// than the token-gated xmlapi endpoint above - it gets its own short gate
-// so it never has to wait on (or slow down) xmlapi's 90s floor. This is
-// just enough to keep one fair's own catch-up pagination from bursting all
-// of pages 1-10 in the same instant.
+// RSS is unauthenticated and more tolerant than xmlapi - own short gate,
+// independent of xmlapi's 90s floor, just enough to avoid bursting pages 1-10.
 const RSS_MIN_GAP_MS = 1_000;
 let lastRssRequestAt = 0;
 
@@ -86,10 +58,8 @@ const waitForRssGap = async () => {
   lastRssRequestAt = Date.now();
 };
 
-// api.geekdo.com (BGG's own internal JSON API, not the public xmlapi/RSS)
-// is a completely separate, undocumented domain - no empirical throttling
-// observed, but treat it as unknown and give it its own conservative gate
-// rather than assuming it shares either of the above two.
+// api.geekdo.com is a separate, undocumented domain - own conservative
+// gate, not assumed to share either of the above.
 const NEW_ITEM_MIN_GAP_MS = 1_000;
 let lastNewItemRequestAt = 0;
 
@@ -104,27 +74,18 @@ const waitForNewItemGap = async () => {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// docker's own --timestamps flag only shows up when someone remembers to
-// pass it, and isn't there at all once logs are piped elsewhere - put the
-// timestamp in the message itself so it's always there.
+// Timestamp in the message itself - docker's --timestamps flag isn't
+// always there once logs are piped elsewhere.
 const log = (message: string) =>
   console.log(`[${new Date().toISOString()}] ${message}`);
 const logError = (message: string) =>
   console.error(`[${new Date().toISOString()}] ${message}`);
 
-// This used to also fetch the plain (comments-less) XML as a second,
-// more-reliable source, on the theory that it'd stay fresh even when the
-// ?comments=1 fetch got rate-limited. In practice both sources hit BGG's
-// rate limit about equally often, so the second source was just doubling
-// request volume without actually buying more reliability - back to a
-// single source. The backend's items-only import pass (updateData.ts)
-// is left in place but now permanently idle (never gets a items-data-*
-// file to import) rather than removed, to keep this a small change.
-// "rss" sources (below) are a second, independent tier: the geeklist RSS
-// activity feed. It's unauthenticated and - per manual testing - notably
-// more tolerant than this token-gated xmlapi endpoint, so it gets its own
-// gate/cadence entirely (see waitForRssGap/RSS_INTERVAL_MS) rather than
-// sharing xmlapi's tuned-from-bans backoff.
+// Used to also fetch a plain (comments-less) XML as backup, but it hit
+// rate limits equally often - removed. Backend's items-only import pass
+// left idle rather than deleted.
+// "rss" is a second, independent tier (the geeklist RSS feed) - unauthenticated,
+// more tolerant, own gate/cadence (see waitForRssGap/RSS_INTERVAL_MS).
 type Source = {
   tier: "xmlapi" | "rss";
   label: string; // for logging - includes the geeklist id, e.g. "comments #319165"
@@ -143,11 +104,8 @@ const sourcesFor = (geeklistId: number): Source[] => [
   },
 ];
 
-// RSS activity pages are fetched newest-first (page 1 = most recent ~100
-// events); this is the ceiling on how far back a single fetch cycle will
-// paginate to catch up to the last-seen cursor, covering cold start
-// (cursor = 0) and any pathological burst without risking unbounded
-// pagination.
+// Ceiling on how deep one cycle paginates to catch the last-seen cursor -
+// covers cold start (cursor = 0) and any pathological burst.
 const RSS_MAX_PAGES = 10;
 
 const rssSource = (geeklistId: number, page: number): Source => ({
@@ -158,16 +116,10 @@ const rssSource = (geeklistId: number, page: number): Source => ({
   geeklistId,
 });
 
-// Axios errors carry the full request/response (headers, sockets, retry
-// config, ...) - logging one raw drowns the log in noise. Reduce it to the
-// status and response body, which is what actually explains the failure
-// (e.g. BGG's rate-limit message arrives as a normal response body on a
-// 429, not as a distinct error type). A Cloudflare JS-challenge page
-// ("Just a moment...") is HTML, not XML - the generic tag-strip below
-// removes the <script>/<style> *tags* but leaves their inline CSS/JS
-// content behind, which is most of what actually shows up in the log, so
-// strip those blocks (tag and content) first, and cap the length as a
-// backstop regardless of what kind of error body shows up next.
+// Reduce an axios error to status + body (raw errors are mostly noise).
+// Strip <script>/<style> blocks first - Cloudflare's challenge page is
+// HTML, and the generic tag-strip below would otherwise leave their inline
+// CSS/JS content behind. Cap the length as a backstop either way.
 const describeError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
@@ -188,15 +140,9 @@ const describeError = (error: unknown): string => {
   return error instanceof Error ? error.message : String(error);
 };
 
-// Deliberately NOT setting a spoofed browser User-Agent here. Confirmed by
-// direct A/B testing (curl) against boardgamegeek.com: a "real Chrome" UA
-// gets a Cloudflare JS challenge (403), while axios's own honest default
-// UA ("axios/x.x.x") and no UA at all both get a normal 200. Cloudflare's
-// bot detection is evidently flagging the *mismatch* between "claims to be
-// Chrome" and the actual TLS/HTTP fingerprint (which obviously isn't real
-// Chrome) as more suspicious than a client that isn't pretending to be
-// something it's not - so leave every request's headers as axios's own
-// defaults unless a specific one (like xmlapi's Authorization) is needed.
+// No spoofed User-Agent: confirmed via curl that a "real Chrome" UA gets a
+// Cloudflare 403 while axios's honest default UA gets 200 - the fingerprint
+// mismatch is what's flagged, not looking like a bot.
 
 type FetchResult =
   | { ok: true; xml: string }
@@ -206,18 +152,16 @@ const fetchXML = async (
   source: Source,
   options?: { skipGlobalGate?: boolean },
 ): Promise<FetchResult> => {
-  // RSS is unauthenticated and doesn't share xmlapi's token requirement or
-  // its 90s global gate (see rssSource's comment) - only xmlapi requests go
-  // through those.
+  // Only xmlapi needs the token/global gate - RSS is unauthenticated and
+  // has its own gate.
   if (source.tier === "xmlapi") {
     if (!BGG_API_TOKEN) {
       logError("BGG_API_TOKEN is not set");
       return { ok: false, rateLimited: false };
     }
 
-    // Skipped for quick queued-chase retries (see runLoop) - those are
-    // rechecking the same single request in a narrow window, not a fresh
-    // request competing with other sources/fairs for the shared budget.
+    // Skipped for quick queued-chase retries (see runLoop) - same request,
+    // not a fresh one competing for the shared budget.
     if (!options?.skipGlobalGate) {
       await waitForGlobalGap();
     }
@@ -262,9 +206,8 @@ const checkXML = (xmlContent: string): null | "queued" | string => {
   return result;
 };
 
-// RSS activity entries are newest-first, so the last <item> on a page is
-// its oldest. Returns null for an empty/unparseable page (e.g. a page
-// number past the end of a small geeklist's activity).
+// Entries are newest-first, so the last <item> on a page is oldest. Null
+// for an empty/unparseable page.
 const getOldestPubDateMs = (xmlContent: string): number | null => {
   const parser = new xml2js.Parser();
   let result: number | null = null;
@@ -290,9 +233,8 @@ const saveXML = (source: Source, xmlContent: string) => {
   log(`[${source.label}] XML saved successfully: ${fileName}`);
 };
 
-// Filenames include the geeklist id so files from different fairs sharing
-// the same prefix (e.g. two "data-*.xml") never get mixed up - both here
-// and in the backend's own lookup of the latest file per fair.
+// Filenames include the geeklist id so same-prefix files across fairs
+// never get mixed up (also relied on by the backend's own lookup).
 const filesFor = (source: Source) =>
   fs
     .readdirSync(xmlDir)
@@ -355,9 +297,8 @@ const fetchAndStoreXML = async (
   return "changed";
 };
 
-// A fair's two loops run until its geeklist id drops out of the active
-// set (checked once per iteration - no hard cancellation needed, this
-// just stops scheduling further fetches for it).
+// A fair's loops run until its geeklist id drops out of the active set -
+// checked once per iteration, no hard cancellation needed.
 const activeGeeklistIds = new Set<number>();
 const runningLoops = new Set<number>();
 
@@ -398,12 +339,9 @@ const runLoop = async (source: Source) => {
   runningLoops.delete(source.geeklistId);
 };
 
-// Scans an RSS page's raw XML for "GeekList Item: ... " entries (item
-// added/edited - see rssSource's own comment on why RSS can't tell those
-// apart) and returns each one's itemid. This is a small, deliberately
-// separate scan from checkXML/getOldestPubDateMs above - it doesn't share
-// code with the backend's own (more thorough) RssCommentWrapper, since the
-// two services are independent yarn projects with no shared package.
+// Scans an RSS page for "GeekList Item: ..." (added/edited) entries and
+// returns their itemids - separate from the backend's RssCommentWrapper
+// since these are independent projects with no shared code.
 const scanForNewItemIds = (xmlContent: string): number[] => {
   const parser = new xml2js.Parser();
   const itemIds: number[] = [];
@@ -424,22 +362,9 @@ const scanForNewItemIds = (xmlContent: string): number[] => {
   return itemIds;
 };
 
-// geeklistId -> itemids we've already fetched full data for, ever. Seeded
-// once per fair (lazily, on first use) from whatever newitem-*.json files
-// already exist on the shared volume, then kept in sync in memory - so an
-// item only gets fetched once for the life of this process, without
-// re-scanning the (growing) shared directory on every single itemid, the
-// way a naive per-id fs.readdirSync check would.
-//
-// The backend deletes a newitem-*.json file once it's consumed it (see
-// updateNewItemsData.ts) - that's fine here, since this Set is only ever
-// re-seeded from disk once per fair, on this process's first use of it. A
-// restart of this process, though, would lose that in-memory state and
-// re-seed from whatever files still exist - which, for an item the backend
-// already consumed and deleted, means none - so a restart can cause a
-// harmless one-off re-fetch of an already-known item (the backend will
-// just find it already in the DB and delete the file again). Accepted
-// trade-off: restarts are rare, unbounded file growth every cycle isn't.
+// geeklistId -> itemids already fetched, ever - seeded once from disk per
+// fair, then kept in memory to avoid re-scanning it per item. A restart
+// can cause one harmless re-fetch of an already-consumed item.
 const knownNewItemIdsByFair = new Map<number, Set<number>>();
 
 const getKnownNewItemIds = (geeklistId: number): Set<number> => {
@@ -461,8 +386,8 @@ const getKnownNewItemIds = (geeklistId: number): Set<number> => {
   return known;
 };
 
-// geekdo user id -> username, cached for the process's lifetime - repeat
-// sellers list many items, no need to re-resolve the same author each time.
+// geekdo user id -> username, cached for the process's life - repeat
+// sellers list many items.
 const usernameCache = new Map<number, string>();
 
 const resolveUsername = async (authorId: number): Promise<string | null> => {
@@ -484,9 +409,8 @@ const resolveUsername = async (authorId: number): Promise<string | null> => {
   }
 };
 
-// xmlapi/RSS use the same "boardgame"/"boardgameexpansion"/"boardgameaccessory"
-// vocabulary for objectSubtype as BGG's own URL paths do - derive it from
-// the leading path segment of the item's href (e.g. "/boardgame/1/foo").
+// Derives objectSubtype from the item href's leading path segment (e.g.
+// "/boardgame/1/foo") - same vocabulary xmlapi uses.
 const deriveSubtype = (href: string): string => {
   const match = href.match(/^\/([a-z]+)\//);
   return match ? match[1] : "boardgame";
@@ -537,22 +461,13 @@ const fetchAndSaveNewItem = async (geeklistId: number, itemId: number) => {
 
 const RSS_INTERVAL_MS = 60_000; // flat - no backoff/tiering needed, RSS has shown no queued/rate-limit behavior yet
 
-// geeklistId -> ms timestamp to resume after a 429. Never observed on RSS
-// in practice, but the xmlapi ban history above is exactly the kind of
-// surprise this should guard against.
+// geeklistId -> ms timestamp to resume after a failure (see fetchRssPages).
 const rssBackoffUntil = new Map<number, number>();
 
-// Paginates from page 1 forward, stopping only once a page's oldest entry
-// is strictly OLDER than the fair's rssLastSeenTimestamp cursor - not
-// merely equal to it. pubDate has 1-second resolution, so a burst can put
-// several entries on the same second; stopping as soon as a page's oldest
-// entry *equals* the cursor risks leaving sibling entries at that exact
-// second stranded on the next, unfetched page, and since the importer's
-// own "new" filter is a strict >, they'd never be picked up on any later
-// cycle either. Pulling one extra page past the equal-timestamp boundary
-// is a cheap price for never missing one. RSS_MAX_PAGES is the safety cap
-// (cold start, or a pathological burst). A quiet fair costs one page
-// fetch; a bursty one pulls as many as it needs to catch up.
+// Paginates until a page's oldest entry is strictly older than the cursor,
+// not just equal - pubDate has 1s resolution, so same-second entries could
+// otherwise get stranded on an unfetched page and never picked up (the
+// importer's own filter is a strict >). Capped at RSS_MAX_PAGES.
 const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
   const [rows] = await pool.query<mysql.RowDataPacket[]>(
     "SELECT rssLastSeenTimestamp FROM Fair WHERE geeklistId = ?",
@@ -569,10 +484,8 @@ const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
     await waitForRssGap();
     const result = await fetchXML(source, { skipGlobalGate: true });
     if (!result.ok) {
-      // Back off on any fetch failure, not just a 429 - retrying a 403
-      // (e.g. a Cloudflare challenge) every 60s is exactly the kind of
-      // pattern that could prolong one, and there's nothing to gain from
-      // hammering an endpoint that just failed regardless of why.
+      // Back off on any failure, not just 429 - retrying a 403 every 60s
+      // could prolong a Cloudflare-style block.
       rssBackoffUntil.set(geeklistId, Date.now() + RATE_LIMIT_INTERVAL_MS);
       logError(
         `[${source.label}] Fetch failed${result.rateLimited ? " (rate limited)" : ""}, pausing RSS fetching for #${geeklistId} for ${RATE_LIMIT_INTERVAL_MS / 60000}min.`,
@@ -680,12 +593,8 @@ const run = async () => {
   }
   const pool = mysql.createPool(process.env.DATABASE_URL);
 
-  // The DB might not be ready to authenticate the instant this container
-  // starts, even with a healthcheck-based startup dependency - that only
-  // helps if whatever (re)started the container actually respects it,
-  // which a plain container restart or a host reboot restarting both
-  // containers together doesn't. Retry quickly at boot instead of
-  // silently doing nothing until the next FAIR_REFRESH_INTERVAL_MS tick.
+  // A healthcheck dependency doesn't help on a plain restart/reboot -
+  // retry quickly at boot instead of waiting for the next refresh tick.
   while (!(await reconcileFairs(pool))) {
     log(`Retrying in ${STARTUP_RETRY_INTERVAL_MS / 1000}s...`);
     await sleep(STARTUP_RETRY_INTERVAL_MS);

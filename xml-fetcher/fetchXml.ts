@@ -7,6 +7,10 @@ import * as xml2js from "xml2js";
 const BGG_API_TOKEN = process.env.BGG_API_TOKEN;
 const xmlDir = "/app/data";
 
+// Kill switch for the RSS/new-item path - xmlapi is unaffected. For when
+// Cloudflare hard-blocks this IP on /rss/ (seen in production).
+const RSS_ENABLED = process.env.RSS_ENABLED !== "false";
+
 // Equal on purpose: during high-churn periods most cycles come back
 // "changed" and reset straight to this interval, so it's effectively the
 // sustained request rate, not just a floor. A production run at 15 minutes
@@ -633,7 +637,11 @@ const startFairLoops = (geeklistId: number, name: string, pool: mysql.Pool) => {
   for (const source of sourcesFor(geeklistId)) {
     runLoop(source);
   }
-  runRssLoop(geeklistId, pool);
+  if (RSS_ENABLED) {
+    runRssLoop(geeklistId, pool);
+  } else {
+    log(`[rss #${geeklistId}] Disabled (RSS_ENABLED=false), not starting.`);
+  }
 };
 
 type ActiveFair = { id: number; geeklistId: number; name: string };

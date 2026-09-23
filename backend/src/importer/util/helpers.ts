@@ -101,6 +101,15 @@ export function parseEndDateString(
 	);
 
 	end = end.replace(/(,?\s*random time\.?)?/gi, "");
+
+	// "26 Sep or 27 Sep" - take the earlier (first-listed) date.
+	end = end.split(/\bor\b/i)[0];
+
+	// Drop a trailing time/timezone ("20:00 CEST") - Date.parse doesn't
+	// reliably recognize timezone abbreviations, and the result only ever
+	// keeps the date part anyway (see formatTimeToDate).
+	end = end.replace(/,?\s*\d{1,2}:\d{2}\s*[A-Za-z]*\s*$/, "");
+
 	end = end.trim();
 
 	if (!/\b\d{4}\b/.test(end)) {

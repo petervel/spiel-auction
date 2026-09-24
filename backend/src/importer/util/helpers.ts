@@ -8,7 +8,14 @@ export function extractString(
 		if (first) {
 			return matches[1] as string;
 		}
-		return matches.pop() as string;
+		// Last *matched* group, not the last array slot - with alternated
+		// groups (a|b), the branch that didn't fire is undefined but still
+		// occupies a slot, so a plain .pop() can silently return that
+		// instead of the real match.
+		for (let i = matches.length - 1; i >= 1; i--) {
+			if (matches[i] !== undefined) return matches[i];
+		}
+		return undefined;
 	}
 	return undefined; // not found
 }

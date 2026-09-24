@@ -20,5 +20,7 @@ export interface UserFair {
 	userId: number;
 	fairId: number;
 	bookmark: number | null;
+	locationSquare: string | null;
+	locationDescription: string | null;
 	fair: Fair;
 }

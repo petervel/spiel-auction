@@ -58,6 +58,11 @@ model UserFair {
   fairId   Int
   bookmark Int?
 
+  // Meetup spot on the trade-floor grid ("A1".."E8") plus how to find/
+  // recognize them there - per fair, like bookmark.
+  locationSquare      String?
+  locationDescription String? @db.Text
+
   // back relation so we can find all users with this as their "current"
   currentUsers User[] @relation("CurrentUserFair")
 

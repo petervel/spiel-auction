@@ -20,6 +20,7 @@ import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useCurrentFair } from '../../hooks/useCurrentFair';
 import { useFairs } from '../../hooks/useFairs';
+import { useMeetupLocation } from '../../hooks/useMeetupLocation';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { usePushSubscription } from '../../hooks/usePushSubscription';
 import { useUser } from '../../hooks/useUser';
@@ -54,6 +55,8 @@ export const SettingsPage = () => {
 		setPreferences: setNotificationPreferences,
 		saving: preferencesSaving,
 	} = useNotificationPreferences();
+
+	const { square: meetupSquare } = useMeetupLocation();
 
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -199,6 +202,20 @@ export const SettingsPage = () => {
 							</IconButton>
 						</Stack>
 					)}
+					<Divider sx={{ width: '100%' }} />
+					<Stack direction="row" alignItems="center" gap={1} width="100%">
+						<Typography flexGrow={1}>
+							Meetup location: {meetupSquare ?? 'Not set'}
+						</Typography>
+						<IconButton
+							size="small"
+							aria-label="Edit meetup location"
+							component={Link}
+							to="/settings/location"
+						>
+							<EditIcon fontSize="small" />
+						</IconButton>
+					</Stack>
 					{pushSupported && (
 						<>
 							<Divider sx={{ width: '100%' }} />

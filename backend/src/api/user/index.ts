@@ -75,6 +75,121 @@ router.delete(
 	},
 );
 
+const VALID_LOCATION_SQUARE = /^[A-E][1-8]$/;
+
+// Square + description are always sent together - the map page uses this
+// both for clicking a square (keeping whatever description is already
+// there) and for a description-only save (keeping the current square).
+router.post(
+	"/location",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const { square, description } = req.body;
+
+			if (
+				typeof square !== "string" ||
+				!VALID_LOCATION_SQUARE.test(square)
+			) {
+				res.status(400).json({ error: "square must be one of A1-E8" });
+				return;
+			}
+
+			if (
+				description !== undefined &&
+				description !== null &&
+				typeof description !== "string"
+			) {
+				res.status(400).json({
+					error: "description must be a string or null",
+				});
+				return;
+			}
+
+			if (!req.user?.currentUserFairId) {
+				res.status(400).json({
+					error: "No current fair selected for user.",
+				});
+				return;
+			}
+
+			await prisma.userFair.update({
+				where: { id: req.user.currentUserFairId },
+				data: {
+					locationSquare: square,
+					locationDescription: description ?? null,
+				},
+			});
+
+			res.status(200).json({ success: true });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.delete(
+	"/location",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			if (!req.user?.currentUserFairId) {
+				res.status(400).json({
+					error: "No current fair selected for user.",
+				});
+				return;
+			}
+
+			await prisma.userFair.update({
+				where: { id: req.user.currentUserFairId },
+				data: { locationSquare: null, locationDescription: null },
+			});
+
+			res.status(200).json({ success: true });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+// Heatmap data: how many users on the caller's own current fair picked each
+// square (including the caller) - so people can find a quieter spot.
+router.get(
+	"/location/counts",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const fairId = req.user?.currentUserFair?.fairId;
+			if (!fairId) {
+				res.status(400).json({
+					error: "No current fair selected for user.",
+				});
+				return;
+			}
+
+			const rows = await prisma.userFair.groupBy({
+				by: ["locationSquare"],
+				where: { fairId, locationSquare: { not: null } },
+				_count: { locationSquare: true },
+			});
+
+			const counts = Object.fromEntries(
+				rows.map((row) => [
+					row.locationSquare,
+					row._count.locationSquare,
+				]),
+			);
+
+			res.status(200).json({ counts });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
 router.post(
 	"/bggUsername",
 	authenticateUser,
@@ -124,8 +239,7 @@ router.post(
 				typeof notifyOnWishlistItemListed !== "boolean"
 			) {
 				return res.status(400).json({
-					error:
-						"notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon, and notifyOnWishlistItemListed must all be booleans",
+					error: "notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon, and notifyOnWishlistItemListed must all be booleans",
 				});
 			}
 
@@ -162,7 +276,9 @@ router.post(
 				return;
 			}
 
-			const fair = await prisma.fair.findUnique({ where: { id: fairId } });
+			const fair = await prisma.fair.findUnique({
+				where: { id: fairId },
+			});
 			if (!fair) {
 				res.status(404).json({ error: "Fair not found" });
 				return;
@@ -221,7 +337,8 @@ router.get(
 			res.status(200).json({ items });
 		} catch (err) {
 			console.error("Failed to fetch BGG wishlist:", err);
-			const message = err instanceof Error ? err.message : "Unknown error";
+			const message =
+				err instanceof Error ? err.message : "Unknown error";
 			res.status(502).json({ error: message });
 		}
 	},

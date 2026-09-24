@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 type BackButtonProps = {
 	sx?: SxProps<Theme>;
+	to?: string;
 };
 
 // Standalone screens (Settings, Duplicates, Deleted, Export, Donate) have
@@ -14,11 +15,11 @@ type BackButtonProps = {
 // footprint (its 42px price badge plus 8px padding on each side) - so this
 // button's box lines up exactly with the price column in the list below it,
 // regardless of how much smaller this icon itself is than that badge.
-export const BackButton = ({ sx }: BackButtonProps) => (
+export const BackButton = ({ sx, to = '/' }: BackButtonProps) => (
 	<IconButton
 		component={Link}
-		to="/"
-		aria-label="Back to home"
+		to={to}
+		aria-label="Back"
 		sx={{ width: 58, height: 58, ...sx }}
 	>
 		<ArrowBackRounded />

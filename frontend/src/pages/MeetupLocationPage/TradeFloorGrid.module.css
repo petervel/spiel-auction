@@ -1,0 +1,100 @@
+/* Fixed warm palette matching the venue's physical map signage - not
+   theme-linked, like the glow accent, since it's an illustration of a
+   real printed map rather than app chrome. */
+
+.grid {
+	width: 100%;
+	max-width: 500px;
+	height: auto;
+}
+
+.cell {
+	fill: #f1ddd0;
+	stroke: #cda876;
+	stroke-width: 1;
+	cursor: pointer;
+}
+
+.cell:hover,
+.cell:focus-visible {
+	fill: #e9cbb8;
+}
+
+.cell:focus-visible {
+	outline: 2px solid #3b6fd6;
+	outline-offset: -2px;
+}
+
+.cellLabel {
+	fill: #a89686;
+	font-size: 13px;
+	pointer-events: none;
+	user-select: none;
+}
+
+.headerChip {
+	fill: #faf6ec;
+	stroke: #1f2937;
+	stroke-width: 2;
+}
+
+.headerLabel {
+	fill: #1f2937;
+	font-size: 18px;
+	font-weight: 700;
+	text-anchor: middle;
+	pointer-events: none;
+	user-select: none;
+}
+
+.tickLine {
+	stroke: #cda876;
+	stroke-width: 2;
+}
+
+.pillar {
+	fill: #1f2937;
+	stroke: #d9a441;
+	stroke-width: 4;
+}
+
+.glow {
+	fill: #e2574c;
+	pointer-events: none;
+}
+
+.selectedRing {
+	fill: none;
+	stroke: #3b6fd6;
+	stroke-width: 4;
+	pointer-events: none;
+}
+
+.gridOutline line {
+	stroke: #1f2937;
+	stroke-width: 4;
+	stroke-linecap: square;
+}
+
+.entrance {
+	color: #1f2937;
+}
+
+.entranceStairsRung {
+	stroke: #1f2937;
+	stroke-width: 3;
+}
+
+.entranceArrow {
+	stroke: #b8492f;
+	fill: #b8492f;
+	stroke-width: 4;
+}
+
+.entranceLabel {
+	fill: #1f2937;
+	font-size: 20px;
+	font-weight: 700;
+	letter-spacing: 1px;
+	text-anchor: middle;
+}

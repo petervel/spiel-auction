@@ -11,6 +11,7 @@ import { ImportWishlistPage } from './pages/ImportWishlistPage/ImportWishlistPag
 import { ItemPage } from './pages/ItemPage/ItemPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { LikedPage } from './pages/LatestPage/LikedPage';
+import { MeetupLocationPage } from './pages/MeetupLocationPage/MeetupLocationPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
@@ -33,6 +34,7 @@ export const AppRouter = () => {
 
 			<Route path="/login/verify" element={<VerifyLoginPage />} />
 			<Route path="/settings" element={<SettingsPage />} />
+			<Route path="/settings/location" element={<MeetupLocationPage />} />
 			<Route path="/duplicates" element={<DuplicatesPage />} />
 			<Route path="/deleted" element={<DeletedPage />} />
 			<Route path="/export" element={<ExportPage />} />

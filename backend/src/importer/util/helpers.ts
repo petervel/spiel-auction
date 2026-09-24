@@ -80,7 +80,18 @@ export function removeStrikethrough(text: string): string {
 	return removeBetweenTags(text, "-");
 }
 export function removeQuoted(text: string): string {
-	return removeBetweenTags(text, "q");
+	// Not removeBetweenTags: BGG's real quote syntax always attributes the
+	// quote ([q="username"]), which that literal-"[q]" matcher never finds.
+	// Strip innermost blocks repeatedly so nested quotes-of-quotes unwrap.
+	const quoteBlock =
+		/\[q(?:=[^\]]*)?\]((?:(?!\[q(?:=[^\]]*)?\]|\[\/q\])[\s\S])*)\[\/q\]/gi;
+	let result = text;
+	for (let i = 0; i < 50; i++) {
+		const next = result.replace(quoteBlock, "");
+		if (next === result) break;
+		result = next;
+	}
+	return result;
 }
 export function removeAllBggTags(text: string): string {
 	return text.replace(/\[[^\]]*]/gi, "");

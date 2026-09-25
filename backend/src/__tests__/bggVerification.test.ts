@@ -1,29 +1,36 @@
 import axios from "axios";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { checkGeeklistForHash } from "../bggVerification";
+import { checkThreadForHash } from "../bggVerification";
 
 vi.mock("axios");
 
-const buildGeeklistXml = (comments: string) => `<geeklist id="385009">
-<title>Spiel Auction Tool - confirm your identity</title>
-<item id="13176910" objecttype="thing" subtype="boardgame" objectid="1" objectname="Test" username="owner" postdate="Wed, 19 Oct 2022 11:32:50 +0000" editdate="Wed, 19 Oct 2022 11:42:50 +0000" thumbs="0" imageid="1">
-<body>Post your verification code here as a comment.</body>
-${comments}
-</item>
-</geeklist>`;
+const buildThreadXml = (
+	articles: string,
+) => `<thread id="3773437" numarticles="1">
+<subject>Spiel Auction Tool - Identification Thread</subject>
+<articles>
+${articles}
+</articles>
+</thread>`;
 
-describe("checkGeeklistForHash", () => {
+const buildArticle = (username: string, body: string, id = "1") =>
+	`<article id="${id}" username="${username}" link="https://boardgamegeek.com/thread/3773437/article/${id}#${id}" postdate="2026-09-25T17:19:51-05:00" editdate="2026-09-25T17:19:51-05:00" numedits="0">
+<subject>Re: Spiel Auction Tool - Identification Thread</subject>
+<body>${body}</body>
+</article>`;
+
+describe("checkThreadForHash", () => {
 	beforeEach(() => {
 		vi.mocked(axios.get).mockReset();
 	});
 
 	it("finds a hash posted by the matching username", async () => {
-		const xml = buildGeeklistXml(
-			'<comment username="JokeVelSlot" date="Sun, 28 Apr 2024 18:51:57 +0000" postdate="Sun, 28 Apr 2024 18:51:57 +0000" editdate="Sun, 28 Apr 2024 18:51:57 +0000" thumbs="0">spielauction-abc123</comment>',
+		const xml = buildThreadXml(
+			buildArticle("JokeVelSlot", "spielauction-abc123"),
 		);
 		vi.mocked(axios.get).mockResolvedValue({ status: 200, data: xml });
 
-		const found = await checkGeeklistForHash(
+		const found = await checkThreadForHash(
 			"JokeVelSlot",
 			"spielauction-abc123",
 		);
@@ -31,25 +38,25 @@ describe("checkGeeklistForHash", () => {
 	});
 
 	it("matches the username case-insensitively", async () => {
-		const xml = buildGeeklistXml(
-			'<comment username="JokeVelSlot" date="Sun, 28 Apr 2024 18:51:57 +0000" postdate="Sun, 28 Apr 2024 18:51:57 +0000" editdate="Sun, 28 Apr 2024 18:51:57 +0000" thumbs="0">spielauction-abc123</comment>',
+		const xml = buildThreadXml(
+			buildArticle("JokeVelSlot", "spielauction-abc123"),
 		);
 		vi.mocked(axios.get).mockResolvedValue({ status: 200, data: xml });
 
-		const found = await checkGeeklistForHash(
+		const found = await checkThreadForHash(
 			"jokevelslot",
 			"spielauction-abc123",
 		);
 		expect(found).toBe(true);
 	});
 
-	it("doesn't match a comment from a different username with the same hash", async () => {
-		const xml = buildGeeklistXml(
-			'<comment username="someoneElse" date="Sun, 28 Apr 2024 18:51:57 +0000" postdate="Sun, 28 Apr 2024 18:51:57 +0000" editdate="Sun, 28 Apr 2024 18:51:57 +0000" thumbs="0">spielauction-abc123</comment>',
+	it("doesn't match an article from a different username with the same hash", async () => {
+		const xml = buildThreadXml(
+			buildArticle("someoneElse", "spielauction-abc123"),
 		);
 		vi.mocked(axios.get).mockResolvedValue({ status: 200, data: xml });
 
-		const found = await checkGeeklistForHash(
+		const found = await checkThreadForHash(
 			"JokeVelSlot",
 			"spielauction-abc123",
 		);
@@ -57,39 +64,44 @@ describe("checkGeeklistForHash", () => {
 	});
 
 	it("doesn't match the right username with a different/missing hash", async () => {
-		const xml = buildGeeklistXml(
-			'<comment username="JokeVelSlot" date="Sun, 28 Apr 2024 18:51:57 +0000" postdate="Sun, 28 Apr 2024 18:51:57 +0000" editdate="Sun, 28 Apr 2024 18:51:57 +0000" thumbs="0">just saying hi</comment>',
+		const xml = buildThreadXml(
+			buildArticle("JokeVelSlot", "just saying hi"),
 		);
 		vi.mocked(axios.get).mockResolvedValue({ status: 200, data: xml });
 
-		const found = await checkGeeklistForHash(
+		const found = await checkThreadForHash(
 			"JokeVelSlot",
 			"spielauction-abc123",
 		);
 		expect(found).toBe(false);
 	});
 
-	it("handles multiple comments (array shape), finding a match among them", async () => {
-		const xml = buildGeeklistXml(
+	it("handles multiple articles (array shape), finding a match among them", async () => {
+		const xml = buildThreadXml(
 			[
-				'<comment username="alice" date="Sun, 28 Apr 2024 18:51:57 +0000" postdate="Sun, 28 Apr 2024 18:51:57 +0000" editdate="Sun, 28 Apr 2024 18:51:57 +0000" thumbs="0">not it</comment>',
-				'<comment username="JokeVelSlot" date="Sun, 28 Apr 2024 18:52:57 +0000" postdate="Sun, 28 Apr 2024 18:52:57 +0000" editdate="Sun, 28 Apr 2024 18:52:57 +0000" thumbs="0">spielauction-abc123</comment>',
+				buildArticle(
+					"petervel",
+					"This thread is for verification",
+					"1",
+				),
+				buildArticle("alice", "not it", "2"),
+				buildArticle("JokeVelSlot", "spielauction-abc123", "3"),
 			].join("\n"),
 		);
 		vi.mocked(axios.get).mockResolvedValue({ status: 200, data: xml });
 
-		const found = await checkGeeklistForHash(
+		const found = await checkThreadForHash(
 			"JokeVelSlot",
 			"spielauction-abc123",
 		);
 		expect(found).toBe(true);
 	});
 
-	it("returns false when the item has no comments at all", async () => {
-		const xml = buildGeeklistXml("");
+	it("returns false when the thread has no articles at all", async () => {
+		const xml = `<thread id="3773437" numarticles="0"><subject>Empty</subject><articles></articles></thread>`;
 		vi.mocked(axios.get).mockResolvedValue({ status: 200, data: xml });
 
-		const found = await checkGeeklistForHash(
+		const found = await checkThreadForHash(
 			"JokeVelSlot",
 			"spielauction-abc123",
 		);
@@ -97,14 +109,14 @@ describe("checkGeeklistForHash", () => {
 	});
 
 	it("retries once on a 202 (still generating) before succeeding", async () => {
-		const xml = buildGeeklistXml(
-			'<comment username="JokeVelSlot" date="Sun, 28 Apr 2024 18:51:57 +0000" postdate="Sun, 28 Apr 2024 18:51:57 +0000" editdate="Sun, 28 Apr 2024 18:51:57 +0000" thumbs="0">spielauction-abc123</comment>',
+		const xml = buildThreadXml(
+			buildArticle("JokeVelSlot", "spielauction-abc123"),
 		);
 		vi.mocked(axios.get)
 			.mockResolvedValueOnce({ status: 202, data: "" })
 			.mockResolvedValueOnce({ status: 200, data: xml });
 
-		const found = await checkGeeklistForHash(
+		const found = await checkThreadForHash(
 			"JokeVelSlot",
 			"spielauction-abc123",
 		);
@@ -116,7 +128,7 @@ describe("checkGeeklistForHash", () => {
 		vi.mocked(axios.get).mockResolvedValue({ status: 500, data: "" });
 
 		await expect(
-			checkGeeklistForHash("JokeVelSlot", "spielauction-abc123"),
+			checkThreadForHash("JokeVelSlot", "spielauction-abc123"),
 		).rejects.toThrow();
 	});
 });

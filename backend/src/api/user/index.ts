@@ -5,7 +5,7 @@ import {
 } from "../../../middleware/auth";
 import { fetchWishlist } from "../../bggCollection";
 import {
-	checkGeeklistForHash,
+	checkThreadForHash,
 	generateVerificationHash,
 } from "../../bggVerification";
 import prisma from "../../prismaClient";
@@ -428,7 +428,7 @@ router.post(
 
 			let found: boolean;
 			try {
-				found = await checkGeeklistForHash(
+				found = await checkThreadForHash(
 					verification.bggUsername,
 					verification.hash,
 				);

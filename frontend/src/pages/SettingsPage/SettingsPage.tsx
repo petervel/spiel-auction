@@ -68,7 +68,8 @@ export const SettingsPage = () => {
 		saving: preferencesSaving,
 	} = useNotificationPreferences();
 
-	const { square: meetupSquare } = useMeetupLocation();
+	const { square: meetupSquare, description: meetupDescription } =
+		useMeetupLocation();
 
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -248,12 +249,12 @@ export const SettingsPage = () => {
 										label="BGG username not verified"
 									/>
 									<Typography variant="body2">
-										Post this code as a comment on{' '}
+										Post this code as a reply on{' '}
 										<a
-											href="https://boardgamegeek.com/geeklist/385009/spiel-auction-tool-confirm-your-identity?itemid=13176910#13176910"
+											href="https://boardgamegeek.com/thread/3773437"
 											target="_blank"
 										>
-											this BGG geeklist item
+											this BGG thread
 										</a>{' '}
 										to prove you own this account:
 									</Typography>
@@ -315,9 +316,19 @@ export const SettingsPage = () => {
 						gap={1}
 						width="100%"
 					>
-						<Typography flexGrow={1}>
-							Meetup location: {meetupSquare ?? 'Not set'}
-						</Typography>
+						<Stack flexGrow={1}>
+							<Typography>
+								Meetup location: {meetupSquare ?? 'Not set'}
+							</Typography>
+							{meetupDescription && (
+								<Typography
+									variant="body2"
+									color="text.secondary"
+								>
+									{meetupDescription}
+								</Typography>
+							)}
+						</Stack>
 						<IconButton
 							size="small"
 							aria-label="Edit meetup location"

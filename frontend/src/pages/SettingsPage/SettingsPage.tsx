@@ -1,7 +1,10 @@
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import {
 	Button,
 	Checkbox,
+	Chip,
 	Divider,
 	FormControlLabel,
 	IconButton,
@@ -28,8 +31,17 @@ import { useUser } from '../../hooks/useUser';
 export const SettingsPage = () => {
 	const { user, isLoading: userLoading } = useUser();
 
-	const { bggUsername, setBggUsername, removeBggUsername, saving } =
-		useBggUsername();
+	const {
+		bggUsername,
+		setBggUsername,
+		removeBggUsername,
+		saving,
+		verification,
+		verifying,
+		fetchVerification,
+		startVerification,
+		checkVerification,
+	} = useBggUsername();
 
 	const { data: fairs } = useFairs();
 	const {
@@ -65,7 +77,7 @@ export const SettingsPage = () => {
 		if (succeeded) {
 			const fair = fairs?.find((f) => f.id === fairId);
 			setToastMessage(
-				fair ? `Switched to ${fair.name}` : 'Fair switched'
+				fair ? `Switched to ${fair.name}` : 'Fair switched',
 			);
 		}
 	};
@@ -76,12 +88,29 @@ export const SettingsPage = () => {
 			[key]: !notificationPreferences[key],
 		});
 
+	useEffect(() => {
+		if (bggUsername) fetchVerification();
+	}, [bggUsername, fetchVerification]);
+
+	const handleCheckVerification = async () => {
+		const { confirmed, unreachable } = await checkVerification();
+		if (confirmed) {
+			setToastMessage('BGG username verified');
+		} else if (unreachable) {
+			setToastMessage("Couldn't reach BGG - try again in a moment");
+		} else {
+			setToastMessage(
+				'Not found yet - comments can take a minute to show up on BGG',
+			);
+		}
+	};
+
 	const handleTestPush = async () => {
 		const succeeded = await sendTestPush();
 		setToastMessage(
 			succeeded
 				? 'Test notification sent'
-				: 'Failed to send test notification'
+				: 'Failed to send test notification',
 		);
 	};
 
@@ -202,8 +231,90 @@ export const SettingsPage = () => {
 							</IconButton>
 						</Stack>
 					)}
+					{!editingUsername && bggUsername && (
+						<Stack gap={1} alignItems="start" width="100%">
+							{verification?.confirmed ? (
+								<Chip
+									color="success"
+									size="small"
+									icon={<CheckCircleIcon />}
+									label="BGG username verified"
+								/>
+							) : verification?.exists ? (
+								<>
+									<Chip
+										color="warning"
+										size="small"
+										label="BGG username not verified"
+									/>
+									<Typography variant="body2">
+										Post this code as a comment on{' '}
+										<a
+											href="https://boardgamegeek.com/geeklist/385009/spiel-auction-tool-confirm-your-identity?itemid=13176910#13176910"
+											target="_blank"
+										>
+											this BGG geeklist item
+										</a>{' '}
+										to prove you own this account:
+									</Typography>
+									<Stack
+										direction="row"
+										alignItems="center"
+										gap={1}
+									>
+										<Typography
+											component="code"
+											sx={{
+												fontFamily: 'monospace',
+												bgcolor: 'action.hover',
+												px: 1,
+												py: 0.5,
+												borderRadius: 1,
+											}}
+										>
+											{verification.hash}
+										</Typography>
+										<IconButton
+											size="small"
+											aria-label="Copy code"
+											onClick={() =>
+												navigator.clipboard.writeText(
+													verification.hash ?? '',
+												)
+											}
+										>
+											<ContentCopyIcon fontSize="small" />
+										</IconButton>
+									</Stack>
+									<Button
+										type="button"
+										variant="contained"
+										size="small"
+										disabled={verifying}
+										onClick={handleCheckVerification}
+									>
+										Check confirmation
+									</Button>
+								</>
+							) : (
+								<Button
+									type="button"
+									size="small"
+									disabled={verifying}
+									onClick={startVerification}
+								>
+									Verify BGG username ownership
+								</Button>
+							)}
+						</Stack>
+					)}
 					<Divider sx={{ width: '100%' }} />
-					<Stack direction="row" alignItems="center" gap={1} width="100%">
+					<Stack
+						direction="row"
+						alignItems="center"
+						gap={1}
+						width="100%"
+					>
 						<Typography flexGrow={1}>
 							Meetup location: {meetupSquare ?? 'Not set'}
 						</Typography>
@@ -265,7 +376,7 @@ export const SettingsPage = () => {
 														}
 														onChange={() =>
 															togglePreference(
-																'notifyOnOutbid'
+																'notifyOnOutbid',
 															)
 														}
 													/>
@@ -283,7 +394,7 @@ export const SettingsPage = () => {
 														}
 														onChange={() =>
 															togglePreference(
-																'notifyOnNewBid'
+																'notifyOnNewBid',
 															)
 														}
 													/>
@@ -301,7 +412,7 @@ export const SettingsPage = () => {
 														}
 														onChange={() =>
 															togglePreference(
-																'notifyOnAuctionWon'
+																'notifyOnAuctionWon',
 															)
 														}
 													/>
@@ -319,7 +430,7 @@ export const SettingsPage = () => {
 														}
 														onChange={() =>
 															togglePreference(
-																'notifyOnWishlistItemListed'
+																'notifyOnWishlistItemListed',
 															)
 														}
 													/>
@@ -360,7 +471,8 @@ export const SettingsPage = () => {
 					<Divider sx={{ width: '100%' }} />
 					<Stack gap={1} alignItems="start" width="100%">
 						<Typography variant="body2">
-							Import your BGG wishlist to build your wishlist here.
+							Import your BGG wishlist to build your wishlist
+							here.
 						</Typography>
 						<Button
 							type="button"

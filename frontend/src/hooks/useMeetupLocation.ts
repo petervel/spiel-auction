@@ -14,8 +14,11 @@ export const useMeetupLocation = () => {
 	// this both for clicking a square (passing the current description
 	// along) and for a description-only save (passing the current square).
 	const setLocation = useCallback(
-		async (newSquare: string, newDescription: string | null) => {
-			if (!user?.currentUserFair) return false;
+		async (
+			newSquare: string,
+			newDescription: string | null,
+		): Promise<{ success: boolean; error?: string }> => {
+			if (!user?.currentUserFair) return { success: false };
 
 			setSaving(true);
 			try {
@@ -29,7 +32,13 @@ export const useMeetupLocation = () => {
 					}),
 				});
 
-				if (!res.ok) throw new Error('Failed to update location');
+				if (!res.ok) {
+					// 403 here means "not verified" - surface the server's own
+					// message rather than a generic failure, since the page's
+					// own verification gate can go stale (e.g. another tab).
+					const { error } = await res.json().catch(() => ({}));
+					return { success: false, error };
+				}
 
 				setUser({
 					...user,
@@ -39,15 +48,15 @@ export const useMeetupLocation = () => {
 						locationDescription: newDescription,
 					},
 				});
-				return true;
+				return { success: true };
 			} catch (err) {
 				console.error(err);
-				return false;
+				return { success: false };
 			} finally {
 				setSaving(false);
 			}
 		},
-		[user, setUser]
+		[user, setUser],
 	);
 
 	return { square, description, setLocation, saving };

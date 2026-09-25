@@ -37,6 +37,7 @@ model User {
   likedItems       UserLikedItem[]
   wishlistItems    UserWishlistItem[]
   PushSubscription PushSubscription[]
+  bggVerifications BggVerification[]
 }
 
 model MagicLinkToken {
@@ -67,6 +68,25 @@ model UserFair {
   currentUsers User[] @relation("CurrentUserFair")
 
   @@unique([userId, fairId])
+}
+
+// Kept off User rather than a field on it so two different app accounts
+// can each independently claim/verify the same real-world BGG username
+// (e.g. a couple sharing one BGG account). Unique on (userId, bggUsername)
+// rather than just userId, so switching away from a verified username and
+// back later doesn't lose that verification - each username a user has
+// ever claimed keeps its own record.
+model BggVerification {
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  bggUsername String
+  hash        String
+  confirmed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  confirmedAt DateTime?
+
+  @@unique([userId, bggUsername])
 }
 
 model UserLikedItem {

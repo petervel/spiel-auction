@@ -1,6 +1,7 @@
 import { Button, Stack } from '@mui/material';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { useEffect, useState } from 'react';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
@@ -9,6 +10,9 @@ import { useBggUsername } from '../../hooks/useBggUsername';
 import { useBids } from '../../hooks/useBids';
 import { useListId } from '../../hooks/useListId';
 import { Item } from '../../model/Item';
+
+type MeetupLocation = { square: string | null; description: string | null };
+type LocationsByUsername = Record<string, MeetupLocation>;
 
 export const ExportPage = () => {
 	const { bggUsername } = useBggUsername();
@@ -29,6 +33,38 @@ export const ExportPage = () => {
 		seller: bggUsername,
 	});
 
+	const [locations, setLocations] = useState<LocationsByUsername>({});
+
+	// The "other party" on each row - the person to meet up with, and whose
+	// meetup spot/description (if any) fills the Where/Info columns below.
+	useEffect(() => {
+		if (!buyingData || !sellingData) return;
+
+		const usernames = new Set<string>();
+		(buyingData.items as Item[]).forEach((item) => {
+			const username = getUsername(item, true);
+			if (username) usernames.add(username);
+		});
+		(sellingData.items as Item[])
+			.filter((item) => item.hasBids)
+			.forEach((item) => {
+				const username = getUsername(item, false);
+				if (username) usernames.add(username);
+			});
+
+		if (usernames.size === 0) return;
+
+		fetch('/api/user/location/lookup', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify({ usernames: Array.from(usernames) }),
+		})
+			.then((res) => (res.ok ? res.json() : { locations: {} }))
+			.then(({ locations }) => setLocations(locations ?? {}))
+			.catch(() => setLocations({}));
+	}, [buyingData, sellingData]);
+
 	const renderBody = () => {
 		if (buyingLoading || sellingLoading) return <Spinner />;
 		if (!buyingData || !sellingData) return null;
@@ -38,12 +74,12 @@ export const ExportPage = () => {
 		}
 
 		const workbook = new ExcelJS.Workbook();
-		createSheet(listId, workbook, buyingData.items, true);
+		createSheet(listId, workbook, buyingData.items, true, locations);
 
 		const filteredSales = (sellingData.items as Item[]).filter(
-			(item: Item) => item.hasBids
+			(item: Item) => item.hasBids,
 		);
-		createSheet(listId, workbook, filteredSales, false);
+		createSheet(listId, workbook, filteredSales, false, locations);
 
 		return (
 			<Stack alignItems="center" my={5}>
@@ -70,7 +106,7 @@ export const ExportPage = () => {
 const linkAuctions = (
 	listId: number,
 	sheet: ExcelJS.Worksheet,
-	items: Item[]
+	items: Item[],
 ) => {
 	items.forEach((item, index) => {
 		const row = sheet.getRow(index + 2);
@@ -85,7 +121,7 @@ const linkAuctions = (
 const linkUserNames = (
 	sheet: ExcelJS.Worksheet,
 	items: Item[],
-	isBuying: boolean
+	isBuying: boolean,
 ) => {
 	items.forEach((item, index) => {
 		const username = getUsername(item, isBuying) ?? '';
@@ -116,7 +152,8 @@ const createSheet = (
 	listId: number,
 	workbook: ExcelJS.Workbook,
 	items: Item[],
-	isBuying: boolean
+	isBuying: boolean,
+	locations: LocationsByUsername,
 ) => {
 	const sheet = workbook.addWorksheet(isBuying ? 'Buying' : 'Selling');
 	sheet.columns = [
@@ -124,6 +161,8 @@ const createSheet = (
 		{ header: 'Name', key: 'name', width: 30 },
 		{ header: 'Price', key: 'price', width: 10 },
 		{ header: 'Username', key: 'username', width: 20 },
+		{ header: 'Where', key: 'where', width: 8 },
+		{ header: 'Info', key: 'info', width: 30 },
 		{ header: 'Date', key: 'date', width: 10 },
 		{ header: 'Time', key: 'time', width: 10 },
 		{ header: 'Place', key: 'place', width: 10 },
@@ -131,20 +170,29 @@ const createSheet = (
 	];
 
 	const sortedItems = items.sort((a, b) =>
-		compareStrings(getUsername(a, isBuying), getUsername(b, isBuying))
+		compareStrings(getUsername(a, isBuying), getUsername(b, isBuying)),
 	);
 
 	sheet.addRows(
-		sortedItems.map((item) => ({
-			done: '',
-			name: item.objectName,
-			price: item.currentBid,
-			username: getUsername(item, isBuying),
-			date: '',
-			time: '',
-			place: '',
-			notes: '',
-		}))
+		sortedItems.map((item) => {
+			const username = getUsername(item, isBuying);
+			const location = username
+				? locations[username.toLowerCase()]
+				: undefined;
+
+			return {
+				done: '',
+				name: item.objectName,
+				price: item.currentBid,
+				username,
+				where: location?.square ?? '',
+				info: location?.description ?? '',
+				date: '',
+				time: '',
+				place: '',
+				notes: '',
+			};
+		}),
 	);
 
 	const headerRow = sheet.getRow(1);
@@ -155,7 +203,7 @@ const createSheet = (
 	priceColumn.alignment = { horizontal: 'right' };
 	priceColumn.numFmt = '€0';
 
-	for (const id of ['username', 'date', 'time', 'place']) {
+	for (const id of ['username', 'where', 'date', 'time', 'place']) {
 		sheet.getColumn(id).alignment = { horizontal: 'center' };
 	}
 

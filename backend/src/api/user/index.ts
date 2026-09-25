@@ -4,6 +4,10 @@ import {
 	authenticateUser,
 } from "../../../middleware/auth";
 import { fetchWishlist } from "../../bggCollection";
+import {
+	checkGeeklistForHash,
+	generateVerificationHash,
+} from "../../bggVerification";
 import prisma from "../../prismaClient";
 
 const router = express.Router();
@@ -106,6 +110,32 @@ router.post(
 				return;
 			}
 
+			// A meetup spot is a claim about being a specific real person at
+			// the fair - only let someone make it once they've proven they
+			// control the BGG account they're claiming.
+			if (!req.user?.bggUsername) {
+				res.status(403).json({
+					error: "Verify your BGG username in Settings before setting a meetup location.",
+				});
+				return;
+			}
+
+			const verification = await prisma.bggVerification.findUnique({
+				where: {
+					userId_bggUsername: {
+						userId: req.user.id,
+						bggUsername: req.user.bggUsername,
+					},
+				},
+			});
+
+			if (!verification?.confirmed) {
+				res.status(403).json({
+					error: "Verify your BGG username in Settings before setting a meetup location.",
+				});
+				return;
+			}
+
 			if (!req.user?.currentUserFairId) {
 				res.status(400).json({
 					error: "No current fair selected for user.",
@@ -190,6 +220,66 @@ router.get(
 	},
 );
 
+// Batch lookup for the export sheet: given the BGG usernames of the other
+// party on each auction, return whichever meetup spot/description they've
+// set for the caller's current fair, if any. bggUsername comparisons rely
+// on the column's utf8mb4_unicode_ci collation for case-insensitivity,
+// same as the geeklist-comment verification check.
+router.post(
+	"/location/lookup",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const { usernames } = req.body;
+			if (
+				!Array.isArray(usernames) ||
+				!usernames.every((u) => typeof u === "string")
+			) {
+				res.status(400).json({
+					error: "usernames must be an array of strings",
+				});
+				return;
+			}
+
+			const fairId = req.user?.currentUserFair?.fairId;
+			if (!fairId) {
+				res.status(400).json({
+					error: "No current fair selected for user.",
+				});
+				return;
+			}
+
+			const rows = await prisma.userFair.findMany({
+				where: {
+					fairId,
+					locationSquare: { not: null },
+					user: { bggUsername: { in: usernames } },
+				},
+				include: { user: { select: { bggUsername: true } } },
+			});
+
+			const locations: Record<
+				string,
+				{ square: string | null; description: string | null }
+			> = {};
+			for (const row of rows) {
+				const key = row.user.bggUsername?.toLowerCase();
+				// First match wins if multiple accounts share a username.
+				if (!key || locations[key]) continue;
+				locations[key] = {
+					square: row.locationSquare,
+					description: row.locationDescription,
+				};
+			}
+
+			res.status(200).json({ locations });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
 router.post(
 	"/bggUsername",
 	authenticateUser,
@@ -212,7 +302,151 @@ router.post(
 				data: { bggUsername },
 			});
 
+			// Verification records are kept per (user, bggUsername) pair, not
+			// deleted on change - switching away from a verified username and
+			// back later should still show it as verified, not force a redo.
+
 			res.status(200).json({ user: updatedUser });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.post(
+	"/bggUsername/verify",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			if (!req.user?.id) {
+				return res.status(401).json({ error: "Not authenticated" });
+			}
+			if (!req.user.bggUsername) {
+				return res.status(400).json({ error: "No bggUsername set" });
+			}
+
+			const hash = generateVerificationHash();
+			const verification = await prisma.bggVerification.upsert({
+				where: {
+					userId_bggUsername: {
+						userId: req.user.id,
+						bggUsername: req.user.bggUsername,
+					},
+				},
+				create: {
+					userId: req.user.id,
+					bggUsername: req.user.bggUsername,
+					hash,
+					confirmed: false,
+				},
+				update: {
+					hash,
+					confirmed: false,
+					confirmedAt: null,
+				},
+			});
+
+			res.status(200).json({
+				bggUsername: verification.bggUsername,
+				hash: verification.hash,
+				confirmed: verification.confirmed,
+			});
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.get(
+	"/bggUsername/verify",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			if (!req.user?.id) {
+				return res.status(401).json({ error: "Not authenticated" });
+			}
+			if (!req.user.bggUsername) {
+				return res.status(200).json({ exists: false });
+			}
+
+			const verification = await prisma.bggVerification.findUnique({
+				where: {
+					userId_bggUsername: {
+						userId: req.user.id,
+						bggUsername: req.user.bggUsername,
+					},
+				},
+			});
+
+			if (!verification) {
+				return res.status(200).json({ exists: false });
+			}
+
+			res.status(200).json({
+				exists: true,
+				bggUsername: verification.bggUsername,
+				hash: verification.hash,
+				confirmed: verification.confirmed,
+				confirmedAt: verification.confirmedAt,
+			});
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.post(
+	"/bggUsername/verify/check",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			if (!req.user?.id) {
+				return res.status(401).json({ error: "Not authenticated" });
+			}
+			if (!req.user.bggUsername) {
+				return res
+					.status(400)
+					.json({ error: "No verification in progress" });
+			}
+
+			const verificationKey = {
+				userId: req.user.id,
+				bggUsername: req.user.bggUsername,
+			};
+
+			const verification = await prisma.bggVerification.findUnique({
+				where: { userId_bggUsername: verificationKey },
+			});
+			if (!verification) {
+				return res
+					.status(400)
+					.json({ error: "No verification in progress" });
+			}
+
+			let found: boolean;
+			try {
+				found = await checkGeeklistForHash(
+					verification.bggUsername,
+					verification.hash,
+				);
+			} catch (err) {
+				console.error(err);
+				return res.status(502).json({
+					error: "Couldn't reach BGG to check - try again in a moment",
+				});
+			}
+
+			if (found) {
+				await prisma.bggVerification.update({
+					where: { userId_bggUsername: verificationKey },
+					data: { confirmed: true, confirmedAt: new Date() },
+				});
+			}
+
+			res.status(200).json({ confirmed: found });
 		} catch (err) {
 			console.error(err);
 			res.status(500).json({ error: "Database error" });

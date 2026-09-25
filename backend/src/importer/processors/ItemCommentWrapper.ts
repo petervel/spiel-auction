@@ -42,9 +42,13 @@ export class ItemCommentWrapper {
 			stripped = removeQuoted(stripped);
 			stripped = removeAllBggTags(stripped);
 			stripped = removeKnownContexts(stripped);
-			const retracted = !!extractString(stripped, /\bretracted\b/i);
+			// .test(), not extractString() - these are plain match checks with
+			// no capture group, and extractString's "last matched group" logic
+			// (see its own comment) always returns undefined when there's no
+			// group to pick from index 1 onward.
+			const retracted = /\bretracted\b/i.test(stripped);
 			if (!retracted) {
-				isBin = !!extractString(stripped, /\bbin\b(?!\?)/i);
+				isBin = /\bbin\b(?!\?)/i.test(stripped);
 
 				bid = isBin
 					? item.binPrice
@@ -138,20 +142,22 @@ export class ItemCommentWrapper {
 			deduped.set(key, comment);
 		}
 
-		const upserts: PrismaPromise<any>[] = Array.from(deduped.values()).map((comment) => {
-			const upsert = prisma.itemComment.upsert({
-				where: {
-					itemId_username_postTimestamp: {
-						itemId: comment.dbObject.itemId,
-						username: comment.dbObject.username,
-						postTimestamp: comment.dbObject.postTimestamp,
+		const upserts: PrismaPromise<any>[] = Array.from(deduped.values()).map(
+			(comment) => {
+				const upsert = prisma.itemComment.upsert({
+					where: {
+						itemId_username_postTimestamp: {
+							itemId: comment.dbObject.itemId,
+							username: comment.dbObject.username,
+							postTimestamp: comment.dbObject.postTimestamp,
+						},
 					},
-				},
-				create: comment.dbObject,
-				update: comment.dbObject,
-			});
-			return upsert;
-		});
+					create: comment.dbObject,
+					update: comment.dbObject,
+				});
+				return upsert;
+			},
+		);
 		return upserts;
 	}
 

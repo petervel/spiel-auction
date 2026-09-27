@@ -20,7 +20,7 @@ print_usage() {
 Usage: $0 <command> [options]
 
 Commands:
-  connect                 Connect to the main database as the app user
+  connect                 Connect to the main database as the app user (default if no command given)
   export [FILENAME]       Export ALL databases to backups/FILENAME (default: backup.sql)
   import [FILENAME]       Import from backups/FILENAME (default: backup.sql) and OVERWRITE data
 
@@ -31,6 +31,7 @@ Environment (from .env):
   DATABASE_ROOT_PASSWORD   Root password for export/import
 
 Examples:
+  $0
   $0 connect
   $0 export
   $0 export prod-2025-11-22.sql
@@ -39,7 +40,7 @@ Examples:
 EOF
 }
 
-cmd="$1"
+cmd="${1:-connect}"  # no command given - just connect
 shift || true  # safely ignore if no extra args
 
 case "$cmd" in
@@ -106,7 +107,7 @@ case "$cmd" in
     echo "Done. Import completed."
     ;;
 
-  ""|help|-h|--help)
+  help|-h|--help)
     print_usage
     ;;
 

@@ -1,15 +1,33 @@
-/* Fixed warm palette matching the venue's physical map signage - not
-   theme-linked, like the glow accent, since it's an illustration of a
-   real printed map rather than app chrome. */
+/* Warm palette matching the venue's physical map signage, with a dark-mode
+   variant (unlike most app chrome, this isn't just a straight color swap -
+   the light-mode "ink" color for header text/pillars/outline/stairs would
+   be invisible against a dark backdrop, so it inverts to a light ink
+   instead; see body:global(.dark) below). */
 
 .grid {
+	--map-backdrop: #faf6ec;
+	--map-cell-hover: #f2e4d4;
+	--map-chip-bg: #faf6ec;
+	--map-ink: #1f2937;
+	--map-coordinate: #a89686;
+
 	width: 100%;
 	max-width: 500px;
 	height: auto;
 }
 
+/* See AuctionItem.module.css for why :global(.dark) rather than plain
+   .dark - the dark-mode toggle adds an unscoped "dark" class to <body>. */
+body:global(.dark) .grid {
+	--map-backdrop: #2c2620;
+	--map-cell-hover: #3a322a;
+	--map-chip-bg: rgba(0, 0, 0, 0.55);
+	--map-ink: #e8dccb;
+	--map-coordinate: #e8dccb;
+}
+
 .cell {
-	fill: #f1ddd0;
+	fill: var(--map-backdrop);
 	stroke: #cda876;
 	stroke-width: 1;
 	cursor: pointer;
@@ -17,7 +35,7 @@
 
 .cell:hover,
 .cell:focus-visible {
-	fill: #e9cbb8;
+	fill: var(--map-cell-hover);
 }
 
 .cell:focus-visible {
@@ -26,20 +44,20 @@
 }
 
 .cellLabel {
-	fill: #a89686;
-	font-size: 13px;
+	fill: var(--map-coordinate);
+	font-size: 20px;
 	pointer-events: none;
 	user-select: none;
 }
 
 .headerChip {
-	fill: #faf6ec;
-	stroke: #1f2937;
+	fill: var(--map-chip-bg);
+	stroke: var(--map-ink);
 	stroke-width: 2;
 }
 
 .headerLabel {
-	fill: #1f2937;
+	fill: var(--map-ink);
 	font-size: 18px;
 	font-weight: 700;
 	text-anchor: middle;
@@ -53,7 +71,7 @@
 }
 
 .pillar {
-	fill: #1f2937;
+	fill: var(--map-ink);
 	stroke: #d9a441;
 	stroke-width: 4;
 }
@@ -71,17 +89,17 @@
 }
 
 .gridOutline line {
-	stroke: #1f2937;
+	stroke: var(--map-ink);
 	stroke-width: 4;
 	stroke-linecap: square;
 }
 
 .entrance {
-	color: #1f2937;
+	color: var(--map-ink);
 }
 
 .entranceStairsRung {
-	stroke: #1f2937;
+	stroke: var(--map-ink);
 	stroke-width: 3;
 }
 
@@ -92,7 +110,7 @@
 }
 
 .entranceLabel {
-	fill: #1f2937;
+	fill: var(--map-ink);
 	font-size: 20px;
 	font-weight: 700;
 	letter-spacing: 1px;

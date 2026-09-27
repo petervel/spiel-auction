@@ -263,7 +263,7 @@ export const TradeFloorGrid = ({
 									counts[square] ? `, ${counts[square]} people here` : ''
 								}`}
 							/>
-							<text x={x + 10} y={y + 22} className={css.cellLabel}>
+							<text x={x + 10} y={y + 28} className={css.cellLabel}>
 								{square}
 							</text>
 						</g>

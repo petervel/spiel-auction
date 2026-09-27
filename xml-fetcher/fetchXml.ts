@@ -165,6 +165,11 @@ const fetchXML = async (
     if (!options?.skipGlobalGate) {
       await waitForGlobalGap();
     }
+
+    // Persisted so a redeploy doesn't lose track of it (see runLoop's
+    // startup gate) - recorded regardless of outcome, since even a 429 or
+    // network error still means we just hit BGG a moment ago.
+    recordFetchAttempt(source);
   }
 
   log(`[${source.label}] Fetching from BGG...`);
@@ -265,6 +270,37 @@ const cleanupOldFiles = (source: Source) => {
     });
 };
 
+// Tracks the last xmlapi fetch *attempt* (not just the last saved change)
+// on the shared volume, so it survives a process restart - a redeploy
+// otherwise loses lastGlobalRequestAt/interval state and immediately
+// refetches, and a few quick redeploys in a row reproduces exactly the
+// sub-10-minute polling that's banned us before (see runLoop).
+const lastFetchMarkerPath = (source: Source) =>
+  path.join(xmlDir, `lastfetch-${source.filePrefix}-${source.geeklistId}.json`);
+
+const recordFetchAttempt = (source: Source) => {
+  try {
+    fs.writeFileSync(
+      lastFetchMarkerPath(source),
+      JSON.stringify({ at: Date.now() }),
+    );
+  } catch (error) {
+    logError(
+      `[${source.label}] Failed to record last-fetch marker: ${describeError(error)}`,
+    );
+  }
+};
+
+// Null if there's no marker yet (first ever run for this source).
+const msSinceLastFetchAttempt = (source: Source): number | null => {
+  try {
+    const at = JSON.parse(fs.readFileSync(lastFetchMarkerPath(source), "utf-8"))?.at;
+    return typeof at === "number" ? Date.now() - at : null;
+  } catch {
+    return null;
+  }
+};
+
 // Returns "changed", "unchanged", "queued", "rateLimited", or false on a
 // non-429 error.
 const fetchAndStoreXML = async (
@@ -304,6 +340,19 @@ const runningLoops = new Set<number>();
 
 const runLoop = async (source: Source) => {
   let interval = MIN_INTERVAL_MS;
+
+  // A restart otherwise fetches immediately regardless of how recently the
+  // previous process instance hit BGG - see recordFetchAttempt.
+  if (source.tier === "xmlapi") {
+    const elapsed = msSinceLastFetchAttempt(source);
+    if (elapsed !== null && elapsed < MIN_INTERVAL_MS) {
+      const wait = MIN_INTERVAL_MS - elapsed;
+      log(
+        `[${source.label}] Last fetch attempt was ${Math.round(elapsed / 1000)}s ago (likely a recent restart) - waiting ${Math.round(wait / 1000)}s before fetching.`,
+      );
+      await sleep(wait);
+    }
+  }
 
   while (activeGeeklistIds.has(source.geeklistId)) {
     let result = await fetchAndStoreXML(source);

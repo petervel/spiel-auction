@@ -124,10 +124,12 @@ export const MeetupLocationPage = () => {
 				variant="body2"
 				color="text.secondary"
 				alignSelf="start"
+				maxWidth={"600px"}
+				marginInline={"auto"}
 			>
-				Click a square to set where you'll be. The red glow shows how
-				many people (including you) have picked each square - pick a
-				quieter one if you'd like.
+				Click a square to set where you'll be. The red glow (and number)
+				shows how many people (including you) have picked each square - pick
+				a quieter one if you'd like.
 			</Typography>
 			{countsLoading ? (
 				<Spinner />

@@ -72,6 +72,7 @@ body:global(.dark) .grid {
 
 .pillar {
 	fill: var(--map-ink);
+	fill-opacity: 0.55;
 	stroke: #d9a441;
 	stroke-width: 4;
 }
@@ -131,4 +132,11 @@ body:global(.dark) .grid {
 	font-weight: 700;
 	letter-spacing: 1px;
 	text-anchor: middle;
+}
+
+.legendLabel {
+	fill: var(--map-ink);
+	font-size: 22px;
+	dominant-baseline: central;
+	user-select: none;
 }

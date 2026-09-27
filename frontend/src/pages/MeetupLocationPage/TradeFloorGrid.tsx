@@ -22,6 +22,14 @@ const PILLAR_X_FRACTION: Record<string, number> = {
 	C: 0.4821,
 	E: 0.8534,
 };
+const PILLAR_RADIUS = 14;
+
+// Legend explaining the pillar circles, bottom-right of the map - clear of
+// the entrance arrow/label, which sit further left under the entrance gap.
+const LEGEND_MARGIN = 24;
+const LEGEND_TEXT_GAP = 10;
+const LEGEND_TEXT_RESERVED_WIDTH = 100;
+const LEGEND_TOP_OFFSET = 50;
 
 const GRID_LEFT = 120;
 const GRID_TOP = 100;
@@ -284,7 +292,7 @@ export const TradeFloorGrid = ({
 							key={square}
 							cx={cx}
 							cy={cy}
-							r={14}
+							r={PILLAR_RADIUS}
 							className={css.pillar}
 						/>
 					);
@@ -398,6 +406,39 @@ export const TradeFloorGrid = ({
 					className={css.entranceLabel}
 				>
 					ENTRANCE
+				</text>
+			</g>
+
+			{/* Legend: explains what the pillar circles are. Text sits to the
+			    right of the circle (reading order "⬤ = pillar"), so the
+			    circle is inset far enough from the right edge to leave room
+			    for it - LEGEND_TEXT_RESERVED_WIDTH is a generous estimate for
+			    "= pillar" at .legendLabel's font size. Sits just below the
+			    grid rather than down at the bottom of the viewBox - the
+			    entrance arrow needs that extra room, the legend doesn't. */}
+			<g>
+				<circle
+					cx={
+						viewBoxWidth -
+						LEGEND_MARGIN -
+						LEGEND_TEXT_RESERVED_WIDTH -
+						LEGEND_TEXT_GAP -
+						PILLAR_RADIUS
+					}
+					cy={GRID_TOP + GRID_HEIGHT + LEGEND_TOP_OFFSET}
+					r={PILLAR_RADIUS}
+					className={css.pillar}
+				/>
+				<text
+					x={
+						viewBoxWidth -
+						LEGEND_MARGIN -
+						LEGEND_TEXT_RESERVED_WIDTH
+					}
+					y={GRID_TOP + GRID_HEIGHT + LEGEND_TOP_OFFSET}
+					className={css.legendLabel}
+				>
+					= pillar
 				</text>
 			</g>
 		</svg>

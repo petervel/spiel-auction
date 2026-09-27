@@ -41,7 +41,12 @@ EOF
 }
 
 cmd="${1:-connect}"  # no command given - just connect
-shift || true  # safely ignore if no extra args
+# dash (production's /bin/sh) hard-errors on `shift` with nothing left to
+# shift - not just a nonzero exit `|| true` can swallow, it aborts the
+# script outright - so only shift when there's actually an arg to drop.
+if [ "$#" -gt 0 ]; then
+  shift
+fi
 
 case "$cmd" in
   connect)

@@ -27,7 +27,7 @@ body {
 }
 
 body.dark {
-	--colour-main: #02274b;
+	--colour-main: rgb(3 64 124);
 	--colour-main-alt: #011428;
 	--colour-on-main: hsl(210, 95%, 97%);
 	--colour-background: #1f1f1f;

@@ -67,7 +67,7 @@ export const MeetupLocationPage = () => {
 
 	if (!user) {
 		return (
-			<Stack paddingInline="2rem">
+			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
 					title="Meetup Location"
 					left={<BackButton to="/settings" />}
@@ -81,7 +81,7 @@ export const MeetupLocationPage = () => {
 
 	if (!bggUsername) {
 		return (
-			<Stack paddingInline="2rem">
+			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
 					title="Meetup Location"
 					left={<BackButton to="/settings" />}
@@ -99,7 +99,7 @@ export const MeetupLocationPage = () => {
 
 	if (!verification.confirmed) {
 		return (
-			<Stack paddingInline="2rem">
+			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
 					title="Meetup Location"
 					left={<BackButton to="/settings" />}
@@ -115,7 +115,7 @@ export const MeetupLocationPage = () => {
 	}
 
 	return (
-		<Stack paddingInline="2rem" gap={3} alignItems="center">
+		<Stack paddingInline="2rem" paddingBottom="2rem" gap={3} alignItems="center">
 			<Title
 				title="Meetup Location"
 				left={<BackButton to="/settings" />}

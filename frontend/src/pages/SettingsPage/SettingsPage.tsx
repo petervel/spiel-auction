@@ -151,7 +151,7 @@ export const SettingsPage = () => {
 
 	if (!user) {
 		return (
-			<Stack paddingInline="2rem">
+			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title title="Settings" left={<BackButton />} />
 				<p>
 					<LoginLink /> to manage your BGG username.
@@ -161,7 +161,7 @@ export const SettingsPage = () => {
 	}
 
 	return (
-		<Stack paddingInline="2rem">
+		<Stack paddingInline="2rem" paddingBottom="2rem">
 			<Title title="Settings" left={<BackButton />} />
 			<Stack alignItems="center">
 				<Stack gap={4} width="100%" maxWidth={400}>

@@ -1,12 +1,20 @@
 import { MenuItem, Select, SelectChangeEvent, Stack, Typography } from '@mui/material';
-import { SORTING } from '../../util';
+import { DEFAULT_SORT_OPTIONS, SORTING } from '../../util';
 
 type SortButtonsProps = {
 	sorting: SORTING;
 	setSorting: (value: SORTING) => void;
+	// Which sort values to offer, and in what order - defaults to every
+	// option except OUTBID_RECENCY, which only makes sense for a group of
+	// items you've actually been outbid on (see LikedPage).
+	options?: SORTING[];
 };
 
-export const SortButtons = ({ sorting, setSorting }: SortButtonsProps) => (
+export const SortButtons = ({
+	sorting,
+	setSorting,
+	options = DEFAULT_SORT_OPTIONS,
+}: SortButtonsProps) => (
 	<Stack direction="row" justifyContent="center" alignItems="center" gap={1} my={2}>
 		<Typography variant="body2">Sort by</Typography>
 		<Select
@@ -16,18 +24,19 @@ export const SortButtons = ({ sorting, setSorting }: SortButtonsProps) => (
 				setSorting(Number(event.target.value))
 			}
 		>
-			{SORT_OPTIONS.map((option) => (
-				<MenuItem key={option.value} value={option.value}>
-					{option.label}
+			{options.map((value) => (
+				<MenuItem key={value} value={value}>
+					{SORT_LABELS[value]}
 				</MenuItem>
 			))}
 		</Select>
 	</Stack>
 );
 
-const SORT_OPTIONS = [
-	{ value: SORTING.MOST_RECENT, label: 'Most recent' },
-	{ value: SORTING.END_DATE, label: 'End date' },
-	{ value: SORTING.NAME, label: 'Name' },
-	{ value: SORTING.PRICE, label: 'Price' },
-];
+const SORT_LABELS: Record<SORTING, string> = {
+	[SORTING.MOST_RECENT]: 'Most recent',
+	[SORTING.END_DATE]: 'End date',
+	[SORTING.NAME]: 'Name',
+	[SORTING.PRICE]: 'Price',
+	[SORTING.OUTBID_RECENCY]: 'Recently outbid',
+};

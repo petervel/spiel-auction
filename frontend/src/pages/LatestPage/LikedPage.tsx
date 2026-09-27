@@ -1,3 +1,4 @@
+import { FavoriteRounded, HeartBrokenRounded } from '@mui/icons-material';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { NotReadyMessage } from '../../components/NotReadyMessage/NotReadyMessage';
 import { Spinner } from '../../components/Spinner/Spinner';
@@ -5,7 +6,10 @@ import { useLiked } from '../../hooks/useLiked';
 import { useOutbids } from '../../hooks/useOutbids';
 import { useUser } from '../../hooks/useUser';
 import { Item } from '../../model/Item';
+import { DEFAULT_SORT_OPTIONS, SORTING } from '../../util';
 import { ItemsPage } from '../ItemsPages/ItemsPage';
+
+const iconSx = { fontSize: '1rem', color: 'var(--color-heart)' };
 
 export const LikedPage = () => {
 	const { user, isLoading: userLoading } = useUser();
@@ -57,14 +61,23 @@ export const LikedPage = () => {
 		(item) => !outbidItemIds.has(item.id) && !isWinning(item)
 	);
 
-	// One combined, sorted-together list - outbidItemIds below is what
-	// still tells each item's heart apart (broken vs. normal).
-	const items = [...outbidItems, ...likedOnlyItems];
-
 	return (
 		<ItemsPage
 			title="Outbid & Liked"
-			items={items}
+			groups={[
+				{
+					label: 'Outbid',
+					items: outbidItems,
+					icon: <HeartBrokenRounded sx={iconSx} />,
+					defaultSorting: SORTING.OUTBID_RECENCY,
+					sortOptions: [SORTING.OUTBID_RECENCY, ...DEFAULT_SORT_OPTIONS],
+				},
+				{
+					label: 'Liked',
+					items: likedOnlyItems,
+					icon: <FavoriteRounded sx={iconSx} />,
+				},
+			]}
 			outbidItemIds={outbidItemIds}
 			options={{ silentToggle: true }}
 		/>

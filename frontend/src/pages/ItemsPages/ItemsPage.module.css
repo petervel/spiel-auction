@@ -1,0 +1,28 @@
+.group + .group {
+	margin-top: 4px;
+}
+
+.groupHeader {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* See AuctionItem.module.css for why :global(.dark) rather than plain
+   .dark - the dark-mode toggle adds an unscoped "dark" class to <body>. */
+body:global(.dark) .groupHeader {
+	background-color: rgba(255, 255, 255, 0.08);
+}
+
+.groupLabel {
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	font-size: 0.75em;
+}
+
+.groupCount {
+	opacity: 0.7;
+}

@@ -5,7 +5,17 @@ export enum SORTING {
 	END_DATE,
 	NAME,
 	PRICE,
+	OUTBID_RECENCY,
 }
+
+// Every sort option except OUTBID_RECENCY, which only makes sense for a
+// group of items you've actually been outbid on (see LikedPage/SortButtons).
+export const DEFAULT_SORT_OPTIONS = [
+	SORTING.MOST_RECENT,
+	SORTING.END_DATE,
+	SORTING.NAME,
+	SORTING.PRICE,
+];
 
 export const sortItems = (
 	items: Item[],
@@ -59,11 +69,36 @@ const sortByPrice = (a: Item, b: Item): number => {
 	return b.currentBid == undefined ? 0 : a.currentBid - b.currentBid;
 };
 
+// Only outbid items carry a comment matching their current highest bid (the
+// /api/liked endpoint doesn't include comments) - anything else falls back
+// to the item's own post time so it still sorts somewhere sensible.
+const outbidTimestamp = (item: Item): number => {
+	const bidderName = item.highestBidder?.toLowerCase();
+	if (!bidderName) return item.postTimestamp;
+
+	const bidTimestamps = (item.comments ?? [])
+		.filter(
+			(comment) =>
+				!comment.deleted &&
+				comment.bid != null &&
+				comment.bid === item.currentBid &&
+				comment.username.toLowerCase() === bidderName
+		)
+		.map((comment) => comment.postTimestamp);
+
+	return bidTimestamps.length ? Math.max(...bidTimestamps) : item.postTimestamp;
+};
+
+const sortByOutbidRecency = (a: Item, b: Item): number => {
+	return outbidTimestamp(b) - outbidTimestamp(a);
+};
+
 const sortingLookup = {
 	[SORTING.MOST_RECENT]: sortByMostRecent,
 	[SORTING.END_DATE]: sortByEndDate,
 	[SORTING.NAME]: sortByName,
 	[SORTING.PRICE]: sortByPrice,
+	[SORTING.OUTBID_RECENCY]: sortByOutbidRecency,
 };
 
 // Only treated as a swipe when the horizontal movement clearly dominates

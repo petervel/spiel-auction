@@ -81,8 +81,6 @@ services:
     container_name: auctions-frontend
     environment:
       VITE_API_URL: /api
-    volumes:
-      - frontend-build:/usr/share/nginx/html
     expose:
       - "80"
     depends_on:
@@ -109,7 +107,6 @@ services:
 
 volumes:
   xml-data:
-  frontend-build:
 
 networks:
   web:

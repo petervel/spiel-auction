@@ -2,12 +2,13 @@
    variant (unlike most app chrome, this isn't just a straight color swap -
    the light-mode "ink" color for header text/pillars/outline/stairs would
    be invisible against a dark backdrop, so it inverts to a light ink
-   instead; see body:global(.dark) below). */
+   instead; see body:global(.dark) below). Header chips are transparent
+   (outline only) so they work over either backdrop without their own
+   fill color. */
 
 .grid {
 	--map-backdrop: #faf6ec;
 	--map-cell-hover: #f2e4d4;
-	--map-chip-bg: #faf6ec;
 	--map-ink: #1f2937;
 	--map-coordinate: #a89686;
 
@@ -21,7 +22,6 @@
 body:global(.dark) .grid {
 	--map-backdrop: #2c2620;
 	--map-cell-hover: #3a322a;
-	--map-chip-bg: rgba(0, 0, 0, 0.55);
 	--map-ink: #e8dccb;
 	--map-coordinate: #e8dccb;
 }
@@ -51,7 +51,7 @@ body:global(.dark) .grid {
 }
 
 .headerChip {
-	fill: var(--map-chip-bg);
+	fill: transparent;
 	stroke: var(--map-ink);
 	stroke-width: 2;
 }
@@ -79,6 +79,22 @@ body:global(.dark) .grid {
 .glow {
 	fill: #e2574c;
 	pointer-events: none;
+}
+
+/* White fill with a dark outline (via paint-order) so the count stays
+   legible regardless of the cell's own color or how intense the glow
+   underneath it is. */
+.countLabel {
+	fill: #fff;
+	stroke: #000;
+	stroke-width: 3px;
+	paint-order: stroke fill;
+	font-size: 26px;
+	font-weight: 800;
+	text-anchor: middle;
+	dominant-baseline: central;
+	pointer-events: none;
+	user-select: none;
 }
 
 .selectedRing {

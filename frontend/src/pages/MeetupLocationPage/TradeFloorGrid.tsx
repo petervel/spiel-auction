@@ -291,8 +291,9 @@ export const TradeFloorGrid = ({
 				})}
 			</g>
 
-			{/* Heatmap glow, drawn on top of cells/pillars but pointer-events:
-			    none so clicks still reach the cell rect underneath. */}
+			{/* Heatmap glow + people count, drawn on top of cells/pillars but
+			    pointer-events: none so clicks still reach the cell rect
+			    underneath. */}
 			{ROWS.map((row, j) =>
 				COLUMNS.map((col, i) => {
 					const square = `${col}${row}`;
@@ -301,15 +302,19 @@ export const TradeFloorGrid = ({
 					const cx = GRID_LEFT + COLUMN_LEFTS[i] + COLUMN_WIDTHS[i] / 2;
 					const cy = GRID_TOP + ROW_TOPS[j] + ROW_HEIGHTS[j] / 2;
 					return (
-						<circle
-							key={square}
-							cx={cx}
-							cy={cy}
-							r={glowRadius(count)}
-							fillOpacity={glowOpacity(count)}
-							className={css.glow}
-							filter="url(#glow-blur)"
-						/>
+						<g key={square}>
+							<circle
+								cx={cx}
+								cy={cy}
+								r={glowRadius(count)}
+								fillOpacity={glowOpacity(count)}
+								className={css.glow}
+								filter="url(#glow-blur)"
+							/>
+							<text x={cx} y={cy} className={css.countLabel}>
+								{count}
+							</text>
+						</g>
 					);
 				})
 			)}

@@ -237,7 +237,8 @@ export class ItemWrapper {
 		const startingBid =
 			extractNumber(
 				text,
-				/(?:\[b\])?\s*starting\s*(?:bid)?(?:price)?\s*(?:\([^\)]*\))?(?:\[\/b\])?(?:\s*:\s*)?(?:\s*\[[^\]]*])*\s*€?(?:euro)?\s*(\d+)(?:,-)?€?(?:euro)?(?:[^[\n]*)/i,
+				// "start" alone (not just "starting") - e.g. "START BID : 15€".
+				/(?:\[b\])?\s*start(?:ing)?\s*(?:bid)?(?:price)?\s*(?:\([^\)]*\))?(?:\[\/b\])?(?:\s*:\s*)?(?:\s*\[[^\]]*])*\s*€?(?:euro)?\s*(\d+)(?:,-)?€?(?:euro)?(?:[^[\n]*)/i,
 			) ?? null;
 
 		const softReserve =

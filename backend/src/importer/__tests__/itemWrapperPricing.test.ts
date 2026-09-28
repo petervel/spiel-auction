@@ -32,4 +32,12 @@ describe("starting bid parsing", () => {
 		);
 		expect(item.currentBid).toBe(35);
 	});
+
+	it("reads the abbreviated 'START' form, not just 'STARTING'", () => {
+		// Real body text (item 13142984): "START BID : 15€" - the regex used
+		// to require the "-ing" suffix, so this never matched and the item
+		// fell all the way back to its BIN price instead.
+		const item = buildItem("START BID : 15€");
+		expect(item.currentBid).toBe(15);
+	});
 });

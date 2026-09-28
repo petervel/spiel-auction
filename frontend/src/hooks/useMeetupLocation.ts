@@ -12,10 +12,11 @@ export const useMeetupLocation = () => {
 
 	// Square and description are always sent together - the map page uses
 	// this both for clicking a square (passing the current description
-	// along) and for a description-only save (passing the current square).
+	// along), a description-only save (passing the current square), and
+	// deselecting the current square (passing null to clear it).
 	const setLocation = useCallback(
 		async (
-			newSquare: string,
+			newSquare: string | null,
 			newDescription: string | null,
 		): Promise<{ success: boolean; error?: string }> => {
 			if (!user?.currentUserFair) return { success: false };

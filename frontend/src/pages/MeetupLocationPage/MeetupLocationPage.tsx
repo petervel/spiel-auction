@@ -36,16 +36,21 @@ export const MeetupLocationPage = () => {
 
 	// Sends whatever's currently typed (even if not explicitly saved yet) so
 	// clicking a square never discards an in-progress description edit.
+	// Clicking the already-selected square again deselects it (sends null)
+	// rather than re-setting the same square.
 	const handleSelectSquare = async (newSquare: string) => {
+		const deselecting = newSquare === square;
 		const { success, error } = await setLocation(
-			newSquare,
+			deselecting ? null : newSquare,
 			editDescription || null,
 		);
 		if (success) {
 			refreshCounts();
-			setToastMessage(`Location set to ${newSquare}`);
+			setToastMessage(
+				deselecting ? 'Location cleared' : `Location set to ${newSquare}`,
+			);
 		} else {
-			setToastMessage(error ?? 'Failed to set location');
+			setToastMessage(error ?? 'Failed to update location');
 		}
 	};
 
@@ -120,6 +125,11 @@ export const MeetupLocationPage = () => {
 				title="Meetup Location"
 				left={<BackButton to="/settings" />}
 			/>
+			{square && (
+				<Typography variant="h3" fontWeight="bold" color="primary">
+					{square}
+				</Typography>
+			)}
 			<Typography
 				variant="body2"
 				color="text.secondary"

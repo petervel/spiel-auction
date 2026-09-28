@@ -83,7 +83,9 @@ const VALID_LOCATION_SQUARE = /^[A-E][1-8]$/;
 
 // Square + description are always sent together - the map page uses this
 // both for clicking a square (keeping whatever description is already
-// there) and for a description-only save (keeping the current square).
+// there), a description-only save (keeping the current square), and
+// deselecting a square (clicking it again sends square: null, keeping the
+// description in case the same square gets picked again later).
 router.post(
 	"/location",
 	authenticateUser,
@@ -92,10 +94,13 @@ router.post(
 			const { square, description } = req.body;
 
 			if (
-				typeof square !== "string" ||
-				!VALID_LOCATION_SQUARE.test(square)
+				square !== null &&
+				(typeof square !== "string" ||
+					!VALID_LOCATION_SQUARE.test(square))
 			) {
-				res.status(400).json({ error: "square must be one of A1-E8" });
+				res.status(400).json({
+					error: "square must be one of A1-E8, or null to clear it",
+				});
 				return;
 			}
 

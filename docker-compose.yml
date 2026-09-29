@@ -104,6 +104,7 @@ services:
       - BGG_API_TOKEN=${BGG_API_TOKEN}
       - DATABASE_URL=${DATABASE_URL}
       - RSS_ENABLED=${RSS_ENABLED}
+      - RSS_PROXY_URLS=${RSS_PROXY_URLS}
 
 volumes:
   xml-data:

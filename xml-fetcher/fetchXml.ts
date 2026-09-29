@@ -105,16 +105,50 @@ const sourcesFor = (geeklistId: number): Source[] => [
 ];
 
 // Ceiling on how deep one cycle paginates to catch the last-seen cursor -
-// covers cold start (cursor = 0) and any pathological burst.
+// covers cold start (cursor = 0) and any pathological burst. Moot for a
+// proxied geeklist (see RSS_PROXY_URLS) - a mirror feed doesn't paginate.
 const RSS_MAX_PAGES = 10;
 
-const rssSource = (geeklistId: number, page: number): Source => ({
-  tier: "rss",
-  label: `rss page ${page} #${geeklistId}`,
-  url: `https://boardgamegeek.com/rss/geeklist/${geeklistId}?page=${page}&comments=1`,
-  filePrefix: `rss-page${page}`,
-  geeklistId,
-});
+// Optional per-geeklist RSS proxy (e.g. a FeedBurner mirror of a geeklist's
+// own RSS feed) to route around boardgamegeek.com/rss/*'s Cloudflare JS
+// challenge - confirmed that challenge can't be passed with any header/
+// client change (see project memory), but a third-party mirror fetched
+// from its own domain never hits BGG's edge at all. JSON map of
+// geeklistId -> full feed URL, e.g. {"382717":"https://feeds.feedburner.com/boardgamegeek/xxxxx"}.
+// A geeklist with no entry here just falls back to the direct (likely
+// still-blocked) URL, same as before this existed - RSS is a speed
+// optimization layered on the always-reliable xmlapi poll, never required
+// for correctness, so an unconfigured/broken proxy only costs latency.
+const RSS_PROXY_URLS: Record<string, string> = (() => {
+  try {
+    return JSON.parse(process.env.RSS_PROXY_URLS ?? "{}");
+  } catch {
+    logError("RSS_PROXY_URLS is not valid JSON - ignoring it.");
+    return {};
+  }
+})();
+
+// A proxy mirror (e.g. FeedBurner) is a flat, unpaginated window, unlike a
+// direct BGG fetch - the caller uses this to skip pagination for it (see
+// fetchRssPages) rather than re-requesting the exact same content on every
+// "page".
+const rssProxyUrl = (geeklistId: number): string | undefined =>
+  RSS_PROXY_URLS[String(geeklistId)];
+
+const rssSource = (geeklistId: number, page: number): Source => {
+  const proxyUrl = rssProxyUrl(geeklistId);
+  return {
+    tier: "rss",
+    label: proxyUrl
+      ? `rss (proxied) #${geeklistId}`
+      : `rss page ${page} #${geeklistId}`,
+    url:
+      proxyUrl ??
+      `https://boardgamegeek.com/rss/geeklist/${geeklistId}?page=${page}&comments=1`,
+    filePrefix: proxyUrl ? "rss-proxy" : `rss-page${page}`,
+    geeklistId,
+  };
+};
 
 // Reduce an axios error to status + body (raw errors are mostly noise).
 // Strip <script>/<style> blocks first - Cloudflare's challenge page is
@@ -516,7 +550,10 @@ const rssBackoffUntil = new Map<number, number>();
 // Paginates until a page's oldest entry is strictly older than the cursor,
 // not just equal - pubDate has 1s resolution, so same-second entries could
 // otherwise get stranded on an unfetched page and never picked up (the
-// importer's own filter is a strict >). Capped at RSS_MAX_PAGES.
+// importer's own filter is a strict >). Capped at RSS_MAX_PAGES - or at 1
+// for a proxied geeklist, since a mirror feed is a flat window with no
+// ?page= support, so a "page 2" fetch would just be the identical content
+// again for no benefit.
 const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
   const [rows] = await pool.query<mysql.RowDataPacket[]>(
     "SELECT rssLastSeenTimestamp FROM Fair WHERE geeklistId = ?",
@@ -524,10 +561,11 @@ const fetchRssPages = async (geeklistId: number, pool: mysql.Pool) => {
   );
   const cursorSeconds = (rows[0]?.rssLastSeenTimestamp as number) ?? 0;
 
+  const maxPages = rssProxyUrl(geeklistId) ? 1 : RSS_MAX_PAGES;
   let pagesFetched = 0;
-  let stopReason = `hit the ${RSS_MAX_PAGES}-page cap`;
+  let stopReason = `hit the ${maxPages}-page cap`;
 
-  for (let page = 1; page <= RSS_MAX_PAGES; page++) {
+  for (let page = 1; page <= maxPages; page++) {
     const source = rssSource(geeklistId, page);
 
     await waitForRssGap();

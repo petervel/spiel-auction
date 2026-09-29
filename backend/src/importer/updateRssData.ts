@@ -234,38 +234,50 @@ async function update(fair: Fair, updateTime: number): Promise<number | null> {
 	return maxPubDateSeconds;
 }
 
-// Scans rss-page{1..RSS_MAX_PAGES}-{geeklistId}-*.xml on the shared volume
-// (same lookup xml-fetcher's files land in via updateData.ts's own
-// getLatestXmlFilename/getXml), parsing whichever pages are actually
-// present. A missing page is routine (a quiet fair, or xml-fetcher hasn't
-// caught up yet) - not an error, it just stops the scan there.
-async function loadRssEntries(geeklistId: number): Promise<RssActivityEntry[]> {
-	const entries: RssActivityEntry[] = [];
+async function parseRssFile(
+	filename: string,
+	geeklistId: number,
+): Promise<RssActivityEntry[]> {
+	const xmlResult = await getXml(filename);
+	if (xmlResult.isErr()) {
+		console.warn(
+			`${geeklistId}: Could not read ${filename}: ${xmlResult.error}`,
+		);
+		return [];
+	}
 
+	try {
+		const parser = new XMLParser({
+			ignoreAttributes: false,
+			attributeNamePrefix: "@_",
+		});
+		const parsed = parser.parse(xmlResult.value);
+		return parseRssPage(parsed?.rss?.channel ?? {});
+	} catch (error) {
+		console.warn(`${geeklistId}: Failed to parse ${filename}: ${error}`);
+		return [];
+	}
+}
+
+// Scans for RSS activity on the shared volume, either a single flat
+// rss-proxy-{geeklistId}-*.xml file (xml-fetcher's RSS_PROXY_URLS routes a
+// geeklist through a third-party mirror with no native pagination) or,
+// failing that, paginated rss-page{1..RSS_MAX_PAGES}-{geeklistId}-*.xml
+// files (the direct-from-BGG case) - same lookup xml-fetcher's files land
+// in via updateData.ts's own getLatestXmlFilename/getXml. A missing page
+// is routine (a quiet fair, or xml-fetcher hasn't caught up yet) - not an
+// error, it just stops the scan there.
+async function loadRssEntries(geeklistId: number): Promise<RssActivityEntry[]> {
+	const proxyFile = getLatestXmlFilename("rss-proxy", geeklistId);
+	if (proxyFile.isOk()) {
+		return parseRssFile(proxyFile.value, geeklistId);
+	}
+
+	const entries: RssActivityEntry[] = [];
 	for (let page = 1; page <= RSS_MAX_PAGES; page++) {
 		const fileResult = getLatestXmlFilename(`rss-page${page}`, geeklistId);
 		if (fileResult.isErr()) break;
-
-		const xmlResult = await getXml(fileResult.value);
-		if (xmlResult.isErr()) {
-			console.warn(
-				`${geeklistId}: Could not read ${fileResult.value}: ${xmlResult.error}`,
-			);
-			continue;
-		}
-
-		try {
-			const parser = new XMLParser({
-				ignoreAttributes: false,
-				attributeNamePrefix: "@_",
-			});
-			const parsed = parser.parse(xmlResult.value);
-			entries.push(...parseRssPage(parsed?.rss?.channel ?? {}));
-		} catch (error) {
-			console.warn(
-				`${geeklistId}: Failed to parse ${fileResult.value}: ${error}`,
-			);
-		}
+		entries.push(...(await parseRssFile(fileResult.value, geeklistId)));
 	}
 
 	return entries;

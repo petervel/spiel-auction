@@ -1,4 +1,5 @@
 import prisma from "../prismaClient";
+import { getConfirmedUserIdsByUsername, UserIdsByUsername } from "./verifiedUsers";
 
 // `${itemId}:${lowercased bidder username}` - identifies one user having
 // placed at least one real bid on one item.
@@ -17,10 +18,6 @@ export const getBidderKeys = async (listId: number): Promise<Set<BidderKey>> => 
 };
 
 export type BidderPair = { itemId: number; username: string };
-// lowercased username -> userIds. A value array rather than a single id
-// because bggUsername isn't unique on User - two people can register the
-// same BGG username, and both must get credited for the same bid.
-export type UserByUsername = Map<string, number[]>;
 
 // Pure: given the full current set of (item, bidder) pairs and a snapshot of
 // which pairs already existed before this import cycle, works out which
@@ -29,7 +26,7 @@ export type UserByUsername = Map<string, number[]>;
 export const computeNewLikes = (
 	currentPairs: BidderPair[],
 	previousBidderKeys: Set<BidderKey>,
-	userIdsByUsername: UserByUsername,
+	userIdsByUsername: UserIdsByUsername,
 	fairId: number,
 ): { userId: number; itemId: number; fairId: number }[] => {
 	const newPairs = currentPairs.filter(
@@ -47,12 +44,12 @@ export const computeNewLikes = (
 	return likes;
 };
 
-// Auto-likes an item for a registered user (matched by bggUsername) the
-// first time they place a bid on it, so it still shows up on their "Outbid &
-// Liked" page if they're later outbid - without them ever having pressed
-// the heart themselves. Idempotent: re-bidding on an already-liked item is a
-// no-op (unique constraint on UserLikedItem), and unliking it later is a
-// deliberate user action this never undoes.
+// Auto-likes an item for every account with a confirmed BggVerification for
+// the bidder's username the first time they place a bid on it, so it still
+// shows up on their "Outbid & Liked" page if they're later outbid - without
+// them ever having pressed the heart themselves. Idempotent: re-bidding on
+// an already-liked item is a no-op (unique constraint on UserLikedItem),
+// and unliking it later is a deliberate user action this never undoes.
 export const likeItemsForNewBidders = async (
 	fairId: number,
 	listId: number,
@@ -72,19 +69,10 @@ export const likeItemsForNewBidders = async (
 	];
 	if (newlyBidUsernames.length === 0) return;
 
-	const users = await prisma.user.findMany({
-		where: { bggUsername: { in: newlyBidUsernames } },
-		select: { id: true, bggUsername: true },
-	});
-	if (users.length === 0) return;
-
-	const userIdsByUsername: UserByUsername = new Map();
-	for (const u of users) {
-		const key = u.bggUsername!.toLowerCase();
-		const existing = userIdsByUsername.get(key);
-		if (existing) existing.push(u.id);
-		else userIdsByUsername.set(key, [u.id]);
-	}
+	const userIdsByUsername = await getConfirmedUserIdsByUsername(
+		newlyBidUsernames,
+	);
+	if (userIdsByUsername.size === 0) return;
 
 	const data = computeNewLikes(
 		currentPairs,

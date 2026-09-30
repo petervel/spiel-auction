@@ -2,6 +2,7 @@ import { User } from "@prisma/client";
 import prisma from "../../prismaClient";
 import { sendPushToUser } from "../../push/webPushClient";
 import { ItemWrapper } from "../processors/ItemWrapper";
+import { getConfirmedUserIdsByUsername } from "../verifiedUsers";
 import {
 	computeNotificationIntents,
 	NotificationIntent,
@@ -52,27 +53,31 @@ export const notifyBidUpdates = async (
 	const intents = computeNotificationIntents(items, previousState);
 	if (intents.length === 0) return;
 
+	// Confirmed-verification-based, not User.bggUsername - see
+	// verifiedUsers.ts. A username can map to several accounts (two people
+	// verifying the same real BGG account), and all of them must be notified.
+	const usernames = [...new Set(intents.map((intent) => intent.username))];
+	const userIdsByUsername = await getConfirmedUserIdsByUsername(usernames);
+	const allUserIds = [...new Set([...userIdsByUsername.values()].flat())];
+	if (allUserIds.length === 0) return;
+
 	// One query for the whole fair rather than one per item.
 	const users = await prisma.user.findMany({
-		where: { bggUsername: { not: null } },
+		where: { id: { in: allUserIds } },
 	});
-
-	// lowercased username -> users. A list rather than a single user because
-	// bggUsername isn't unique on User - two people can register the same
-	// BGG username, and both must be notified about the same bid.
-	const byUsername = new Map<string, User[]>();
-	for (const user of users) {
-		const key = user.bggUsername!.toLowerCase();
-		const existing = byUsername.get(key);
-		if (existing) existing.push(user);
-		else byUsername.set(key, [user]);
-	}
+	const usersById = new Map(users.map((user) => [user.id, user]));
 
 	await Promise.all(
-		intents.flatMap((intent) =>
-			(byUsername.get(intent.username.toLowerCase()) ?? [])
-				.filter((user) => user[PREFERENCE_FIELD[intent.type]])
-				.map((user) => sendPushToUser(user.id, buildPayload(intent))),
-		),
+		intents.flatMap((intent) => {
+			const userIds =
+				userIdsByUsername.get(intent.username.toLowerCase()) ?? [];
+			return userIds
+				.map((id) => usersById.get(id))
+				.filter(
+					(user): user is User =>
+						!!user && user[PREFERENCE_FIELD[intent.type]],
+				)
+				.map((user) => sendPushToUser(user.id, buildPayload(intent)));
+		}),
 	);
 };

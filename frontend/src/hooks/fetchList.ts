@@ -2,7 +2,10 @@
 // fetches a URL and distinguishes "fair exists but hasn't imported yet"
 // (see backend/src/api/listLookup.ts) from a genuine failure.
 export const fetchListJson = async <T>(url: URL): Promise<T> => {
-	const response = await fetch(url);
+	// credentials included since /api/outbids requires auth (results are
+	// per-viewer - see its own comment) - harmless no-op for the other
+	// still-public routes sharing this helper.
+	const response = await fetch(url, { credentials: 'include' });
 
 	if (!response.ok) {
 		if (response.status === 404) {

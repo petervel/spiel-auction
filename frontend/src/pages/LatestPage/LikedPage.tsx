@@ -13,8 +13,8 @@ const iconSx = { fontSize: '1rem', color: 'var(--color-heart)' };
 
 export const LikedPage = () => {
 	const { user, isLoading: userLoading } = useUser();
-	// This page shows a frozen snapshot: no polling, and unliking an item
-	// doesn't refetch, so it stays put until the page is reloaded.
+	// This page shows a frozen snapshot: no polling, and unliking/dismissing
+	// an item doesn't refetch, so it stays put until the page is reloaded.
 	const { liked, isLoading: likedLoading } = useLiked({ poll: false });
 	const {
 		data: outbidsData,
@@ -44,14 +44,13 @@ export const LikedPage = () => {
 		item.highestBidder?.toLowerCase() === user.bggUsername.toLowerCase();
 
 	const likedItems = liked?.items ?? [];
-	const likedItemIds = new Set(likedItems.map((item) => item.id));
 
-	// Bidding auto-likes an item (see backend/src/importer/likedItems.ts),
-	// so being outbid only keeps an item here while it's still liked -
-	// unliking it removes it from this list entirely, not just the outbid
-	// part of it.
+	// /api/outbids is authoritative on its own (username/bid based) and
+	// already excludes anything dismissed (see backend/src/api/outbids) -
+	// no longer gated on being liked, so a shared-BGG-account auto-like gap
+	// (see usersByBggUsername.ts) can't hide a real outbid item anymore.
 	const outbidItems = (outbidsData?.items ?? []).filter(
-		(item) => likedItemIds.has(item.id) && !isWinning(item)
+		(item) => !isWinning(item)
 	);
 	const outbidItemIds = new Set(outbidItems.map((item) => item.id));
 

@@ -7,6 +7,7 @@ import {
 import { Stack } from '@mui/material';
 import { useState } from 'react';
 import bggIcon from '../../assets/bgg.svg';
+import { useDismissed } from '../../hooks/useDismissed';
 import { useLiked } from '../../hooks/useLiked';
 import { Item } from '../../model/Item';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
@@ -53,10 +54,13 @@ export const ItemButtons = ({
 	// own liked state locally instead.
 	const { likeItem, unlikeItem, likeItemSilently, unlikeItemSilently, liked, isLiked } =
 		useLiked({ enabled: !silentToggle });
+	const { dismissItemSilently, undismissItemSilently } = useDismissed();
 	const iconSize = 30;
 
-	// Starts liked, since silentToggle only ever renders for items that
-	// were liked when the page loaded.
+	// Starts shown, since silentToggle only ever renders for items that were
+	// liked/outbid-and-not-dismissed when the page loaded. For an outbid
+	// item this tracks "is it still shown", not literally "is it liked" -
+	// toggling it off dismisses rather than unlikes (see isOutbid below).
 	const [isLikedLocally, setIsLikedLocally] = useState(true);
 
 	const toggleLike = (itemId: number) => {
@@ -69,7 +73,13 @@ export const ItemButtons = ({
 	};
 
 	const toggleLikeSilently = (itemId: number) => {
-		if (isLikedLocally) {
+		if (isOutbid) {
+			if (isLikedLocally) {
+				dismissItemSilently(itemId);
+			} else {
+				undismissItemSilently(itemId);
+			}
+		} else if (isLikedLocally) {
 			unlikeItemSilently(itemId);
 		} else {
 			likeItemSilently(itemId);
@@ -109,8 +119,12 @@ export const ItemButtons = ({
 				silentToggle ? toggleLikeSilently(item.id) : toggleLike(item.id),
 			tooltip: silentToggle
 				? isLikedLocally
-					? 'Remove from liked items'
-					: 'Add back to liked items'
+					? isOutbid
+						? 'Dismiss'
+						: 'Remove from liked items'
+					: isOutbid
+						? 'Show again'
+						: 'Add back to liked items'
 				: 'Add to liked items',
 		},
 		showCompare && {

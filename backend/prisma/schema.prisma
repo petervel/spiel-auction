@@ -35,6 +35,7 @@ model User {
 
   fairs            UserFair[]
   likedItems       UserLikedItem[]
+  dismissedItems   UserDismissedItem[]
   wishlistItems    UserWishlistItem[]
   PushSubscription PushSubscription[]
   bggVerifications BggVerification[]
@@ -101,6 +102,23 @@ model UserLikedItem {
   @@unique([userId, itemId])
 }
 
+// "I don't want to see this on my Outbid & Liked page anymore" - separate
+// from UserLikedItem (liking and dismissing are independent, not opposites:
+// dismissing an auto-liked outbid item shouldn't need to un-like it, and a
+// dismissal shouldn't block a genuine future like). Per app account, not
+// per BggVerification-shared BGG username - this is a personal UI
+// preference, not a fact about the real bidder, so it's never fanned out
+// to other accounts sharing that username (contrast usersByBggUsername.ts).
+model UserDismissedItem {
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  item   Item @relation(fields: [itemId], references: [id])
+  itemId Int
+
+  @@unique([userId, itemId])
+}
+
 // A BGG "thing" (board game, expansion, etc), keyed by its BGG object id.
 // Populated lazily from whichever source sees it first - a geeklist item
 // being imported, or a user's BGG collection being imported for their
@@ -141,29 +159,29 @@ model PushSubscription {
 }
 
 model Fair {
-  id          Int        @id @default(autoincrement())
-  name        String     @unique
-  status      FairStatus @default(ACTIVE)
+  id                   Int        @id @default(autoincrement())
+  name                 String     @unique
+  status               FairStatus @default(ACTIVE)
   // status decides whether the importer fetches/updates this fair; hidden
   // decides whether normal users see it as a selectable option in the UI.
-  hidden      Boolean    @default(false)
+  hidden               Boolean    @default(false)
   // The real-world date this fair is held. Used as the reference year
   // when resolving imprecise end-date notations in item bodies (e.g.
   // "Auction ends: Thu 17 Nov" has no year) - without this, parsing
   // always assumed the current year, which is wrong for any fair other
   // than the one happening right now.
-  eventDate   DateTime
-  geeklistId  Int        @unique
-  lastUpdated Int        @default(0)
-  lastResult  JobResult  @default(NONE)
-  startedAt   Int        @default(0)
-  list        List?      @relation(fields: [listId], references: [id])
-  listId      Int?       @unique
-  latestFile  String?
+  eventDate            DateTime
+  geeklistId           Int        @unique
+  lastUpdated          Int        @default(0)
+  lastResult           JobResult  @default(NONE)
+  startedAt            Int        @default(0)
+  list                 List?      @relation(fields: [listId], references: [id])
+  listId               Int?       @unique
+  latestFile           String?
   // Newest RSS activity feed pubDate (unix seconds) imported so far by the
   // RSS fast path (updateRssData.ts) - also read by xml-fetcher to decide
   // how many RSS pages deep it needs to paginate each cycle to catch up.
-  rssLastSeenTimestamp Int @default(0)
+  rssLastSeenTimestamp Int        @default(0)
 
   UserFair   UserFair[]
   likedItems UserLikedItem[]
@@ -230,9 +248,10 @@ model Item {
   currentBid    Int?
   highestBidder String?
 
-  lastSeen     Int             @default(0)
-  deleted      Boolean         @default(false)
-  likedByUsers UserLikedItem[]
+  lastSeen         Int                 @default(0)
+  deleted          Boolean             @default(false)
+  likedByUsers     UserLikedItem[]
+  dismissedByUsers UserDismissedItem[]
 
   @@index([listId, deleted, id])
   @@index([listId, deleted, username])

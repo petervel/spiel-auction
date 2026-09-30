@@ -1,6 +1,7 @@
 import auth from "./auth";
 import bids from "./bids";
 import deleted from "./deleted";
+import dismissed from "./dismissed";
 import duplicates from "./duplicates";
 import fairs from "./fairs";
 import item from "./item";
@@ -17,6 +18,7 @@ export default [
 	{ path: "/auth", object: auth },
 	{ path: "/bids", object: bids },
 	{ path: "/deleted", object: deleted },
+	{ path: "/dismissed", object: dismissed },
 	{ path: "/duplicates", object: duplicates },
 	{ path: "/fairs", object: fairs },
 	{ path: "/item", object: item },

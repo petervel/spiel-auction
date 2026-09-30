@@ -2,7 +2,7 @@ import { User } from "@prisma/client";
 import prisma from "../../prismaClient";
 import { sendPushToUser } from "../../push/webPushClient";
 import { ItemWrapper } from "../processors/ItemWrapper";
-import { getConfirmedUserIdsByUsername } from "../verifiedUsers";
+import { getUserIdsByUsername } from "../usersByBggUsername";
 import {
 	computeNotificationIntents,
 	NotificationIntent,
@@ -53,11 +53,12 @@ export const notifyBidUpdates = async (
 	const intents = computeNotificationIntents(items, previousState);
 	if (intents.length === 0) return;
 
-	// Confirmed-verification-based, not User.bggUsername - see
-	// verifiedUsers.ts. A username can map to several accounts (two people
-	// verifying the same real BGG account), and all of them must be notified.
+	// Confirmed BggVerification or just a matching User.bggUsername claim -
+	// see usersByBggUsername.ts. A username can map to several accounts (two
+	// people sharing the same real BGG account), and all of them must be
+	// notified.
 	const usernames = [...new Set(intents.map((intent) => intent.username))];
-	const userIdsByUsername = await getConfirmedUserIdsByUsername(usernames);
+	const userIdsByUsername = await getUserIdsByUsername(usernames);
 	const allUserIds = [...new Set([...userIdsByUsername.values()].flat())];
 	if (allUserIds.length === 0) return;
 

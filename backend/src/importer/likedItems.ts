@@ -1,5 +1,5 @@
 import prisma from "../prismaClient";
-import { getConfirmedUserIdsByUsername, UserIdsByUsername } from "./verifiedUsers";
+import { getUserIdsByUsername, UserIdsByUsername } from "./usersByBggUsername";
 
 // `${itemId}:${lowercased bidder username}` - identifies one user having
 // placed at least one real bid on one item.
@@ -44,8 +44,9 @@ export const computeNewLikes = (
 	return likes;
 };
 
-// Auto-likes an item for every account with a confirmed BggVerification for
-// the bidder's username the first time they place a bid on it, so it still
+// Auto-likes an item for every account that's this bidder - confirmed
+// BggVerification or just a matching User.bggUsername claim, see
+// usersByBggUsername.ts - the first time they place a bid on it, so it still
 // shows up on their "Outbid & Liked" page if they're later outbid - without
 // them ever having pressed the heart themselves. Idempotent: re-bidding on
 // an already-liked item is a no-op (unique constraint on UserLikedItem),
@@ -69,9 +70,7 @@ export const likeItemsForNewBidders = async (
 	];
 	if (newlyBidUsernames.length === 0) return;
 
-	const userIdsByUsername = await getConfirmedUserIdsByUsername(
-		newlyBidUsernames,
-	);
+	const userIdsByUsername = await getUserIdsByUsername(newlyBidUsernames);
 	if (userIdsByUsername.size === 0) return;
 
 	const data = computeNewLikes(

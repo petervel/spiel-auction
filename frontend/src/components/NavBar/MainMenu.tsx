@@ -1,8 +1,8 @@
 import {
 	ForumRounded,
+	HandshakeRounded,
 	LoginRounded,
 	LogoutRounded,
-	Save,
 	SettingsRounded,
 	VolunteerActivismRounded,
 } from '@mui/icons-material';
@@ -61,12 +61,12 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						className={css.menuItem}
 						component={NavLink}
 						onClick={close}
-						to="/export"
+						to="/meetups"
 					>
 						<ListItemIcon>
-							<Save className={css.menuIcon} />
+							<HandshakeRounded className={css.menuIcon} />
 						</ListItemIcon>
-						Export
+						Meetups
 					</MenuItem>
 					<MenuItem
 						className={css.menuItem}

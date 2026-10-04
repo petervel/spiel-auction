@@ -7,6 +7,7 @@ import fairs from "./fairs";
 import item from "./item";
 import items from "./items";
 import liked from "./liked";
+import meetups from "./meetups";
 import object from "./object";
 import objects from "./objects";
 import outbids from "./outbids";
@@ -23,6 +24,7 @@ export default [
 	{ path: "/fairs", object: fairs },
 	{ path: "/item", object: item },
 	{ path: "/items", object: items },
+	{ path: "/meetups", object: meetups },
 	{ path: "/object", object: object },
 	{ path: "/objects", object: objects },
 	{ path: "/outbids", object: outbids },

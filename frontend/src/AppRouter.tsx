@@ -5,13 +5,13 @@ import { SellingPage } from './pages/BidsPages/SellingPage';
 import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DonatePage } from './pages/DonatePage/DonatePage';
 import { DuplicatesPage } from './pages/DuplicatesPage/DuplicatesPage';
-import { ExportPage } from './pages/ExportPage/ExportPage';
 import { HelpPage } from './pages/HelpPage/HelpPage';
 import { ImportWishlistPage } from './pages/ImportWishlistPage/ImportWishlistPage';
 import { ItemPage } from './pages/ItemPage/ItemPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { LikedPage } from './pages/LatestPage/LikedPage';
 import { MeetupLocationPage } from './pages/MeetupLocationPage/MeetupLocationPage';
+import { MeetupsPage } from './pages/MeetupsPage/MeetupsPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
@@ -37,7 +37,7 @@ export const AppRouter = () => {
 			<Route path="/settings/location" element={<MeetupLocationPage />} />
 			<Route path="/duplicates" element={<DuplicatesPage />} />
 			<Route path="/deleted" element={<DeletedPage />} />
-			<Route path="/export" element={<ExportPage />} />
+			<Route path="/meetups" element={<MeetupsPage />} />
 			<Route path="/donate" element={<DonatePage />} />
 			<Route path="/help" element={<HelpPage />} />
 			<Route path="/wishlist/import" element={<ImportWishlistPage />} />

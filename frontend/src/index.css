@@ -4,6 +4,15 @@
 	font-family: Roboto, Arial;
 }
 
+/* box-sizing defaults to content-box and isn't inherited, so a reset has
+   to target every element directly (not just body) - otherwise a child
+   with width:100% plus its own padding (e.g. MeetupsPage's row list)
+   renders wider than its container and overflows on mobile. */
+body,
+body * {
+	box-sizing: border-box;
+}
+
 body {
 	margin: 0;
 	--colour-main: #1069bc;

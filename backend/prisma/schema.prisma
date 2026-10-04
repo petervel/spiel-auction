@@ -119,6 +119,53 @@ model UserDismissedItem {
   @@unique([userId, itemId])
 }
 
+enum Day {
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// A planned in-person handoff between one buyer and one seller, covering
+// every item currently being exchanged between that exact pair in this
+// fair - not one row per item. buyerUsername/sellerUsername are plain BGG
+// usernames (like Item.username/highestBidder), not FKs to User - a
+// counterpart may never have an app account at all, and the pair's
+// identity has to survive either side's own User.bggUsername changing
+// later. If the same two people are both buying from and selling to each
+// other, that's two separate rows (one per direction), not merged.
+// location/time default to the venue's own "Hall 1A, 15:00" convention
+// (seen verbatim in many sellers' own listings) but either side can
+// override them; day has no default since the user picks it from
+// scratch. updatedAt is the "last edited" tracking, shared by both
+// parties since either can write to this same row. completedAt is
+// separate from updatedAt (not reused) so toggling "completed" off again
+// doesn't need to guess/restore whatever updatedAt was before - and so the
+// Completed section can sort by "most recently completed" without that
+// order being disturbed by someone later tweaking the day/time/location
+// of an already-completed meetup.
+model Meetup {
+  id             Int       @id @default(autoincrement())
+  fair           Fair      @relation(fields: [fairId], references: [id])
+  fairId         Int
+  buyerUsername  String
+  sellerUsername String
+  day            Day?
+  location       String    @default("Hall 1A")
+  time           String    @default("15:00")
+  completed      Boolean   @default(false)
+  completedAt    DateTime?
+  // Private per-side notes - each party only ever sees/edits their own
+  // column (API resolves "mine" from role), never the other party's.
+  buyerNotes     String?   @db.Text
+  sellerNotes    String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([fairId, buyerUsername, sellerUsername])
+}
+
 // A BGG "thing" (board game, expansion, etc), keyed by its BGG object id.
 // Populated lazily from whichever source sees it first - a geeklist item
 // being imported, or a user's BGG collection being imported for their
@@ -185,6 +232,7 @@ model Fair {
 
   UserFair   UserFair[]
   likedItems UserLikedItem[]
+  meetups    Meetup[]
 }
 
 model List {

@@ -7,6 +7,7 @@ import { NavBar } from './components/NavBar/NavBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BookmarkProvider } from './providers/BookmarkProvider';
+import { DonateHint } from './components/DonateHint';
 
 function App() {
 	const { mode, toggleDarkMode } = useDarkMode();
@@ -27,7 +28,7 @@ function App() {
 				<ThemeProvider theme={theme}>
 					<BookmarkProvider>
 						<NavBar />
-						{/* <DonateHint /> */}
+						<DonateHint />
 						<div className="content-max-width">
 							<AppRouter />
 						</div>

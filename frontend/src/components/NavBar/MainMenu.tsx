@@ -1,8 +1,10 @@
 import {
+	AdminPanelSettingsRounded,
 	ForumRounded,
 	HandshakeRounded,
 	LoginRounded,
 	LogoutRounded,
+	PersonOffRounded,
 	SettingsRounded,
 	VolunteerActivismRounded,
 } from '@mui/icons-material';
@@ -32,6 +34,9 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 	const {
 		user,
 		logout,
+		realAdmin,
+		emulating,
+		stopEmulating,
 		isLoginDialogOpen,
 		openLoginDialog,
 		closeLoginDialog,
@@ -94,6 +99,33 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 						</ListItemIcon>
 						Dark mode
 					</MenuItem>
+					{realAdmin && (
+						<MenuItem
+							className={css.menuItem}
+							component={NavLink}
+							onClick={close}
+							to="/admin"
+						>
+							<ListItemIcon>
+								<AdminPanelSettingsRounded
+									className={css.menuIcon}
+								/>
+							</ListItemIcon>
+							Admin
+						</MenuItem>
+					)}
+					{realAdmin && emulating && (
+						<MenuItem
+							className={css.menuItem}
+							onClick={closeWith(stopEmulating)}
+						>
+							<ListItemIcon>
+								<PersonOffRounded className={css.menuIcon} />
+							</ListItemIcon>
+							Stop impersonating
+						</MenuItem>
+					)}
+
 					<Divider />
 
 					{!user ? (

@@ -3,7 +3,11 @@ import prisma from "../../prismaClient";
 // import { checkAdmin } from "../../util";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
-import { authenticateUser, tokenToUser } from "../../../middleware/auth";
+import {
+	authenticateUser,
+	EMULATED_USER_COOKIE,
+	tokenToUser,
+} from "../../../middleware/auth";
 import { sendMagicLinkEmail } from "../../email";
 import { consumeMagicLinkToken, createMagicLinkToken } from "../../magicLink";
 import { completeLogin, touchLastSeen } from "../../session";
@@ -69,7 +73,10 @@ router.post("/google", async (req, res) => {
 
 router.post("/magic-link/request", async (req, res) => {
 	const { email } = req.body;
-	if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+	if (
+		typeof email !== "string" ||
+		!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+	) {
 		res.status(400).json({ error: "Valid email required" });
 		return;
 	}
@@ -111,6 +118,7 @@ router.post("/logout", authenticateUser, (_, res) => {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
 	}); // Clear the session cookie
+	res.clearCookie(EMULATED_USER_COOKIE, { path: "/" });
 
 	res.status(200).json({ message: "Logged out successfully" });
 });
@@ -160,26 +168,35 @@ router.get("/me", async (req, res) => {
 	}
 
 	try {
-		const user = await tokenToUser(token);
-		if (user) {
-			touchLastSeen(user).catch((err) =>
-				console.error("Error updating lastSeenAt:", err),
-			);
-			const verification = user.bggUsername
-				? await prisma.bggVerification.findUnique({
-						where: {
-							userId_bggUsername: {
-								userId: user.id,
-								bggUsername: user.bggUsername,
-							},
-						},
-					})
-				: null;
-			return res.json({
-				user: { ...user, bggVerified: !!verification?.confirmed },
-			});
+		const session = await tokenToUser(
+			token,
+			req.cookies[EMULATED_USER_COOKIE],
+		);
+		if (!session) {
+			return res.json({ user: null });
 		}
-		return res.json({ user });
+
+		touchLastSeen(session.realUser).catch((err) =>
+			console.error("Error updating lastSeenAt:", err),
+		);
+
+		const user = session.user;
+		const verification = user.bggUsername
+			? await prisma.bggVerification.findUnique({
+					where: {
+						userId_bggUsername: {
+							userId: user.id,
+							bggUsername: user.bggUsername,
+						},
+					},
+				})
+			: null;
+
+		return res.json({
+			user: { ...user, bggVerified: !!verification?.confirmed },
+			realAdmin: session.realUser.accessLevel === "ADMIN",
+			emulating: session.emulating,
+		});
 	} catch (err) {
 		console.error("Error in /me:", err);
 		return res.json({ user: null });

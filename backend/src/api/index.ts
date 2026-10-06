@@ -1,3 +1,4 @@
+import admin from "./admin";
 import auth from "./auth";
 import bids from "./bids";
 import deleted from "./deleted";
@@ -16,6 +17,7 @@ import user from "./user";
 import wishlist from "./wishlist";
 
 export default [
+	{ path: "/admin", object: admin },
 	{ path: "/auth", object: auth },
 	{ path: "/bids", object: bids },
 	{ path: "/deleted", object: deleted },

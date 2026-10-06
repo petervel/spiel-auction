@@ -8,6 +8,7 @@ import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BookmarkProvider } from './providers/BookmarkProvider';
 import { DonateHint } from './components/DonateHint';
+import { EmulationBanner } from './components/EmulationBanner/EmulationBanner';
 
 function App() {
 	const { mode, toggleDarkMode } = useDarkMode();
@@ -30,6 +31,7 @@ function App() {
 						<NavBar />
 						<DonateHint />
 						<div className="content-max-width">
+							<EmulationBanner />
 							<AppRouter />
 						</div>
 						<BggUsernameReminder />

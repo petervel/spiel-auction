@@ -8,6 +8,8 @@ const MIN_VISIBILITY_REFETCH_MS = 30_000;
 export const UserProvider = ({ children }: { children: ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setLoading] = useState(true);
+	const [realAdmin, setRealAdmin] = useState(false);
+	const [emulating, setEmulating] = useState(false);
 	const [isLoginDialogOpen, setLoginDialogOpen] = useState(false);
 	const lastFetchAtRef = useRef(0);
 
@@ -21,12 +23,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 				const data = await res.json();
 				// console.log('Fetched current user:', data);
 				setUser(data.user ?? null);
+				setRealAdmin(!!data.realAdmin);
+				setEmulating(!!data.emulating);
 			} else {
 				setUser(null);
+				setRealAdmin(false);
+				setEmulating(false);
 			}
 		} catch (err) {
 			console.error('Failed to fetch current user:', err);
 			setUser(null);
+			setRealAdmin(false);
+			setEmulating(false);
 		} finally {
 			setLoading(false);
 		}
@@ -75,7 +83,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 			stopPolling();
 			document.removeEventListener(
 				'visibilitychange',
-				handleVisibilityChange
+				handleVisibilityChange,
 			);
 		};
 	}, []);
@@ -116,14 +124,39 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 		},
 	});
 
+	const startEmulating = async (userId: number) => {
+		const res = await fetch('/api/admin/emulate', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify({ userId }),
+		});
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			return body.error ?? 'Could not emulate that user';
+		}
+		await fetchCurrentUser();
+		return null;
+	};
+
+	const stopEmulating = async () => {
+		await fetch('/api/admin/emulate', {
+			method: 'DELETE',
+			credentials: 'include',
+		});
+		await fetchCurrentUser();
+	};
+
 	const logout = () => {
 		googleLogout();
 		setUser(null);
+		setRealAdmin(false);
+		setEmulating(false);
 
 		fetch('/api/auth/logout', { method: 'POST' })
 			.then(() => console.log('Backend session cleared'))
 			.catch((err) =>
-				console.error('Error clearing backend session:', err)
+				console.error('Error clearing backend session:', err),
 			);
 	};
 
@@ -135,6 +168,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 				login,
 				logout,
 				isLoading,
+				realAdmin,
+				emulating,
+				startEmulating,
+				stopEmulating,
 				isLoginDialogOpen,
 				openLoginDialog: () => setLoginDialogOpen(true),
 				closeLoginDialog: () => setLoginDialogOpen(false),

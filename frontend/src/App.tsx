@@ -8,6 +8,7 @@ import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BookmarkProvider } from './providers/BookmarkProvider';
 import { DonateHint } from './components/DonateHint';
+import { LocationSetupHint } from './components/LocationSetupHint';
 import { EmulationBanner } from './components/EmulationBanner/EmulationBanner';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
 				<ThemeProvider theme={theme}>
 					<BookmarkProvider>
 						<NavBar />
+						<LocationSetupHint />
 						<DonateHint />
 						<div className="content-max-width">
 							<EmulationBanner />

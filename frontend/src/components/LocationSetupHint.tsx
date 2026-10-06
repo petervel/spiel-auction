@@ -2,7 +2,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Alert from '@mui/material/Alert';
 import IconButton from '@mui/material/IconButton';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useUser } from '../hooks/useUser';
 
 const DISMISS_KEY = 'locationSetupHintDismissed';
@@ -19,16 +19,24 @@ const readDismissedAt = (): number | null => {
 	}
 };
 
-// Nudges logged-in users who haven't picked a meetup spot yet. Hidden for
-// anyone who already has one, and dismissible for a week at a time.
+// Global nudge for logged-in users who haven't picked a meetup spot yet.
+// Hidden once they have one, on the map page itself, and dismissible for a
+// week at a time.
 export const LocationSetupHint = () => {
 	const { user } = useUser();
+	const { pathname } = useLocation();
 	const [dismissed, setDismissed] = useState(() => {
 		const dismissedAt = readDismissedAt();
 		return dismissedAt !== null && Date.now() - dismissedAt < ONE_WEEK;
 	});
 
-	if (!user || user.currentUserFair?.locationSquare || dismissed) return null;
+	if (
+		!user ||
+		user.currentUserFair?.locationSquare ||
+		dismissed ||
+		pathname === '/settings/location'
+	)
+		return null;
 
 	const dismiss = () => {
 		try {

@@ -14,6 +14,7 @@ import { Title } from '../../components/Title/Title';
 import { useListId } from '../../hooks/useListId';
 import { MeetupChanges, MeetupEntry, useMeetups } from '../../hooks/useMeetups';
 import { useUser } from '../../hooks/useUser';
+import { LocationSetupHint } from '../../components/LocationSetupHint';
 import { MeetupRowDetails } from './MeetupRowDetails';
 import { MeetupRowEditForm } from './MeetupRowEditForm';
 import {
@@ -139,6 +140,8 @@ export const MeetupsPage = () => {
 					</Button>
 				}
 			/>
+
+			<LocationSetupHint />
 
 			{isLoading ? (
 				<Spinner />

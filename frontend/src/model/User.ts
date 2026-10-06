@@ -8,6 +8,7 @@ export interface User {
 
 	accessLevel?: 'NORMAL' | 'ADMIN' | 'MODERATOR';
 	bggUsername?: string;
+	bggVerified?: boolean;
 
 	notifyOnOutbid?: boolean;
 	notifyOnNewBid?: boolean;

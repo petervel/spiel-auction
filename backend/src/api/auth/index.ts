@@ -165,6 +165,19 @@ router.get("/me", async (req, res) => {
 			touchLastSeen(user).catch((err) =>
 				console.error("Error updating lastSeenAt:", err),
 			);
+			const verification = user.bggUsername
+				? await prisma.bggVerification.findUnique({
+						where: {
+							userId_bggUsername: {
+								userId: user.id,
+								bggUsername: user.bggUsername,
+							},
+						},
+					})
+				: null;
+			return res.json({
+				user: { ...user, bggVerified: !!verification?.confirmed },
+			});
 		}
 		return res.json({ user });
 	} catch (err) {

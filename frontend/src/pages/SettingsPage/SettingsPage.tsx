@@ -27,6 +27,7 @@ import { useMeetupLocation } from '../../hooks/useMeetupLocation';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { usePushSubscription } from '../../hooks/usePushSubscription';
 import { useUser } from '../../hooks/useUser';
+import { LocationSetupHint } from '../../components/LocationSetupHint';
 
 export const SettingsPage = () => {
 	const { user, isLoading: userLoading } = useUser();
@@ -165,6 +166,7 @@ export const SettingsPage = () => {
 			<Title title="Settings" left={<BackButton />} />
 			<Stack alignItems="center">
 				<Stack gap={4} width="100%" maxWidth={400}>
+					<LocationSetupHint />
 					{fairs && fairs.length > 1 && (
 						<>
 							<TextField

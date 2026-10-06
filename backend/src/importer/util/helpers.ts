@@ -120,6 +120,10 @@ export function parseEndDateString(
 
 	end = end.replace(/(,?\s*random time\.?)?/gi, "");
 
+	// Anything after the first comma is a note ("after dinner, no time set")
+	// that makes Date.parse give up entirely - the date is all that's needed.
+	end = end.split(",")[0];
+
 	// "26 Sep or 27 Sep" - take the earlier (first-listed) date.
 	end = end.split(/\bor\b/i)[0];
 

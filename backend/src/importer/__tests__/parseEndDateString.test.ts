@@ -21,6 +21,12 @@ describe("parseEndDateString", () => {
 		).toBe("20260926");
 	});
 
+	it("ignores a trailing free-text note after the date", () => {
+		expect(
+			parseEndDateString("Thu 15 Oct, after dinner, no time set", 2026),
+		).toBe("20261015");
+	});
+
 	it("returns undefined for empty input", () => {
 		expect(parseEndDateString("", 2026)).toBeUndefined();
 		expect(parseEndDateString(null, 2026)).toBeUndefined();

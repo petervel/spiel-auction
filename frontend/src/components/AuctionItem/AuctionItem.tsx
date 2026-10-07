@@ -21,7 +21,11 @@ interface Props {
 	options?: ItemDisplayOptions;
 }
 
-export const AuctionItem = ({ item, isOutbid = false, options = {} }: Props) => {
+export const AuctionItem = ({
+	item,
+	isOutbid = false,
+	options = {},
+}: Props) => {
 	const {
 		allowBookmarks = false,
 		allowLikes = false,
@@ -65,8 +69,14 @@ export const AuctionItem = ({ item, isOutbid = false, options = {} }: Props) => 
 				item: true,
 				[css.container]: true,
 				[css.ended]: item.isEnded,
-				[css.bookmarked]: allowBookmarks && bookmark == item.id,
 				[css.seen]: allowBookmarks && bookmark && item.id < bookmark,
+				// Not the same boundary as .seen: the bookmarked row itself
+				// (id === bookmark) is deliberately excluded from .seen (it's
+				// the current marker, not yet "passed"), but the line should
+				// still sit right above it, same as before - so this uses
+				// <=, not <.
+				[css.pastBookmark]:
+					allowBookmarks && bookmark && item.id <= bookmark,
 			})}
 		>
 			<Stack direction="row" gap={1}>

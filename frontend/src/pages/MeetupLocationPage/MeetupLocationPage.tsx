@@ -19,6 +19,8 @@ import { useMeetupLocation } from '../../hooks/useMeetupLocation';
 import { useUser } from '../../hooks/useUser';
 import { TradeFloorGrid } from './TradeFloorGrid';
 
+const TITLE = "Meetup Info";
+
 export const MeetupLocationPage = () => {
 	const { user, isLoading: userLoading } = useUser();
 	const { square, description, setLocation, saving } = useMeetupLocation();
@@ -85,7 +87,7 @@ export const MeetupLocationPage = () => {
 		return (
 			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
-					title="My Meetup Info"
+					title={TITLE}
 					left={<BackButton to="/settings" />}
 				/>
 				<p>
@@ -99,7 +101,7 @@ export const MeetupLocationPage = () => {
 		return (
 			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
-					title="My Meetup Info"
+					title={TITLE}
 					left={<BackButton to="/settings" />}
 				/>
 				<Typography>
@@ -117,7 +119,7 @@ export const MeetupLocationPage = () => {
 		return (
 			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
-					title="My Meetup Info"
+					title={TITLE}
 					left={<BackButton to="/settings" />}
 				/>
 				<Typography>
@@ -138,7 +140,7 @@ export const MeetupLocationPage = () => {
 			sx={{ width: '100%', maxWidth: 540, marginInline: 'auto' }}
 		>
 			<Title
-				title="My Meetup Info"
+				title={TITLE}
 				left={<BackButton to="/settings" />}
 			/>
 			<Stack gap={3}>

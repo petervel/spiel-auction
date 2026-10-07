@@ -1,4 +1,8 @@
-import { StarBorderRounded } from '@mui/icons-material';
+import {
+	ExpandLessRounded,
+	ExpandMoreRounded,
+	StarBorderRounded,
+} from '@mui/icons-material';
 import {
 	Button,
 	MenuItem,
@@ -48,7 +52,9 @@ export const WishlistPage = () => {
 		if (sortMode === 'alphabetical') {
 			list.sort((a, b) => a.objectName.localeCompare(b.objectName));
 		} else {
-			list.sort((a, b) => latestPostTimestamp(b) - latestPostTimestamp(a));
+			list.sort(
+				(a, b) => latestPostTimestamp(b) - latestPostTimestamp(a),
+			);
 		}
 		return list;
 	}, [withAuctions, sortMode]);
@@ -60,6 +66,20 @@ export const WishlistPage = () => {
 			else next.add(objectId);
 			return next;
 		});
+	};
+
+	// Toggles based on whether anything's currently expanded - matches the
+	// usual "select all" pattern: collapse everything if any row is open,
+	// otherwise expand everything.
+	const allExpanded = sortedWithAuctions.every(
+		(object) => !collapsedIds.has(object.objectId),
+	);
+	const toggleAllExpanded = () => {
+		setCollapsedIds(
+			allExpanded
+				? new Set(sortedWithAuctions.map((object) => object.objectId))
+				: new Set(),
+		);
 	};
 
 	if (userLoading) return <Spinner />;
@@ -82,24 +102,55 @@ export const WishlistPage = () => {
 					{sortedWithAuctions.length > 0 && (
 						<div className={css.section}>
 							<div className={css.sectionHeader}>
-								<Typography variant="h6">With auctions</Typography>
-								<Select
-									size="small"
-									value={sortMode}
-									onChange={(evt: SelectChangeEvent) =>
-										setSortMode(evt.target.value as SortMode)
-									}
+								<Typography variant="h6">
+									With auctions
+								</Typography>
+								<Stack
+									direction="row"
+									gap={1}
+									alignItems="center"
 								>
-									<MenuItem value="latest">Latest auction</MenuItem>
-									<MenuItem value="alphabetical">Alphabetical</MenuItem>
-								</Select>
+									<Button
+										size="small"
+										startIcon={
+											allExpanded ? (
+												<ExpandLessRounded />
+											) : (
+												<ExpandMoreRounded />
+											)
+										}
+										onClick={toggleAllExpanded}
+									>
+										{allExpanded
+											? 'Collapse all'
+											: 'Expand all'}
+									</Button>
+									<Select
+										size="small"
+										value={sortMode}
+										onChange={(evt: SelectChangeEvent) =>
+											setSortMode(
+												evt.target.value as SortMode,
+											)
+										}
+									>
+										<MenuItem value="latest">
+											Latest auction
+										</MenuItem>
+										<MenuItem value="alphabetical">
+											Alphabetical
+										</MenuItem>
+									</Select>
+								</Stack>
 							</div>
 							<ul className={css.items}>
 								{sortedWithAuctions.map((object) => (
 									<WishlistObjectRow
 										key={object.objectId}
 										object={object}
-										expanded={!collapsedIds.has(object.objectId)}
+										expanded={
+											!collapsedIds.has(object.objectId)
+										}
 										onToggleExpand={() =>
 											toggleExpanded(object.objectId)
 										}
@@ -112,7 +163,9 @@ export const WishlistPage = () => {
 					{withoutAuctions.length > 0 && (
 						<div className={css.section}>
 							<div className={css.sectionHeader}>
-								<Typography variant="h6">No auctions yet</Typography>
+								<Typography variant="h6">
+									No auctions yet
+								</Typography>
 							</div>
 							<ul className={css.items}>
 								{withoutAuctions.map((object) => (
@@ -136,7 +189,11 @@ export const WishlistPage = () => {
 					<Typography color="text.secondary">
 						No games on your wishlist yet.
 					</Typography>
-					<Button component={Link} to="/wishlist/import" variant="contained">
+					<Button
+						component={Link}
+						to="/wishlist/import"
+						variant="contained"
+					>
 						Import from BGG
 					</Button>
 				</Stack>

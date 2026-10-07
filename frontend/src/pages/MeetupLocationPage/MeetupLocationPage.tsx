@@ -1,8 +1,16 @@
-import { Button, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import {
+	Button,
+	Divider,
+	Snackbar,
+	Stack,
+	TextField,
+	Typography,
+} from '@mui/material';
 import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
+import { MeetupSpotSummary } from '../../components/MeetupSpotSummary/MeetupSpotSummary';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
@@ -47,7 +55,9 @@ export const MeetupLocationPage = () => {
 		if (success) {
 			refreshCounts();
 			setToastMessage(
-				deselecting ? 'Location cleared' : `Location set to ${newSquare}`,
+				deselecting
+					? 'Location cleared'
+					: `Location set to ${newSquare}`,
 			);
 		} else {
 			setToastMessage(error ?? 'Failed to update location');
@@ -56,7 +66,8 @@ export const MeetupLocationPage = () => {
 
 	const saveDescription = async (evt: FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();
-		if (!square) return;
+		// square may be null here - the description works on its own, so
+		// this just keeps whatever square (or lack of one) is already set.
 		const { success, error } = await setLocation(
 			square,
 			editDescription || null,
@@ -74,7 +85,7 @@ export const MeetupLocationPage = () => {
 		return (
 			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
-					title="Meetup Location"
+					title="My Meetup Info"
 					left={<BackButton to="/settings" />}
 				/>
 				<p>
@@ -88,7 +99,7 @@ export const MeetupLocationPage = () => {
 		return (
 			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
-					title="Meetup Location"
+					title="My Meetup Info"
 					left={<BackButton to="/settings" />}
 				/>
 				<Typography>
@@ -106,7 +117,7 @@ export const MeetupLocationPage = () => {
 		return (
 			<Stack paddingInline="2rem" paddingBottom="2rem">
 				<Title
-					title="Meetup Location"
+					title="My Meetup Info"
 					left={<BackButton to="/settings" />}
 				/>
 				<Typography>
@@ -120,65 +131,60 @@ export const MeetupLocationPage = () => {
 	}
 
 	return (
-		<Stack paddingInline="2rem" paddingBottom="2rem" gap={3} alignItems="center">
+		<Stack
+			paddingInline="2rem"
+			paddingBottom="2rem"
+			gap={3}
+			sx={{ width: '100%', maxWidth: 540, marginInline: 'auto' }}
+		>
 			<Title
-				title="Meetup Location"
+				title="My Meetup Info"
 				left={<BackButton to="/settings" />}
 			/>
-			{square && (
-				<Typography variant="h3" fontWeight="bold" color="primary">
-					{square}
+			<Stack gap={3}>
+				<MeetupSpotSummary square={square} description={description} />
+				<Typography variant="h6">How to find you</Typography>
+				<form onSubmit={saveDescription} style={{ width: '100%' }}>
+					<Stack gap={2} alignItems="start">
+						<TextField
+							value={editDescription}
+							onChange={(evt) =>
+								setEditDescription(evt.target.value)
+							}
+							fullWidth
+							multiline
+							minRows={3}
+							label="How to find/recognize you"
+							placeholder="e.g. red jacket, or call me on +32..."
+							variant="standard"
+						/>
+						<Button
+							variant="contained"
+							type="submit"
+							disabled={saving}
+						>
+							Save description
+						</Button>
+					</Stack>
+				</form>
+				<Divider />
+				<Typography variant="body2" color="text.secondary">
+					Click a square to set where you'll be. The red glow (and
+					number) shows how many people (including you) have picked
+					each square - pick a quieter one if you'd like.
 				</Typography>
-			)}
-			<Typography
-				variant="body2"
-				color="text.secondary"
-				alignSelf="start"
-				maxWidth={"600px"}
-				marginInline={"auto"}
-			>
-				Click a square to set where you'll be. The red glow (and number)
-				shows how many people (including you) have picked each square - pick
-				a quieter one if you'd like.
-			</Typography>
-			{countsLoading ? (
-				<Spinner />
-			) : (
-				<TradeFloorGrid
-					counts={counts ?? {}}
-					selected={square}
-					onSelect={handleSelectSquare}
-				/>
-			)}
-			<form
-				onSubmit={saveDescription}
-				style={{ width: '100%', maxWidth: 400 }}
-			>
-				<Stack gap={2} alignItems="start">
-					<TextField
-						value={editDescription}
-						onChange={(evt) => setEditDescription(evt.target.value)}
-						fullWidth
-						multiline
-						minRows={3}
-						label="How to find/recognize you"
-						placeholder="e.g. red jacket, or call me on +32..."
-						variant="standard"
-					/>
-					<Button
-						variant="contained"
-						type="submit"
-						disabled={saving || !square}
-					>
-						Save description
-					</Button>
-					{!square && (
-						<Typography variant="body2" color="text.secondary">
-							Pick a square above first.
-						</Typography>
+				<Stack alignItems="center">
+					{countsLoading ? (
+						<Spinner />
+					) : (
+						<TradeFloorGrid
+							counts={counts ?? {}}
+							selected={square}
+							onSelect={handleSelectSquare}
+						/>
 					)}
 				</Stack>
-			</form>
+			</Stack>
 			<Snackbar
 				open={!!toastMessage}
 				autoHideDuration={4000}

@@ -5,7 +5,6 @@ import {
 	Button,
 	Checkbox,
 	Chip,
-	Divider,
 	FormControlLabel,
 	IconButton,
 	MenuItem,
@@ -18,6 +17,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
+import { MeetupSpotSummary } from '../../components/MeetupSpotSummary/MeetupSpotSummary';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
@@ -27,6 +27,15 @@ import { useMeetupLocation } from '../../hooks/useMeetupLocation';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { usePushSubscription } from '../../hooks/usePushSubscription';
 import { useUser } from '../../hooks/useUser';
+
+// Groups each setting into its own visually distinct block instead of
+// stringing them together behind plain dividers.
+const sectionSx = {
+	border: '1px solid',
+	borderColor: 'divider',
+	borderRadius: 2,
+	padding: 2,
+} as const;
 
 export const SettingsPage = () => {
 	const { user, isLoading: userLoading } = useUser();
@@ -151,7 +160,11 @@ export const SettingsPage = () => {
 
 	if (!user) {
 		return (
-			<Stack paddingInline="2rem" paddingBottom="2rem">
+			<Stack
+				paddingInline="2rem"
+				paddingBottom="2rem"
+				sx={{ width: '100%', maxWidth: 640, marginInline: 'auto' }}
+			>
 				<Title title="Settings" left={<BackButton />} />
 				<p>
 					<LoginLink /> to manage your BGG username.
@@ -161,342 +174,329 @@ export const SettingsPage = () => {
 	}
 
 	return (
-		<Stack paddingInline="2rem" paddingBottom="2rem">
+		<Stack
+			paddingInline="2rem"
+			paddingBottom="2rem"
+			gap={3}
+			sx={{ width: '100%', maxWidth: 640, marginInline: 'auto' }}
+		>
 			<Title title="Settings" left={<BackButton />} />
-			<Stack alignItems="center">
-				<Stack gap={4} width="100%" maxWidth={400}>
-					{fairs && fairs.length > 1 && (
-						<>
+
+			{fairs && fairs.length > 1 && (
+				<Stack gap={1.5} sx={sectionSx}>
+					<Typography variant="subtitle2" color="text.secondary">
+						Fair
+					</Typography>
+					<TextField
+						select
+						value={currentFairId ?? ''}
+						onChange={(evt) => handleFairChange(+evt.target.value)}
+						disabled={switchingFair}
+						fullWidth
+						label="Active fair"
+						variant="standard"
+					>
+						{fairs.map((fair) => (
+							<MenuItem key={fair.id} value={fair.id}>
+								{fair.name}
+							</MenuItem>
+						))}
+					</TextField>
+				</Stack>
+			)}
+
+			<Stack gap={1.5} sx={sectionSx}>
+				<Typography variant="subtitle2" color="text.secondary">
+					BGG Username
+				</Typography>
+				{editingUsername ? (
+					<form onSubmit={save} style={{ width: '100%' }}>
+						<Stack gap={2} alignItems="start">
 							<TextField
-								select
-								value={currentFairId ?? ''}
+								name="username"
+								value={editUsername}
 								onChange={(evt) =>
-									handleFairChange(+evt.target.value)
+									setEditUsername(evt.target.value)
 								}
-								disabled={switchingFair}
+								autoFocus
 								fullWidth
-								label="Active fair"
+								label="BGG username"
 								variant="standard"
-							>
-								{fairs.map((fair) => (
-									<MenuItem key={fair.id} value={fair.id}>
-										{fair.name}
-									</MenuItem>
-								))}
-							</TextField>
-							<Divider sx={{ width: '100%' }} />
-						</>
-					)}
-					{editingUsername ? (
-						<form onSubmit={save} style={{ width: '100%' }}>
-							<Stack gap={3} alignItems="start">
-								<TextField
-									name="username"
-									value={editUsername}
-									onChange={(evt) =>
-										setEditUsername(evt.target.value)
-									}
-									autoFocus
-									fullWidth
-									label="BGG username"
-									variant="standard"
-								/>
-								<Stack gap={2} direction="row">
-									<Button variant="contained" type="submit">
-										Save
-									</Button>
-									{bggUsername && (
-										<Button type="button" onClick={cancel}>
-											Cancel
-										</Button>
-									)}
-								</Stack>
-							</Stack>
-						</form>
-					) : (
-						<Stack
-							direction="row"
-							alignItems="center"
-							gap={1}
-							width="100%"
-						>
-							<Typography flexGrow={1}>
-								BGG username: {bggUsername}
-							</Typography>
-							<IconButton
-								size="small"
-								aria-label="Edit BGG username"
-								onClick={() => setEditingUsername(true)}
-							>
-								<EditIcon fontSize="small" />
-							</IconButton>
-						</Stack>
-					)}
-					{!editingUsername && bggUsername && (
-						<Stack gap={1} alignItems="start" width="100%">
-							{verification?.confirmed ? (
-								<Chip
-									color="success"
-									size="small"
-									icon={<CheckCircleIcon />}
-									label="BGG username verified"
-								/>
-							) : verification?.exists ? (
-								<>
-									<Chip
-										color="warning"
-										size="small"
-										label="BGG username not verified"
-									/>
-									<Typography variant="body2">
-										Post this code as a reply on{' '}
-										<a
-											href="https://boardgamegeek.com/thread/3773437"
-											target="_blank"
-										>
-											this BGG thread
-										</a>{' '}
-										to prove you own this account:
-									</Typography>
-									<Stack
-										direction="row"
-										alignItems="center"
-										gap={1}
-									>
-										<Typography
-											component="code"
-											sx={{
-												fontFamily: 'monospace',
-												bgcolor: 'action.hover',
-												px: 1,
-												py: 0.5,
-												borderRadius: 1,
-											}}
-										>
-											{verification.hash}
-										</Typography>
-										<IconButton
-											size="small"
-											aria-label="Copy code"
-											onClick={() =>
-												navigator.clipboard.writeText(
-													verification.hash ?? '',
-												)
-											}
-										>
-											<ContentCopyIcon fontSize="small" />
-										</IconButton>
-									</Stack>
-									<Button
-										type="button"
-										variant="contained"
-										size="small"
-										disabled={verifying}
-										onClick={handleCheckVerification}
-									>
-										Check confirmation
-									</Button>
-								</>
-							) : (
-								<Button
-									type="button"
-									size="small"
-									disabled={verifying}
-									onClick={startVerification}
-								>
-									Verify BGG username ownership
+							/>
+							<Stack gap={2} direction="row">
+								<Button variant="contained" type="submit">
+									Save
 								</Button>
-							)}
+								{bggUsername && (
+									<Button type="button" onClick={cancel}>
+										Cancel
+									</Button>
+								)}
+							</Stack>
 						</Stack>
-					)}
-					<Divider sx={{ width: '100%' }} />
+					</form>
+				) : (
 					<Stack
 						direction="row"
 						alignItems="center"
 						gap={1}
 						width="100%"
 					>
-						<Stack flexGrow={1}>
-							<Typography>
-								Meetup location: {meetupSquare ?? 'Not set'}
-							</Typography>
-							{meetupDescription && (
-								<Typography
-									variant="body2"
-									color="text.secondary"
-								>
-									{meetupDescription}
-								</Typography>
-							)}
-						</Stack>
+						<Typography flexGrow={1}>{bggUsername}</Typography>
 						<IconButton
 							size="small"
-							aria-label="Edit meetup location"
-							component={Link}
-							to="/settings/location"
+							aria-label="Edit BGG username"
+							onClick={() => setEditingUsername(true)}
 						>
 							<EditIcon fontSize="small" />
 						</IconButton>
 					</Stack>
-					{pushSupported && (
-						<>
-							<Divider sx={{ width: '100%' }} />
-							<Stack gap={1} alignItems="start">
-								<Typography variant="body2">
-									Get notified about your auctions.
-								</Typography>
-								{needsHomeScreenInstall && (
-									<Typography
-										variant="body2"
-										color="text.secondary"
-									>
-										Add this app to your home screen first -
-										iOS only allows notifications for
-										installed apps.
-									</Typography>
-								)}
-								{pushPermission === 'denied' ? (
-									<Typography
-										variant="body2"
-										color="text.secondary"
-									>
-										Notifications are blocked for this site
-										in your browser settings.
-									</Typography>
-								) : pushSubscribed ? (
-									<>
-										<Typography
-											variant="body2"
-											color="text.secondary"
-										>
-											Notifications are enabled on this
-											device.
-										</Typography>
-										<Stack>
-											<Typography variant="body2">
-												Notify me about:
-											</Typography>
-											<FormControlLabel
-												control={
-													<Checkbox
-														checked={
-															notificationPreferences.notifyOnOutbid
-														}
-														disabled={
-															preferencesSaving
-														}
-														onChange={() =>
-															togglePreference(
-																'notifyOnOutbid',
-															)
-														}
-													/>
-												}
-												label="Outbid on an item"
-											/>
-											<FormControlLabel
-												control={
-													<Checkbox
-														checked={
-															notificationPreferences.notifyOnNewBid
-														}
-														disabled={
-															preferencesSaving
-														}
-														onChange={() =>
-															togglePreference(
-																'notifyOnNewBid',
-															)
-														}
-													/>
-												}
-												label="New bids on my auctions"
-											/>
-											<FormControlLabel
-												control={
-													<Checkbox
-														checked={
-															notificationPreferences.notifyOnAuctionWon
-														}
-														disabled={
-															preferencesSaving
-														}
-														onChange={() =>
-															togglePreference(
-																'notifyOnAuctionWon',
-															)
-														}
-													/>
-												}
-												label="Auctions I've won"
-											/>
-											<FormControlLabel
-												control={
-													<Checkbox
-														checked={
-															notificationPreferences.notifyOnWishlistItemListed
-														}
-														disabled={
-															preferencesSaving
-														}
-														onChange={() =>
-															togglePreference(
-																'notifyOnWishlistItemListed',
-															)
-														}
-													/>
-												}
-												label="New listing for a wishlisted game"
-											/>
-										</Stack>
-										<Stack gap={2} direction="row">
-											<Button
-												type="button"
-												disabled={pushTestSending}
-												onClick={handleTestPush}
-											>
-												Send test notification
-											</Button>
-											<Button
-												type="button"
-												disabled={pushSaving}
-												onClick={unsubscribePush}
-											>
-												Turn off notifications
-											</Button>
-										</Stack>
-									</>
-								) : (
-									<Button
-										type="button"
-										variant="contained"
-										disabled={pushSaving}
-										onClick={subscribePush}
-									>
-										Enable notifications
-									</Button>
-								)}
-							</Stack>
-						</>
-					)}
-					<Divider sx={{ width: '100%' }} />
+				)}
+				{!editingUsername && bggUsername && (
 					<Stack gap={1} alignItems="start" width="100%">
-						<Typography variant="body2">
-							Import your BGG wishlist to build your wishlist
-							here.
-						</Typography>
-						<Button
-							type="button"
-							variant="contained"
-							disabled={!bggUsername}
-							component={Link}
-							to="/wishlist/import"
-						>
-							Import from BGG
-						</Button>
+						{verification?.confirmed ? (
+							<Chip
+								color="success"
+								size="small"
+								icon={<CheckCircleIcon />}
+								label="BGG username verified"
+							/>
+						) : verification?.exists ? (
+							<>
+								<Chip
+									color="warning"
+									size="small"
+									label="BGG username not verified"
+								/>
+								<Typography variant="body2">
+									Post this code as a reply on{' '}
+									<a
+										href="https://boardgamegeek.com/thread/3773437"
+										target="_blank"
+									>
+										this BGG thread
+									</a>{' '}
+									to prove you own this account:
+								</Typography>
+								<Stack
+									direction="row"
+									alignItems="center"
+									gap={1}
+								>
+									<Typography
+										component="code"
+										sx={{
+											fontFamily: 'monospace',
+											bgcolor: 'action.hover',
+											px: 1,
+											py: 0.5,
+											borderRadius: 1,
+										}}
+									>
+										{verification.hash}
+									</Typography>
+									<IconButton
+										size="small"
+										aria-label="Copy code"
+										onClick={() =>
+											navigator.clipboard.writeText(
+												verification.hash ?? '',
+											)
+										}
+									>
+										<ContentCopyIcon fontSize="small" />
+									</IconButton>
+								</Stack>
+								<Button
+									type="button"
+									variant="contained"
+									size="small"
+									disabled={verifying}
+									onClick={handleCheckVerification}
+								>
+									Check confirmation
+								</Button>
+							</>
+						) : (
+							<Button
+								type="button"
+								size="small"
+								disabled={verifying}
+								onClick={startVerification}
+							>
+								Verify BGG username ownership
+							</Button>
+						)}
 					</Stack>
+				)}
+			</Stack>
+
+			<Stack gap={1.5} sx={sectionSx}>
+				<Typography variant="subtitle2" color="text.secondary">
+					Meetup
+				</Typography>
+				<Stack direction="row" alignItems="center" gap={1} width="100%">
+					<MeetupSpotSummary
+						square={meetupSquare}
+						description={meetupDescription}
+					/>
+					<IconButton
+						size="small"
+						aria-label="Edit meetup location"
+						component={Link}
+						to="/settings/location"
+					>
+						<EditIcon fontSize="small" />
+					</IconButton>
 				</Stack>
 			</Stack>
+
+			{pushSupported && (
+				<Stack gap={1.5} sx={sectionSx}>
+					<Typography variant="subtitle2" color="text.secondary">
+						Notifications
+					</Typography>
+					<Stack gap={1} alignItems="start">
+						<Typography variant="body2">
+							Get notified about your auctions.
+						</Typography>
+						{needsHomeScreenInstall && (
+							<Typography variant="body2" color="text.secondary">
+								Add this app to your home screen first - iOS
+								only allows notifications for installed apps.
+							</Typography>
+						)}
+						{pushPermission === 'denied' ? (
+							<Typography variant="body2" color="text.secondary">
+								Notifications are blocked for this site in your
+								browser settings.
+							</Typography>
+						) : pushSubscribed ? (
+							<>
+								<Typography
+									variant="body2"
+									color="text.secondary"
+								>
+									Notifications are enabled on this device.
+								</Typography>
+								<Stack>
+									<Typography variant="body2">
+										Notify me about:
+									</Typography>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={
+													notificationPreferences.notifyOnOutbid
+												}
+												disabled={preferencesSaving}
+												onChange={() =>
+													togglePreference(
+														'notifyOnOutbid',
+													)
+												}
+											/>
+										}
+										label="Outbid on an item"
+									/>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={
+													notificationPreferences.notifyOnNewBid
+												}
+												disabled={preferencesSaving}
+												onChange={() =>
+													togglePreference(
+														'notifyOnNewBid',
+													)
+												}
+											/>
+										}
+										label="New bids on my auctions"
+									/>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={
+													notificationPreferences.notifyOnAuctionWon
+												}
+												disabled={preferencesSaving}
+												onChange={() =>
+													togglePreference(
+														'notifyOnAuctionWon',
+													)
+												}
+											/>
+										}
+										label="Auctions I've won"
+									/>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={
+													notificationPreferences.notifyOnWishlistItemListed
+												}
+												disabled={preferencesSaving}
+												onChange={() =>
+													togglePreference(
+														'notifyOnWishlistItemListed',
+													)
+												}
+											/>
+										}
+										label="New listing for a wishlisted game"
+									/>
+								</Stack>
+								<Stack gap={2} direction="row">
+									<Button
+										type="button"
+										disabled={pushTestSending}
+										onClick={handleTestPush}
+									>
+										Send test notification
+									</Button>
+									<Button
+										type="button"
+										disabled={pushSaving}
+										onClick={unsubscribePush}
+									>
+										Turn off notifications
+									</Button>
+								</Stack>
+							</>
+						) : (
+							<Button
+								type="button"
+								variant="contained"
+								disabled={pushSaving}
+								onClick={subscribePush}
+							>
+								Enable notifications
+							</Button>
+						)}
+					</Stack>
+				</Stack>
+			)}
+
+			<Stack gap={1.5} sx={sectionSx}>
+				<Typography variant="subtitle2" color="text.secondary">
+					Wishlist
+				</Typography>
+				<Typography variant="body2">
+					Import your BGG wishlist to build your wishlist here.
+				</Typography>
+				<Button
+					type="button"
+					variant="contained"
+					disabled={!bggUsername}
+					component={Link}
+					to="/wishlist/import"
+				>
+					Import from BGG
+				</Button>
+			</Stack>
+
 			<Snackbar
 				open={!!toastMessage}
 				autoHideDuration={4000}

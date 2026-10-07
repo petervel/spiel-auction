@@ -27,7 +27,11 @@ export const AdminPage = () => {
 
 	if (!realAdmin) {
 		return (
-			<Stack paddingInline="1rem" paddingBottom="2rem">
+			<Stack
+				paddingInline="2rem"
+				paddingBottom="2rem"
+				sx={{ width: '100%', maxWidth: 640, marginInline: 'auto' }}
+			>
 				<Title title="Admin" left={<BackButton />} />
 				<Typography>Admins only.</Typography>
 			</Stack>
@@ -70,7 +74,12 @@ export const AdminPage = () => {
 	};
 
 	return (
-		<Stack paddingInline="1rem" paddingBottom="2rem" gap={2}>
+		<Stack
+			paddingInline="2rem"
+			paddingBottom="2rem"
+			gap={2}
+			sx={{ width: '100%', maxWidth: 640, marginInline: 'auto' }}
+		>
 			<Title title="Admin" left={<BackButton />} />
 
 			<Typography variant="h6">Emulate user</Typography>

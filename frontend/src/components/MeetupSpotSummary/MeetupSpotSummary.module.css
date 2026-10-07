@@ -1,0 +1,62 @@
+/* Same warm trade-floor-map palette as the grid itself (TradeFloorGrid.module.css)
+   and the coordinate chip on the Meetups page, so this reads as "a square on
+   that map" rather than an unrelated badge. */
+.summaryCard {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 14px 16px;
+	border-radius: 12px;
+	background: #faf6ec;
+	border: 1.5px solid #cda876;
+	flex: 1;
+	min-width: 0;
+}
+
+body:global(.dark) .summaryCard {
+	background: #2c2620;
+}
+
+.summaryBadge {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	flex-shrink: 0;
+	border-radius: 10px;
+	background: var(--colour-background);
+	border: 1.5px solid #cda876;
+	font-size: 22px;
+	font-weight: 800;
+	color: #1f2937;
+}
+
+body:global(.dark) .summaryBadge {
+	color: #e8dccb;
+}
+
+.summaryEmptyCard {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 14px 16px;
+	border-radius: 12px;
+	border: 1.5px dashed var(--colour-disabled);
+	flex: 1;
+	min-width: 0;
+}
+
+.summaryEmptyBadge {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	flex-shrink: 0;
+	border-radius: 10px;
+	border: 1.5px dashed var(--colour-disabled);
+	font-size: 18px;
+	font-weight: 700;
+	color: var(--colour-inactive);
+}

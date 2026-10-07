@@ -47,15 +47,17 @@ export const LikedPage = () => {
 
 	// /api/outbids is authoritative on its own (username/bid based) and
 	// already excludes anything dismissed (see backend/src/api/outbids) -
-	// no longer gated on being liked, so a shared-BGG-account auto-like gap
-	// (see usersByBggUsername.ts) can't hide a real outbid item anymore.
+	// entirely independent of likes.
 	const outbidItems = (outbidsData?.items ?? []).filter(
 		(item) => !isWinning(item)
 	);
 	const outbidItemIds = new Set(outbidItems.map((item) => item.id));
 
-	// Liked-only items are everything else: manually liked (or bid on),
-	// but not currently outbid or won.
+	// Liked-only items are everything else: manually liked, but not
+	// currently outbid or won. Bidding no longer auto-likes an item (see
+	// the removal of backend/src/importer/likedItems.ts) - Like is purely
+	// a "remember this" action now, so an item you dismissed as outbid
+	// doesn't reappear here on its own.
 	const likedOnlyItems = likedItems.filter(
 		(item) => !outbidItemIds.has(item.id) && !isWinning(item)
 	);

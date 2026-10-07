@@ -1,7 +1,6 @@
 import { Fair, Item, JobResult } from "@prisma/client";
 import { XMLParser } from "fast-xml-parser";
 import prisma from "../prismaClient";
-import { getBidderKeys, likeItemsForNewBidders } from "./likedItems";
 import { notifyBidUpdates } from "./notifications/outbidNotifier";
 import { ItemCommentWrapper } from "./processors/ItemCommentWrapper";
 import { ItemWrapper } from "./processors/ItemWrapper";
@@ -122,10 +121,6 @@ async function update(fair: Fair, updateTime: number): Promise<number | null> {
 		return maxPubDateSeconds;
 	}
 
-	// Snapshot per-bidder state before any writes this cycle, for the
-	// auto-like-on-first-bid side effect below.
-	const previousBidderKeys = await getBidderKeys(fair.geeklistId);
-
 	const previousItemState = new Map<
 		number,
 		{ currentBid: number | null; isEnded: boolean }
@@ -214,17 +209,6 @@ async function update(fair: Fair, updateTime: number): Promise<number | null> {
 	// this can't double-fire once the xmlapi cycle runs next.
 	await notifyBidUpdates(itemWrappers, previousItemState).catch((err) =>
 		console.error(`${fair.geeklistId}: RSS push notification failed:`, err),
-	);
-
-	await likeItemsForNewBidders(
-		fair.id,
-		fair.geeklistId,
-		previousBidderKeys,
-	).catch((err) =>
-		console.error(
-			`${fair.geeklistId}: RSS auto-like for new bidders failed:`,
-			err,
-		),
 	);
 
 	console.log(

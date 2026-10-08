@@ -26,6 +26,7 @@ import { useFairs } from '../../hooks/useFairs';
 import { useMeetupLocation } from '../../hooks/useMeetupLocation';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { usePushSubscription } from '../../hooks/usePushSubscription';
+import { useRememberSorting } from '../../hooks/useRememberSorting';
 import { useUser } from '../../hooks/useUser';
 
 // Groups each setting into its own visually distinct block instead of
@@ -79,6 +80,8 @@ export const SettingsPage = () => {
 
 	const { square: meetupSquare, description: meetupDescription } =
 		useMeetupLocation();
+
+	const { rememberSorting, setRememberSorting } = useRememberSorting();
 
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -495,6 +498,23 @@ export const SettingsPage = () => {
 				>
 					Import from BGG
 				</Button>
+			</Stack>
+
+			<Stack gap={1.5} sx={sectionSx}>
+				<Typography variant="subtitle2" color="text.secondary">
+					Miscellaneous
+				</Typography>
+				<FormControlLabel
+					control={
+						<Checkbox
+							checked={rememberSorting}
+							onChange={(evt) =>
+								setRememberSorting(evt.target.checked)
+							}
+						/>
+					}
+					label="Remember sorting order"
+				/>
 			</Stack>
 
 			<Snackbar

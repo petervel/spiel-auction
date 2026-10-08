@@ -7,6 +7,7 @@ import { NavBar } from './components/NavBar/NavBar';
 import { ColorModeContext } from './contexts/ColorModeContext';
 import { useDarkMode } from './hooks/useDarkMode';
 import { BookmarkProvider } from './providers/BookmarkProvider';
+import { RememberSortingProvider } from './providers/RememberSortingProvider';
 import { DonateHint } from './components/DonateHint';
 import { LocationSetupHint } from './components/LocationSetupHint';
 import { EmulationBanner } from './components/EmulationBanner/EmulationBanner';
@@ -29,14 +30,16 @@ function App() {
 			<ColorModeContext.Provider value={{ mode, toggleDarkMode }}>
 				<ThemeProvider theme={theme}>
 					<BookmarkProvider>
-						<NavBar />
-						<LocationSetupHint />
-						<DonateHint />
-						<div className="content-max-width">
-							<EmulationBanner />
-							<AppRouter />
-						</div>
-						<BggUsernameReminder />
+						<RememberSortingProvider>
+							<NavBar />
+							<LocationSetupHint />
+							<DonateHint />
+							<div className="content-max-width">
+								<EmulationBanner />
+								<AppRouter />
+							</div>
+							<BggUsernameReminder />
+						</RememberSortingProvider>
 					</BookmarkProvider>
 				</ThemeProvider>
 			</ColorModeContext.Provider>

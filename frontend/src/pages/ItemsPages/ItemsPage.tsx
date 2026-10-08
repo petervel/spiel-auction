@@ -6,6 +6,8 @@ import { Container } from '../../components/Container/Container';
 import { ItemsList } from '../../components/ItemsList/ItemsList';
 import { Title } from '../../components/Title/Title';
 import { TitleButton } from '../../components/Title/TitleButton';
+import useLocalStorage from '../../hooks/useLocalStorage';
+import { useRememberSorting } from '../../hooks/useRememberSorting';
 import { Item } from '../../model/Item';
 import { SORTING, sortItems } from '../../util';
 import css from './ItemsPage.module.css';
@@ -55,21 +57,48 @@ export const ItemsPage = ({
 	options,
 	defaultSorting = SORTING.MOST_RECENT,
 }: ItemsPageProps) => {
-	const [sorting, setSorting] = useState<SORTING>(defaultSorting);
+	const { rememberSorting } = useRememberSorting();
+
+	// Keyed by title, which is unique per page instance (e.g. "Buying",
+	// "Selling", "Outbid & Liked") - only read/written when the user has
+	// opted in to remembering sort order, via the Settings page.
+	const [storedSorting, setStoredSorting] = useLocalStorage<SORTING>(
+		`sort:${title}`,
+		defaultSorting
+	);
+	const [sorting, setSortingState] = useState<SORTING>(() =>
+		rememberSorting ? storedSorting : defaultSorting
+	);
+	const setSorting = (value: SORTING) => {
+		setSortingState(value);
+		if (rememberSorting) setStoredSorting(value);
+	};
 	const [showSort, setShowSort] = useState(false);
 	const toggleSort = () => setShowSort((v) => !v);
 
 	// Keyed by group label rather than index - stable across re-renders as
 	// long as groups keep the same labels, which is all this needs.
-	const [groupSorting, setGroupSorting] = useState<Record<string, SORTING>>(
-		() =>
-			Object.fromEntries(
-				(groups ?? []).map((group) => [
-					group.label,
-					group.defaultSorting ?? SORTING.MOST_RECENT,
-				])
-			)
-	);
+	const [storedGroupSorting, setStoredGroupSorting] = useLocalStorage<
+		Record<string, SORTING>
+	>(`sort:${title}:groups`, {});
+	const [groupSorting, setGroupSortingState] = useState<
+		Record<string, SORTING>
+	>(() => {
+		const defaults = Object.fromEntries(
+			(groups ?? []).map((group) => [
+				group.label,
+				group.defaultSorting ?? SORTING.MOST_RECENT,
+			])
+		);
+		return rememberSorting ? { ...defaults, ...storedGroupSorting } : defaults;
+	});
+	const setGroupSorting = (label: string, value: SORTING) => {
+		setGroupSortingState((prev) => {
+			const next = { ...prev, [label]: value };
+			if (rememberSorting) setStoredGroupSorting(next);
+			return next;
+		});
+	};
 	const [openSortLabel, setOpenSortLabel] = useState<string | null>(null);
 	const toggleGroupSort = (label: string) =>
 		setOpenSortLabel((current) => (current === label ? null : label));
@@ -147,10 +176,7 @@ export const ItemsPage = ({
 												SORTING.MOST_RECENT
 											}
 											setSorting={(value) =>
-												setGroupSorting((prev) => ({
-													...prev,
-													[group.label]: value,
-												}))
+												setGroupSorting(group.label, value)
 											}
 											options={group.sortOptions}
 										/>

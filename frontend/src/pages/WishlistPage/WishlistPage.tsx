@@ -18,6 +18,8 @@ import { Container } from '../../components/Container/Container';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
+import useLocalStorage from '../../hooks/useLocalStorage';
+import { useRememberSorting } from '../../hooks/useRememberSorting';
 import { useUser } from '../../hooks/useUser';
 import { useWishlist, WishlistObject } from '../../hooks/useWishlist';
 import css from './WishlistPage.module.css';
@@ -32,7 +34,18 @@ const latestPostTimestamp = (object: WishlistObject) =>
 export const WishlistPage = () => {
 	const { user, isLoading: userLoading } = useUser();
 	const { wishlist, isLoading: wishlistLoading } = useWishlist();
-	const [sortMode, setSortMode] = useState<SortMode>('latest');
+	const { rememberSorting } = useRememberSorting();
+	const [storedSortMode, setStoredSortMode] = useLocalStorage<SortMode>(
+		'sort:wishlist',
+		'latest',
+	);
+	const [sortMode, setSortModeState] = useState<SortMode>(() =>
+		rememberSorting ? storedSortMode : 'latest',
+	);
+	const setSortMode = (value: SortMode) => {
+		setSortModeState(value);
+		if (rememberSorting) setStoredSortMode(value);
+	};
 	// Collapsed object ids - everything starts expanded, so this only ever
 	// needs to track exceptions to that default.
 	const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());

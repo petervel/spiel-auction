@@ -3,6 +3,7 @@ import {
 	AuthenticatedRequest,
 	authenticateUser,
 } from "../../../middleware/auth";
+import { fetchPrimaryName } from "../../bggCollection";
 import prisma from "../../prismaClient";
 import { redisClient } from "../redisClient";
 
@@ -144,8 +145,18 @@ router.post(
 					});
 					return;
 				}
+				// req.body.objectName comes from whatever a geeklist posting
+				// called the item (see ObjectPage.tsx), which can be a
+				// translated/stylized title - prefer BGG's own primary name
+				// for the object when available, falling back to that
+				// posting-derived name only if the lookup fails.
+				const primaryName = await fetchPrimaryName(objectId);
 				await prisma.bggObject.create({
-					data: { objectId, ...req.body },
+					data: {
+						objectId,
+						...req.body,
+						objectName: primaryName ?? req.body.objectName,
+					},
 				});
 			}
 

@@ -34,6 +34,44 @@ const extractName = (name: unknown): string => {
 	return "";
 };
 
+// Looks up the name BGG has configured as an object's primary/sort name via
+// /xmlapi2/thing, independent of whatever name a specific geeklist auction
+// posting used for it - sellers can type anything (including a translated
+// or stylized title) into a posting's objectname, and that's otherwise the
+// only source wishlist/index.ts's single-object "add to wishlist" route has
+// for a BggObject it hasn't seen before. Returns null (never throws) so a
+// BGG hiccup falls back to that caller-supplied name instead of failing the
+// request.
+export const fetchPrimaryName = async (
+	objectId: number,
+): Promise<string | null> => {
+	try {
+		const url = `https://boardgamegeek.com/xmlapi2/thing?id=${objectId}`;
+		const response = await axios.get(url, {
+			responseType: "text",
+			validateStatus: () => true,
+			headers: { Authorization: `Bearer ${process.env.BGG_API_TOKEN}` },
+		});
+
+		if (response.status !== 200) return null;
+
+		const parser = new XMLParser({
+			ignoreAttributes: false,
+			attributeNamePrefix: "@_",
+		});
+		const item = parser.parse(response.data)?.items?.item;
+		if (!item) return null;
+
+		const names = Array.isArray(item.name) ? item.name : [item.name];
+		const primary = names.find((n: any) => n?.["@_type"] === "primary");
+		const value = (primary ?? names[0])?.["@_value"];
+
+		return value ? decode(String(value)) : null;
+	} catch {
+		return null;
+	}
+};
+
 export const fetchWishlist = async (
 	username: string,
 ): Promise<WishlistItem[]> => {

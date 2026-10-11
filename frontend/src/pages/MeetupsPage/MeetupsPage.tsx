@@ -26,12 +26,23 @@ import {
 import css from './MeetupsPage.module.css';
 import { exportMeetupsToXlsx } from './xlsxExport';
 
+const gameNamesOf = (entry: MeetupEntry) =>
+	entry.items.map((item) => item.objectName).join(', ');
+
 const byTimeThenCounterpart = (a: MeetupEntry, b: MeetupEntry) => {
 	if (a.meetup.time !== b.meetup.time) {
 		return a.meetup.time.localeCompare(b.meetup.time);
 	}
 	return a.counterpart.localeCompare(b.counterpart);
 };
+
+// Time's not a useful sort key here - every unscheduled entry sits on the
+// same default "15:00" (there's no day yet to actually attach a time to),
+// so sorting by it like the scheduled sections do would just fall through
+// to counterpart anyway. Game name is more useful: it's what you're
+// scanning for before you've agreed on a day to put someone under.
+const byGameName = (a: MeetupEntry, b: MeetupEntry) =>
+	gameNamesOf(a).localeCompare(gameNamesOf(b));
 
 type DaySection = {
 	key: string;
@@ -44,15 +55,12 @@ const makeSection = (
 	key: string,
 	label: string,
 	entries: MeetupEntry[],
+	sortFn: (a: MeetupEntry, b: MeetupEntry) => number,
 ): DaySection => ({
 	key,
 	label,
-	selling: entries
-		.filter((entry) => entry.role === 'selling')
-		.sort(byTimeThenCounterpart),
-	buying: entries
-		.filter((entry) => entry.role === 'buying')
-		.sort(byTimeThenCounterpart),
+	selling: entries.filter((entry) => entry.role === 'selling').sort(sortFn),
+	buying: entries.filter((entry) => entry.role === 'buying').sort(sortFn),
 });
 
 // Unscheduled first, then only the days that actually have a meetup on
@@ -62,13 +70,17 @@ const groupByDay = (entries: MeetupEntry[]): DaySection[] => {
 
 	const unscheduled = entries.filter((entry) => entry.meetup.day === null);
 	if (unscheduled.length > 0) {
-		sections.push(makeSection('UNSCHEDULED', 'Unscheduled', unscheduled));
+		sections.push(
+			makeSection('UNSCHEDULED', 'Unscheduled', unscheduled, byGameName),
+		);
 	}
 
 	for (const day of DAY_ORDER) {
 		const dayEntries = entries.filter((entry) => entry.meetup.day === day);
 		if (dayEntries.length > 0) {
-			sections.push(makeSection(day, DAY_LABELS[day], dayEntries));
+			sections.push(
+				makeSection(day, DAY_LABELS[day], dayEntries, byTimeThenCounterpart),
+			);
 		}
 	}
 
@@ -305,7 +317,7 @@ const MeetupRow = ({
 		}
 	};
 
-	const gameNames = entry.items.map((item) => item.objectName).join(', ');
+	const gameNames = gameNamesOf(entry);
 
 	return (
 		<div

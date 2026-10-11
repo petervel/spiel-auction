@@ -86,6 +86,7 @@ export const WishlistObjectRow = ({
 					<AuctionItemButton
 						link={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
 						tooltip="Look up on BGG"
+						newTab={true}
 					>
 						<img src={bggIcon} width="30" height="30" />
 					</AuctionItemButton>

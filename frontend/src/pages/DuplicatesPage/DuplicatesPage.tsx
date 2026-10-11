@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { BackButton } from '../../components/BackButton/BackButton';
+import { BggUserLink } from '../../components/BggUserLink/BggUserLink';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
@@ -46,13 +47,7 @@ const UserDuplicates = ({ userDupes }: UserDuplicatesProps) => {
 
 	return (
 		<li className={css.listItem}>
-			<a
-				href={`https://boardgamegeek.com/user/${userDupes.username}`}
-				target="_blank"
-				className={css.username}
-			>
-				{userDupes.username}
-			</a>
+			<BggUserLink username={userDupes.username} bold />
 			<span className={css.datetime}>
 				({formatTimestamp(userDupes.latestTimestamp)})
 			</span>

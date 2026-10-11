@@ -6,11 +6,11 @@ import {
 } from '@mui/icons-material';
 import { Stack } from '@mui/material';
 import { useState } from 'react';
-import bggIcon from '../../assets/bgg.svg';
 import { useDismissed } from '../../hooks/useDismissed';
 import { useLiked } from '../../hooks/useLiked';
 import { Item } from '../../model/Item';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
+import { BggLookupButton } from './BggLookupButton';
 
 interface ItemButtonsProps {
 	item: Item;
@@ -135,13 +135,6 @@ export const ItemButtons = ({
 			link: `/object/${item.objectId}`,
 			tooltip: 'Compare with other auctions',
 		},
-		showBgg && {
-			key: 'bgg',
-			content: <img src={bggIcon} width={iconSize} height={iconSize} />,
-			link: `https://boardgamegeek.com/${item.objectSubtype}/${item.objectId}`,
-			newTab: true,
-			tooltip: 'Look up on BGG',
-		},
 	].filter(Boolean) as ButtonConfig[];
 
 	return (
@@ -156,6 +149,12 @@ export const ItemButtons = ({
 					{btn.content}
 				</AuctionItemButton>
 			))}
+			{showBgg && (
+				<BggLookupButton
+					objectSubtype={item.objectSubtype}
+					objectId={item.objectId}
+				/>
+			)}
 		</Stack>
 	);
 };

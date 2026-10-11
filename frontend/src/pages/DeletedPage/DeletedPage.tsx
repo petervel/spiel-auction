@@ -1,4 +1,5 @@
 import { BackButton } from '../../components/BackButton/BackButton';
+import { BggUserLink } from '../../components/BggUserLink/BggUserLink';
 import { Container } from '../../components/Container/Container';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
@@ -91,13 +92,7 @@ const UserDeletedItems = ({
 
 	return (
 		<li className={css.listItem}>
-			<a
-				href={`https://boardgamegeek.com/user/${username}`}
-				target="_blank"
-				className={css.username}
-			>
-				{username}
-			</a>
+			<BggUserLink username={username} bold />
 			<span className={css.datetime}>
 				{formatTimestamp(latestTimestamp)}
 			</span>
@@ -145,13 +140,7 @@ const UserDeletedComments = ({
 
 	return (
 		<li className={css.listItem}>
-			<a
-				href={`https://boardgamegeek.com/user/${username}`}
-				target="_blank"
-				className={css.username}
-			>
-				{username}
-			</a>
+			<BggUserLink username={username} bold />
 			<span className={css.datetime}>
 				{formatTimestamp(latestTimestamp)}
 			</span>

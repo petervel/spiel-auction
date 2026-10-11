@@ -1,4 +1,5 @@
 import parse from 'html-react-parser';
+import { BggUserLink } from '../BggUserLink/BggUserLink';
 import { Item } from '../../model/Item';
 import css from './AuctionItemDetails.module.css';
 
@@ -13,13 +14,7 @@ const AuctionItemDetails = ({ item }: Props) => {
 				<div>
 					<div>
 						{'seller: '}
-						<a
-							href={`https://boardgamegeek.com/user/${item.username}`}
-							target="_blank"
-							rel="noreferrer"
-						>
-							{item.username}
-						</a>
+						<BggUserLink username={item.username} />
 					</div>
 					<div>{parse(toHtml(item.body))}</div>
 				</div>

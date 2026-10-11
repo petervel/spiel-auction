@@ -1,9 +1,9 @@
 import { BarChartRounded } from '@mui/icons-material';
 import { Stack } from '@mui/material';
 import classNames from 'classnames';
-import bggIcon from '../../assets/bgg.svg';
 import { BggObject } from '../../hooks/useInfiniteObjects';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
+import { BggLookupButton } from './BggLookupButton';
 import css from './AuctionItem.module.css';
 import { WishlistStarButton } from './WishlistStarButton';
 
@@ -53,12 +53,10 @@ export const ObjectItem = ({
 						<WishlistStarButton objectId={object.objectId} />
 					)}
 
-					<AuctionItemButton
-						link={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
-						tooltip="Look up on BGG"
-					>
-						<img src={bggIcon} width="30" height="30" />
-					</AuctionItemButton>
+					<BggLookupButton
+						objectSubtype={object.objectSubtype}
+						objectId={object.objectId}
+					/>
 				</Stack>
 			</Stack>
 		</div>

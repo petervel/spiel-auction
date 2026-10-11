@@ -5,10 +5,10 @@ import {
 } from '@mui/icons-material';
 import { Collapse, Stack } from '@mui/material';
 import classNames from 'classnames';
-import bggIcon from '../../assets/bgg.svg';
 import { ItemsList } from '../ItemsList/ItemsList';
 import { WishlistObject } from '../../hooks/useWishlist';
 import AuctionItemButton from '../AuctionItemButton/AuctionItemButton';
+import { BggLookupButton } from './BggLookupButton';
 import css from './AuctionItem.module.css';
 import { WishlistStarButton } from './WishlistStarButton';
 import rowCss from './WishlistObjectRow.module.css';
@@ -83,13 +83,10 @@ export const WishlistObjectRow = ({
 				<Stack direction="row">
 					<WishlistStarButton objectId={object.objectId} />
 
-					<AuctionItemButton
-						link={`https://boardgamegeek.com/${object.objectSubtype}/${object.objectId}`}
-						tooltip="Look up on BGG"
-						newTab={true}
-					>
-						<img src={bggIcon} width="30" height="30" />
-					</AuctionItemButton>
+					<BggLookupButton
+						objectSubtype={object.objectSubtype}
+						objectId={object.objectId}
+					/>
 				</Stack>
 			</Stack>
 

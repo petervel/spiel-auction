@@ -198,8 +198,12 @@ router.get("/me", async (req, res) => {
 			emulating: session.emulating,
 		});
 	} catch (err) {
+		// A real failure (e.g. DB not reachable yet right after a restart)
+		// is NOT the same thing as "no session" - returning 200 here would
+		// tell the frontend the user is logged out, when actually we just
+		// don't know yet. Let it retry instead of reporting that as fact.
 		console.error("Error in /me:", err);
-		return res.json({ user: null });
+		return res.status(503).json({ error: "Temporarily unavailable" });
 	}
 });
 

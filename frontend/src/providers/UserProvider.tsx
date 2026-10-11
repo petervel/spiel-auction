@@ -5,6 +5,17 @@ import { User } from '../model/User';
 
 const MIN_VISIBILITY_REFETCH_MS = 30_000;
 
+// A network error or 5xx from /me means "we don't know yet" (e.g. the
+// backend container is mid-restart, or the DB isn't reachable yet) - not
+// "you're logged out". Retried a handful of times before falling back to
+// treating it as logged out, rather than reporting that immediately and
+// (since every page checks isLoading before `!user`) flashing a wrong
+// "log in to see this" message during a routine few-second restart.
+const ME_RETRY_COUNT = 8;
+const ME_RETRY_DELAY_MS = 2000;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const UserProvider = ({ children }: { children: ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setLoading] = useState(true);
@@ -15,29 +26,50 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
 	const fetchCurrentUser = async () => {
 		lastFetchAtRef.current = Date.now();
-		try {
-			const res = await fetch('/api/auth/me', {
-				credentials: 'include',
-			}); // include cookie!
-			if (res.ok) {
-				const data = await res.json();
-				// console.log('Fetched current user:', data);
-				setUser(data.user ?? null);
-				setRealAdmin(!!data.realAdmin);
-				setEmulating(!!data.emulating);
-			} else {
-				setUser(null);
-				setRealAdmin(false);
-				setEmulating(false);
+
+		for (let attempt = 0; attempt <= ME_RETRY_COUNT; attempt++) {
+			try {
+				const res = await fetch('/api/auth/me', {
+					credentials: 'include',
+				}); // include cookie!
+				if (res.ok) {
+					const data = await res.json();
+					// console.log('Fetched current user:', data);
+					setUser(data.user ?? null);
+					setRealAdmin(!!data.realAdmin);
+					setEmulating(!!data.emulating);
+					setLoading(false);
+					return;
+				}
+				if (res.status < 500) {
+					// A definitive non-transient response - /me doesn't
+					// normally send one, but don't retry forever if it ever
+					// does.
+					setUser(null);
+					setRealAdmin(false);
+					setEmulating(false);
+					setLoading(false);
+					return;
+				}
+				// 5xx (including nginx's own 502/503/504 while the backend
+				// isn't listening yet) - transient, fall through to retry.
+			} catch (err) {
+				// Network-level failure (e.g. connection refused while the
+				// container is still starting) - also transient.
+				if (attempt === ME_RETRY_COUNT) {
+					console.error('Failed to fetch current user:', err);
+				}
 			}
-		} catch (err) {
-			console.error('Failed to fetch current user:', err);
-			setUser(null);
-			setRealAdmin(false);
-			setEmulating(false);
-		} finally {
-			setLoading(false);
+
+			if (attempt < ME_RETRY_COUNT) await sleep(ME_RETRY_DELAY_MS);
 		}
+
+		// Retries exhausted - fall back to "logged out" rather than
+		// spinning forever.
+		setUser(null);
+		setRealAdmin(false);
+		setEmulating(false);
+		setLoading(false);
 	};
 
 	useEffect(() => {

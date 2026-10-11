@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import TabLayout from './layouts/TabLayout';
 import { BuyingPage } from './pages/BidsPages/BuyingPage';
 import { SellingPage } from './pages/BidsPages/SellingPage';
+import { AdminFairsPage } from './pages/AdminFairsPage/AdminFairsPage';
 import { AdminPage } from './pages/AdminPage/AdminPage';
 import { DeletedPage } from './pages/DeletedPage/DeletedPage';
 import { DonatePage } from './pages/DonatePage/DonatePage';
@@ -40,6 +41,7 @@ export const AppRouter = () => {
 			<Route path="/deleted" element={<DeletedPage />} />
 			<Route path="/meetups" element={<MeetupsPage />} />
 			<Route path="/admin" element={<AdminPage />} />
+			<Route path="/admin/fairs" element={<AdminFairsPage />} />
 			<Route path="/donate" element={<DonatePage />} />
 			<Route path="/help" element={<HelpPage />} />
 			<Route path="/wishlist/import" element={<ImportWishlistPage />} />

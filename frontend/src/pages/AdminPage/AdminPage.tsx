@@ -1,6 +1,6 @@
 import { Button, Chip, Stack, TextField, Typography } from '@mui/material';
 import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
@@ -235,6 +235,15 @@ export const AdminPage = () => {
 			sx={{ width: '100%', maxWidth: 640, marginInline: 'auto' }}
 		>
 			<Title title="Admin" left={<BackButton />} />
+
+			<Button
+				component={Link}
+				to="/admin/fairs"
+				variant="outlined"
+				sx={{ alignSelf: 'start' }}
+			>
+				Manage fairs
+			</Button>
 
 			<FairStats />
 

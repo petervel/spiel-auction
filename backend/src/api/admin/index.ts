@@ -1,3 +1,4 @@
+import { FairStatus, Prisma } from "@prisma/client";
 import express from "express";
 import prisma from "../../prismaClient";
 import {
@@ -6,6 +7,7 @@ import {
 	EMULATED_USER_COOKIE,
 	requireAdmin,
 } from "../../../middleware/auth";
+import { redisClient } from "../redisClient";
 
 const router = express.Router();
 
@@ -210,6 +212,176 @@ router.delete(
 	(_req: AuthenticatedRequest, res) => {
 		res.clearCookie(EMULATED_USER_COOKIE, { path: "/" });
 		return res.json({ emulating: false });
+	},
+);
+
+// GET /api/fairs also serves admins the full list (see fairs/index.ts),
+// but that endpoint is "what fairs can I switch into" for every logged-in
+// user - this is the dedicated admin-management read/write surface, kept
+// separate so one isn't pulling double duty.
+const FAIR_STATUSES = new Set(Object.values(FairStatus));
+
+const invalidateFairsCache = async () => {
+	await redisClient.del("api:fairs:admin", "api:fairs:normal");
+};
+
+router.get(
+	"/fairs",
+	authenticateUser,
+	requireAdmin,
+	async (_req: AuthenticatedRequest, res) => {
+		try {
+			const fairs = await prisma.fair.findMany({
+				orderBy: { id: "desc" },
+			});
+			res.status(200).json({ fairs });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.post(
+	"/fairs",
+	authenticateUser,
+	requireAdmin,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const { name, geeklistId, eventDate, status, hidden } = req.body;
+
+			if (typeof name !== "string" || !name.trim()) {
+				res.status(400).json({ error: "name is required" });
+				return;
+			}
+			const parsedGeeklistId = Number(geeklistId);
+			if (!Number.isInteger(parsedGeeklistId)) {
+				res.status(400).json({
+					error: "geeklistId is required and must be an integer",
+				});
+				return;
+			}
+			const parsedEventDate = new Date(eventDate);
+			if (Number.isNaN(parsedEventDate.getTime())) {
+				res.status(400).json({ error: "eventDate is required" });
+				return;
+			}
+			if (status !== undefined && !FAIR_STATUSES.has(status)) {
+				res.status(400).json({
+					error: `status must be one of ${[...FAIR_STATUSES].join(", ")}`,
+				});
+				return;
+			}
+			if (hidden !== undefined && typeof hidden !== "boolean") {
+				res.status(400).json({ error: "hidden must be a boolean" });
+				return;
+			}
+
+			const fair = await prisma.fair.create({
+				data: {
+					name: name.trim(),
+					geeklistId: parsedGeeklistId,
+					eventDate: parsedEventDate,
+					status: status ?? FairStatus.ACTIVE,
+					hidden: hidden ?? false,
+				},
+			});
+
+			await invalidateFairsCache();
+			res.status(201).json({ fair });
+		} catch (err) {
+			if (
+				err instanceof Prisma.PrismaClientKnownRequestError &&
+				err.code === "P2002"
+			) {
+				res.status(400).json({
+					error: "A fair with that name or geeklist id already exists.",
+				});
+				return;
+			}
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+router.patch(
+	"/fairs/:id",
+	authenticateUser,
+	requireAdmin,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const id = Number(req.params.id);
+			if (Number.isNaN(id)) {
+				res.status(400).json({ error: "Invalid fair id" });
+				return;
+			}
+
+			const { name, geeklistId, eventDate, status, hidden } = req.body;
+			const data: Prisma.FairUpdateInput = {};
+
+			if (name !== undefined) {
+				if (typeof name !== "string" || !name.trim()) {
+					res.status(400).json({ error: "name must be a string" });
+					return;
+				}
+				data.name = name.trim();
+			}
+			if (geeklistId !== undefined) {
+				const parsedGeeklistId = Number(geeklistId);
+				if (!Number.isInteger(parsedGeeklistId)) {
+					res.status(400).json({
+						error: "geeklistId must be an integer",
+					});
+					return;
+				}
+				data.geeklistId = parsedGeeklistId;
+			}
+			if (eventDate !== undefined) {
+				const parsedEventDate = new Date(eventDate);
+				if (Number.isNaN(parsedEventDate.getTime())) {
+					res.status(400).json({ error: "eventDate is invalid" });
+					return;
+				}
+				data.eventDate = parsedEventDate;
+			}
+			if (status !== undefined) {
+				if (!FAIR_STATUSES.has(status)) {
+					res.status(400).json({
+						error: `status must be one of ${[...FAIR_STATUSES].join(", ")}`,
+					});
+					return;
+				}
+				data.status = status;
+			}
+			if (hidden !== undefined) {
+				if (typeof hidden !== "boolean") {
+					res.status(400).json({ error: "hidden must be a boolean" });
+					return;
+				}
+				data.hidden = hidden;
+			}
+
+			const fair = await prisma.fair.update({ where: { id }, data });
+
+			await invalidateFairsCache();
+			res.status(200).json({ fair });
+		} catch (err) {
+			if (err instanceof Prisma.PrismaClientKnownRequestError) {
+				if (err.code === "P2002") {
+					res.status(400).json({
+						error: "A fair with that name or geeklist id already exists.",
+					});
+					return;
+				}
+				if (err.code === "P2025") {
+					res.status(404).json({ error: "Fair not found" });
+					return;
+				}
+			}
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
 	},
 );
 

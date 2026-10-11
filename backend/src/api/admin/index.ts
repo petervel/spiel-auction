@@ -11,6 +11,120 @@ const router = express.Router();
 
 const EMULATION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
+// Monitoring overview for the admin's own currently-selected fair (the
+// same "current fair" everything else in the app uses) - everything here
+// is scoped to that one fair, not the whole install, so switching fairs
+// (Settings > Fair) changes what this shows.
+router.get(
+	"/stats",
+	authenticateUser,
+	requireAdmin,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const fair = req.user?.currentUserFair?.fair;
+			const fairId = req.user?.currentUserFair?.fairId;
+			const listId = fair?.listId;
+
+			if (!fairId) {
+				res.status(400).json({
+					error: "No current fair selected for user.",
+				});
+				return;
+			}
+
+			const [
+				activeUsers,
+				usersWithLocationSquare,
+				items,
+				meetupCount,
+				meetupCompletedCount,
+				likeCount,
+				fairUsers,
+			] = await Promise.all([
+				prisma.userFair.count({ where: { fairId } }),
+				prisma.userFair.count({
+					where: { fairId, locationSquare: { not: null } },
+				}),
+				listId
+					? prisma.item.findMany({
+							where: { listId, deleted: false },
+							select: {
+								hasBids: true,
+								isEnded: true,
+								username: true,
+								highestBidder: true,
+								currentBid: true,
+							},
+						})
+					: Promise.resolve([]),
+				prisma.meetup.count({ where: { fairId } }),
+				prisma.meetup.count({ where: { fairId, completed: true } }),
+				prisma.userLikedItem.count({ where: { fairId } }),
+				prisma.user.findMany({
+					where: { fairs: { some: { fairId } } },
+					select: {
+						bggUsername: true,
+						bggVerifications: {
+							where: { confirmed: true },
+							select: { bggUsername: true },
+						},
+					},
+				}),
+			]);
+
+			const itemsWithBids = items.filter((item) => item.hasBids);
+			const sellers = new Set(
+				itemsWithBids.map((item) => item.username.toLowerCase()),
+			);
+			const bidders = new Set(
+				itemsWithBids
+					.map((item) => item.highestBidder?.toLowerCase())
+					.filter((username): username is string => !!username),
+			);
+			const totalBidValue = itemsWithBids.reduce(
+				(sum, item) => sum + (item.currentBid ?? 0),
+				0,
+			);
+			const endedAuctions = itemsWithBids.filter(
+				(item) => item.isEnded,
+			).length;
+
+			const usersWithBggUsername = fairUsers.filter(
+				(user) => !!user.bggUsername,
+			).length;
+			const usersWithConfirmedBgg = fairUsers.filter(
+				(user) =>
+					user.bggUsername &&
+					user.bggVerifications.some(
+						(v) => v.bggUsername === user.bggUsername,
+					),
+			).length;
+
+			res.status(200).json({
+				fairName: fair?.name ?? null,
+				lastUpdated: fair?.lastUpdated ?? null,
+				lastResult: fair?.lastResult ?? null,
+				activeUsers,
+				usersWithBggUsername,
+				usersWithConfirmedBgg,
+				usersWithLocationSquare,
+				totalItems: items.length,
+				itemsWithBids: itemsWithBids.length,
+				endedAuctions,
+				distinctSellers: sellers.size,
+				distinctBidders: bidders.size,
+				totalBidValue,
+				meetupCount,
+				meetupCompletedCount,
+				likeCount,
+			});
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
 router.get(
 	"/users/search",
 	authenticateUser,

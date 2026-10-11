@@ -1,3 +1,4 @@
+import { Day } from "@prisma/client";
 import express from "express";
 import {
 	AuthenticatedRequest,
@@ -493,6 +494,62 @@ router.post(
 					notifyOnNewBid,
 					notifyOnAuctionWon,
 					notifyOnWishlistItemListed,
+				},
+			});
+
+			res.status(200).json({ user: updatedUser });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+const VALID_TRADE_DAYS = new Set(Object.values(Day));
+
+router.post(
+	"/geekmailSettings",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const { preferredTradeDays, sellerMessageTemplate, buyerMessageTemplate } =
+				req.body;
+
+			if (
+				!Array.isArray(preferredTradeDays) ||
+				!preferredTradeDays.every((day) => VALID_TRADE_DAYS.has(day))
+			) {
+				return res.status(400).json({
+					error: `preferredTradeDays must be an array of ${[...VALID_TRADE_DAYS].join(", ")}`,
+				});
+			}
+			if (
+				sellerMessageTemplate !== null &&
+				typeof sellerMessageTemplate !== "string"
+			) {
+				return res.status(400).json({
+					error: "sellerMessageTemplate must be a string or null",
+				});
+			}
+			if (
+				buyerMessageTemplate !== null &&
+				typeof buyerMessageTemplate !== "string"
+			) {
+				return res.status(400).json({
+					error: "buyerMessageTemplate must be a string or null",
+				});
+			}
+
+			if (!req.user?.id) {
+				return res.status(401).json({ error: "Not authenticated" });
+			}
+
+			const updatedUser = await prisma.user.update({
+				where: { id: req.user.id },
+				data: {
+					preferredTradeDays,
+					sellerMessageTemplate,
+					buyerMessageTemplate,
 				},
 			});
 

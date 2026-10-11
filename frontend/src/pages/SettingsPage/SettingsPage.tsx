@@ -1,6 +1,7 @@
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import {
 	Button,
 	Checkbox,
@@ -23,11 +24,14 @@ import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useCurrentFair } from '../../hooks/useCurrentFair';
 import { useFairs } from '../../hooks/useFairs';
+import { useGeekmailSettings } from '../../hooks/useGeekmailSettings';
+import { MeetupDay } from '../../hooks/useMeetups';
 import { useMeetupLocation } from '../../hooks/useMeetupLocation';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { usePushSubscription } from '../../hooks/usePushSubscription';
 import { useRememberSorting } from '../../hooks/useRememberSorting';
 import { useUser } from '../../hooks/useUser';
+import { DAY_LABELS, DAY_ORDER } from '../MeetupsPage/meetupDisplay';
 
 // Groups each setting into its own visually distinct block instead of
 // stringing them together behind plain dividers.
@@ -83,7 +87,41 @@ export const SettingsPage = () => {
 
 	const { rememberSorting, setRememberSorting } = useRememberSorting();
 
+	const {
+		settings: geekmailSettings,
+		setSettings: setGeekmailSettings,
+		saving: geekmailSaving,
+	} = useGeekmailSettings();
+
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+	// Collapsed by default - two full-size templates plus the day picker
+	// make this by far the tallest section on the page, so it shouldn't
+	// dominate everyone else's settings just to be visible.
+	const [templatesOpen, setTemplatesOpen] = useState(false);
+
+	// Drafted locally and only sent on Save (not per keystroke/toggle) -
+	// these are free text plus a multi-select, not a single flip like the
+	// other settings on this page, so autosaving every change would mean a
+	// request per keystroke.
+	const [draftTradeDays, setDraftTradeDays] = useState<MeetupDay[]>(
+		geekmailSettings.preferredTradeDays,
+	);
+	const [draftSellerTemplate, setDraftSellerTemplate] = useState(
+		geekmailSettings.sellerMessageTemplate,
+	);
+	const [draftBuyerTemplate, setDraftBuyerTemplate] = useState(
+		geekmailSettings.buyerMessageTemplate,
+	);
+
+	const saveGeekmailSettings = () => {
+		setGeekmailSettings({
+			preferredTradeDays: draftTradeDays,
+			sellerMessageTemplate: draftSellerTemplate,
+			buyerMessageTemplate: draftBuyerTemplate,
+		});
+		setToastMessage('Geekmail templates saved');
+	};
 
 	const handleFairChange = async (fairId: number) => {
 		const succeeded = await switchFair(fairId);
@@ -498,6 +536,216 @@ export const SettingsPage = () => {
 				>
 					Import from BGG
 				</Button>
+			</Stack>
+
+			<Stack gap={1.5} sx={sectionSx}>
+				<Stack
+					direction="row"
+					alignItems="center"
+					justifyContent="space-between"
+					component="button"
+					type="button"
+					onClick={() => setTemplatesOpen((open) => !open)}
+					aria-expanded={templatesOpen}
+					sx={{
+						background: 'none',
+						border: 'none',
+						padding: 0,
+						margin: 0,
+						width: '100%',
+						cursor: 'pointer',
+						textAlign: 'left',
+						font: 'inherit',
+						color: 'inherit',
+					}}
+				>
+					<Typography variant="subtitle2" color="text.secondary">
+						Geekmail templates
+					</Typography>
+					<ExpandMoreRoundedIcon
+						fontSize="small"
+						sx={{
+							color: 'text.secondary',
+							transform: templatesOpen
+								? 'rotate(180deg)'
+								: 'none',
+							transition: 'transform 0.15s',
+						}}
+					/>
+				</Stack>
+
+				{templatesOpen && (
+					<>
+						<Typography variant="body2">
+							Used to pre-fill a BGG geekmail when you tap "Send
+							message" on a meetup. Different wording for
+							people buying from you vs. people you're buying
+							from.
+						</Typography>
+
+						<Stack gap={0.5}>
+							<Typography variant="body2">
+								Preferred trade day(s)
+							</Typography>
+							<Stack direction="row" gap={0.75} flexWrap="wrap">
+								{DAY_ORDER.map((day) => {
+									const selected =
+										draftTradeDays.includes(day);
+									return (
+										<Chip
+											key={day}
+											label={DAY_LABELS[day].slice(0, 3)}
+											clickable
+											size="small"
+											color={
+												selected ? 'primary' : 'default'
+											}
+											variant={
+												selected ? 'filled' : 'outlined'
+											}
+											onClick={() =>
+												setDraftTradeDays((days) =>
+													selected
+														? days.filter(
+																(d) =>
+																	d !== day,
+															)
+														: [...days, day],
+												)
+											}
+										/>
+									);
+								})}
+							</Stack>
+						</Stack>
+
+						<Stack gap={0.5}>
+							<Typography variant="body2" color="text.secondary">
+								Tokens
+							</Typography>
+							{[
+								{
+									token: '[game]',
+									desc: 'the game(s) in this meetup',
+								},
+								{ token: '[amount]', desc: 'total price' },
+								{
+									token: '[day]',
+									desc: 'your preferred day(s) above, e.g. "Thursday or Friday"',
+								},
+								{
+									token: '[location]',
+									desc: "the meetup's location",
+								},
+								{ token: '[name]', desc: 'your own name' },
+							].map(({ token, desc }) => (
+								<Stack
+									key={token}
+									direction="row"
+									gap={1}
+									alignItems="baseline"
+								>
+									<Typography
+										component="code"
+										variant="body2"
+										sx={{
+											fontFamily: 'monospace',
+											bgcolor: 'action.hover',
+											px: 0.75,
+											borderRadius: 1,
+											flexShrink: 0,
+											minWidth: 76,
+										}}
+									>
+										{token}
+									</Typography>
+									<Typography
+										variant="body2"
+										color="text.secondary"
+									>
+										{desc}
+									</Typography>
+								</Stack>
+							))}
+						</Stack>
+
+						<Stack gap={0.5}>
+							<Typography variant="body2">
+								Template for sellers
+								<Typography
+									component="span"
+									variant="body2"
+									color="text.secondary"
+								>
+									{' '}
+									- sent to people buying from you. Also has{' '}
+									<Typography
+										component="code"
+										variant="body2"
+										sx={{ fontFamily: 'monospace' }}
+									>
+										[buyer]
+									</Typography>
+									.
+								</Typography>
+							</Typography>
+							<TextField
+								multiline
+								minRows={6}
+								fullWidth
+								size="small"
+								value={draftSellerTemplate}
+								onChange={(evt) =>
+									setDraftSellerTemplate(evt.target.value)
+								}
+							/>
+						</Stack>
+
+						<Stack gap={0.5}>
+							<Typography variant="body2">
+								Template for buyers
+								<Typography
+									component="span"
+									variant="body2"
+									color="text.secondary"
+								>
+									{' '}
+									- sent to people you're buying from. Also
+									has{' '}
+									<Typography
+										component="code"
+										variant="body2"
+										sx={{ fontFamily: 'monospace' }}
+									>
+										[seller]
+									</Typography>
+									.
+								</Typography>
+							</Typography>
+							<TextField
+								multiline
+								minRows={5}
+								fullWidth
+								size="small"
+								value={draftBuyerTemplate}
+								onChange={(evt) =>
+									setDraftBuyerTemplate(evt.target.value)
+								}
+							/>
+						</Stack>
+
+						<Button
+							type="button"
+							variant="contained"
+							size="small"
+							disabled={geekmailSaving}
+							onClick={saveGeekmailSettings}
+							sx={{ alignSelf: 'start' }}
+						>
+							Save
+						</Button>
+					</>
+				)}
 			</Stack>
 
 			<Stack gap={1.5} sx={sectionSx}>

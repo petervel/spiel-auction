@@ -14,6 +14,16 @@ export interface User {
 	notifyOnNewBid?: boolean;
 	notifyOnAuctionWon?: boolean;
 	notifyOnWishlistItemListed?: boolean;
+
+	preferredTradeDays?: (
+		| 'WEDNESDAY'
+		| 'THURSDAY'
+		| 'FRIDAY'
+		| 'SATURDAY'
+		| 'SUNDAY'
+	)[];
+	sellerMessageTemplate?: string | null;
+	buyerMessageTemplate?: string | null;
 }
 
 export interface UserFair {

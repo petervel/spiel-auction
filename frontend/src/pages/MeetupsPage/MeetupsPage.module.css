@@ -43,6 +43,14 @@
 	border-left-color: var(--colour-main);
 }
 
+/* --colour-main is a dark navy in dark mode - too close to the page
+   background to read as an accent (same problem AuctionPrice.module.css's
+   .winning badge diverges from --colour-main for). Reuse that same
+   brighter blue here instead, everywhere Buying's accent shows up. */
+body:global(.dark) .buying {
+	border-left-color: hsl(210, 95%, 55%);
+}
+
 .selling {
 	border-left-color: var(--colour-seen);
 }
@@ -81,6 +89,10 @@
    even at a glance. */
 .buying .price {
 	color: var(--colour-main);
+}
+
+body:global(.dark) .buying .price {
+	color: hsl(210, 95%, 55%);
 }
 
 .selling .price {
@@ -261,4 +273,12 @@ body:global(.dark) .coordinateChip {
 	flex-shrink: 0;
 	margin-top: 1px;
 	color: var(--colour-main);
+}
+
+body:global(.dark) .counterpartInfo {
+	border-left-color: hsl(210, 95%, 55%);
+}
+
+body:global(.dark) .counterpartInfoIcon {
+	color: hsl(210, 95%, 55%);
 }

@@ -1,4 +1,8 @@
-import { EditRounded, InfoOutlined } from '@mui/icons-material';
+import {
+	EditRounded,
+	InfoOutlined,
+	MailOutlineRounded,
+} from '@mui/icons-material';
 import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import classNames from 'classnames';
 import { MeetupEntry } from '../../hooks/useMeetups';
@@ -11,9 +15,11 @@ import css from './MeetupsPage.module.css';
 export const MeetupRowDetails = ({
 	entry,
 	onEdit,
+	onSendMessage,
 }: {
 	entry: MeetupEntry;
 	onEdit: () => void;
+	onSendMessage: () => void;
 }) => {
 	const lastUpdatedLabel = entry.meetup.updatedAt
 		? `Last updated ${new Date(entry.meetup.updatedAt).toLocaleString()}`
@@ -49,38 +55,49 @@ export const MeetupRowDetails = ({
 					))}
 				</Stack>
 			)}
-			<Stack
-				direction={{ xs: 'column', sm: 'row' }}
-				gap={1}
-				justifyContent="space-between"
-				alignItems={{ xs: 'flex-start', sm: 'center' }}
-			>
-				<Typography
-					variant="body2"
-					sx={{
-						display: 'flex',
-						alignItems: 'center',
-						gap: 0.75,
-						flexWrap: 'wrap',
-					}}
+			<Stack gap={0.5}>
+				<Stack
+					direction="row"
+					gap={1}
+					justifyContent="space-between"
+					alignItems="center"
 				>
-					<span>
-						{entry.meetup.day
-							? DAY_LABELS[entry.meetup.day]
-							: 'Day not set'}
-						{showExpandedTime && ` · ${entry.meetup.time}`}
-						{' · '}
-						{entry.meetup.location === HALL_1A
-							? HALL_1A
-							: entry.meetup.location}
-					</span>
-					{entry.meetup.location === HALL_1A &&
-						entry.counterpartLocation?.square && (
-							<span className={css.coordinateChip}>
-								{entry.counterpartLocation.square}
-							</span>
-						)}
-				</Typography>
+					<Typography
+						variant="body2"
+						sx={{
+							display: 'flex',
+							alignItems: 'center',
+							gap: 0.75,
+							flexWrap: 'wrap',
+						}}
+					>
+						<span>
+							{entry.meetup.day
+								? DAY_LABELS[entry.meetup.day]
+								: 'Day not set'}
+							{showExpandedTime && ` · ${entry.meetup.time}`}
+							{' · '}
+							{entry.meetup.location === HALL_1A
+								? HALL_1A
+								: entry.meetup.location}
+						</span>
+						{entry.meetup.location === HALL_1A &&
+							entry.counterpartLocation?.square && (
+								<span className={css.coordinateChip}>
+									{entry.counterpartLocation.square}
+								</span>
+							)}
+					</Typography>
+					<Tooltip title={lastUpdatedLabel}>
+						<IconButton
+							size="small"
+							aria-label={lastUpdatedLabel}
+							sx={{ flexShrink: 0 }}
+						>
+							<InfoOutlined fontSize="small" />
+						</IconButton>
+					</Tooltip>
+				</Stack>
 				{entry.meetup.location === HALL_1A &&
 					entry.counterpartLocation?.description && (
 						<Typography
@@ -116,11 +133,13 @@ export const MeetupRowDetails = ({
 				>
 					Edit
 				</Button>
-				<Tooltip title={lastUpdatedLabel}>
-					<IconButton size="small" aria-label={lastUpdatedLabel}>
-						<InfoOutlined fontSize="small" />
-					</IconButton>
-				</Tooltip>
+				<Button
+					size="small"
+					startIcon={<MailOutlineRounded fontSize="small" />}
+					onClick={onSendMessage}
+				>
+					Send message
+				</Button>
 			</Stack>
 		</Stack>
 	);

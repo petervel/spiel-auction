@@ -33,6 +33,17 @@ model User {
   notifyOnAuctionWon         Boolean @default(true)
   notifyOnWishlistItemListed Boolean @default(true)
 
+  // Days this user expects to be trading at the fair, used to fill in the
+  // [day] token in their geekmail templates below (joined as "Thursday or
+  // Friday" etc. - see frontend's buildDayText). Stored as JSON rather than
+  // a join table since it's a handful of values with no need to query by
+  // day. Template text is nullable (falls back to a hardcoded default in
+  // frontend code) rather than defaulted here, since the default contains
+  // newlines/placeholder tokens that are easier to keep in application code.
+  preferredTradeDays    Json?
+  sellerMessageTemplate String? @db.Text
+  buyerMessageTemplate  String? @db.Text
+
   fairs            UserFair[]
   likedItems       UserLikedItem[]
   dismissedItems   UserDismissedItem[]

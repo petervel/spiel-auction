@@ -16,6 +16,7 @@ import { MeetupChanges, MeetupEntry, useMeetups } from '../../hooks/useMeetups';
 import { useUser } from '../../hooks/useUser';
 import { MeetupRowDetails } from './MeetupRowDetails';
 import { MeetupRowEditForm } from './MeetupRowEditForm';
+import { MessageComposeDialog } from './MessageComposeDialog';
 import {
 	DAY_LABELS,
 	DAY_ORDER,
@@ -254,6 +255,7 @@ const MeetupRow = ({
 	// one to render.
 	const [expanded, setExpanded] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
+	const [isMessaging, setIsMessaging] = useState(false);
 
 	// Ticking the checkbox jumps this row to a different section (Completed,
 	// or back out of it) - committing that instantly made it feel like the
@@ -378,6 +380,7 @@ const MeetupRow = ({
 					<MeetupRowDetails
 						entry={entry}
 						onEdit={() => setIsEditing(true)}
+						onSendMessage={() => setIsMessaging(true)}
 					/>
 				)}
 
@@ -391,6 +394,11 @@ const MeetupRow = ({
 					/>
 				)}
 			</div>
+			<MessageComposeDialog
+				entry={entry}
+				open={isMessaging}
+				onClose={() => setIsMessaging(false)}
+			/>
 		</div>
 	);
 };

@@ -129,16 +129,32 @@ const glowOpacity = (count: number) =>
 	GLOW_MIN_OPACITY +
 	glowIntensity(count) * (GLOW_MAX_OPACITY - GLOW_MIN_OPACITY);
 
+// A classic map-pin silhouette (Material Design's "place" glyph), in its
+// own 24x24 space with the tip - what should land exactly on the target
+// square - at (12, 22). Scaled/translated into position per use, same as
+// the pillars' PILLAR_X_FRACTION approach above.
+const MARKER_HEAD_PATH =
+	'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z';
+const MARKER_HOLE_PATH =
+	'M12 11.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z';
+const MARKER_TIP = { x: 12, y: 22 };
+const MARKER_SCALE = 2.2;
+
 type TradeFloorGridProps = {
 	counts: Record<string, number>;
 	selected: string | null;
 	onSelect: (square: string) => void;
+	// A square to point out with a pin, distinct from `selected` (your own
+	// spot) - e.g. the result of looking up someone else's square. Purely
+	// decorative, non-interactive.
+	marker?: string | null;
 };
 
 export const TradeFloorGrid = ({
 	counts,
 	selected,
 	onSelect,
+	marker,
 }: TradeFloorGridProps) => {
 	const viewBoxWidth = GRID_LEFT + GRID_WIDTH + 120;
 	const viewBoxHeight = GRID_TOP + GRID_HEIGHT + 220;
@@ -341,6 +357,36 @@ export const TradeFloorGrid = ({
 							height={ROW_HEIGHTS[j] - 8}
 							className={css.selectedRing}
 						/>
+					);
+				})()}
+
+			{/* Lookup marker pin - drawn last of all, so it's never hidden
+			    behind the selected ring or a glow. */}
+			{marker &&
+				(() => {
+					const i = COLUMNS.indexOf(marker[0]);
+					const j = ROWS.indexOf(Number(marker.slice(1)));
+					if (i === -1 || j === -1) return null;
+					const cx = GRID_LEFT + COLUMN_LEFTS[i] + COLUMN_WIDTHS[i] / 2;
+					const cy = GRID_TOP + ROW_TOPS[j] + ROW_HEIGHTS[j] / 2;
+					return (
+						<g
+							transform={`translate(${
+								cx - MARKER_TIP.x * MARKER_SCALE
+							}, ${
+								cy - MARKER_TIP.y * MARKER_SCALE
+							}) scale(${MARKER_SCALE})`}
+							aria-hidden="true"
+						>
+							<path
+								d={MARKER_HEAD_PATH}
+								className={css.lookupMarkerHead}
+							/>
+							<path
+								d={MARKER_HOLE_PATH}
+								className={css.lookupMarkerHole}
+							/>
+						</g>
 					);
 				})()}
 

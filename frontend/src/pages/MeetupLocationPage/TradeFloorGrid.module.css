@@ -105,6 +105,19 @@ body:global(.dark) .grid {
 	pointer-events: none;
 }
 
+/* The looked-up-user pin - purple so it can't be mistaken for the blue
+   selectedRing (your own spot), the red heatmap glow, or the gold
+   pillars/outline, all of which already use this map's palette. */
+.lookupMarkerHead {
+	fill: #9c27b0;
+	stroke: #ffffff;
+	stroke-width: 0.8;
+}
+
+.lookupMarkerHole {
+	fill: #ffffff;
+}
+
 .gridOutline line {
 	stroke: var(--map-ink);
 	stroke-width: 4;

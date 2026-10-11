@@ -226,23 +226,25 @@ router.get(
 	},
 );
 
-// Batch lookup for the export sheet: given the BGG usernames of the other
-// party on each auction, return whichever meetup spot/description they've
-// set for the caller's current fair, if any. bggUsername comparisons rely
-// on the column's utf8mb4_unicode_ci collation for case-insensitivity,
-// same as the geeklist-comment verification check.
-router.post(
-	"/location/lookup",
+// Fuzzy username search for the meetup-location lookup (Meetup Info page) -
+// same shape as /admin/users/search, but open to any authenticated user
+// rather than admin-gated, and scoped down accordingly: only bggUsername
+// and this fair's meetup spot, never accessLevel/createdAt/id. Only
+// matches people who've actually set a spot for the caller's current
+// fair - there's nothing useful to show otherwise, and it keeps this from
+// doubling as a general "does this username exist" probe.
+router.get(
+	"/location/search",
 	authenticateUser,
 	async (req: AuthenticatedRequest, res) => {
 		try {
-			const { usernames } = req.body;
-			if (
-				!Array.isArray(usernames) ||
-				!usernames.every((u) => typeof u === "string")
-			) {
+			const query =
+				typeof req.query.bggUsername === "string"
+					? req.query.bggUsername.trim()
+					: "";
+			if (query.length < 2) {
 				res.status(400).json({
-					error: "usernames must be an array of strings",
+					error: "Search for at least 2 characters.",
 				});
 				return;
 			}
@@ -259,26 +261,22 @@ router.post(
 				where: {
 					fairId,
 					locationSquare: { not: null },
-					user: { bggUsername: { in: usernames } },
+					user: { bggUsername: { contains: query } },
 				},
 				include: { user: { select: { bggUsername: true } } },
+				take: 20,
 			});
 
-			const locations: Record<
-				string,
-				{ square: string | null; description: string | null }
-			> = {};
-			for (const row of rows) {
-				const key = row.user.bggUsername?.toLowerCase();
-				// First match wins if multiple accounts share a username.
-				if (!key || locations[key]) continue;
-				locations[key] = {
+			const results = rows
+				.filter((row) => row.user.bggUsername)
+				.map((row) => ({
+					bggUsername: row.user.bggUsername as string,
 					square: row.locationSquare,
 					description: row.locationDescription,
-				};
-			}
+				}))
+				.sort((a, b) => a.bggUsername.localeCompare(b.bggUsername));
 
-			res.status(200).json({ locations });
+			res.status(200).json({ results });
 		} catch (err) {
 			console.error(err);
 			res.status(500).json({ error: "Database error" });

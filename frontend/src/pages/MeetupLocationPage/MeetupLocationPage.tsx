@@ -1,3 +1,4 @@
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import {
 	Button,
 	Divider,
@@ -15,6 +16,10 @@ import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useLocationCounts } from '../../hooks/useLocationCounts';
+import {
+	LocationSearchResult,
+	useLocationSearch,
+} from '../../hooks/useLocationSearch';
 import { useMeetupLocation } from '../../hooks/useMeetupLocation';
 import { useUser } from '../../hooks/useUser';
 import { TradeFloorGrid } from './TradeFloorGrid';
@@ -32,6 +37,28 @@ export const MeetupLocationPage = () => {
 	} = useLocationCounts();
 
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+	const [searchQuery, setSearchQuery] = useState('');
+	const {
+		results: searchResults,
+		loading: searchLoading,
+		error: searchError,
+		search,
+	} = useLocationSearch();
+	const [selectedResult, setSelectedResult] =
+		useState<LocationSearchResult | null>(null);
+	const [findOpen, setFindOpen] = useState(false);
+
+	// A single match is almost certainly what you were looking for - skip
+	// the extra click of picking it out of a one-item list.
+	const handleSearch = async (evt: FormEvent<HTMLFormElement>) => {
+		evt.preventDefault();
+		setSelectedResult(null);
+		const results = await search(searchQuery);
+		if (results?.length === 1) {
+			setSelectedResult(results[0]);
+		}
+	};
 
 	const [editDescription, setEditDescription] = useState(description ?? '');
 	useEffect(() => {
@@ -170,6 +197,120 @@ export const MeetupLocationPage = () => {
 					</Stack>
 				</form>
 				<Divider />
+				<Stack
+					direction="row"
+					alignItems="center"
+					justifyContent="space-between"
+					component="button"
+					type="button"
+					onClick={() => setFindOpen((open) => !open)}
+					aria-expanded={findOpen}
+					sx={{
+						background: 'none',
+						border: 'none',
+						padding: 0,
+						margin: 0,
+						width: '100%',
+						cursor: 'pointer',
+						textAlign: 'left',
+						font: 'inherit',
+						color: 'inherit',
+					}}
+				>
+					<Typography variant="h6">Find someone else</Typography>
+					<ExpandMoreRoundedIcon
+						sx={{
+							color: 'text.secondary',
+							transform: findOpen ? 'rotate(180deg)' : 'none',
+							transition: 'transform 0.15s',
+						}}
+					/>
+				</Stack>
+
+				{findOpen && (
+					<>
+						<Typography variant="body2" color="text.secondary">
+							Search for a BGG username to see their spot, if
+							they've set one for this fair.
+						</Typography>
+						<Stack
+							component="form"
+							onSubmit={handleSearch}
+							direction="row"
+							gap={1}
+						>
+							<TextField
+								value={searchQuery}
+								onChange={(evt) =>
+									setSearchQuery(evt.target.value)
+								}
+								label="BGG username"
+								size="small"
+								fullWidth
+								variant="standard"
+							/>
+							<Button
+								type="submit"
+								variant="contained"
+								disabled={searchLoading || !searchQuery.trim()}
+							>
+								Find
+							</Button>
+						</Stack>
+						{searchError && (
+							<Typography variant="body2" color="error">
+								{searchError}
+							</Typography>
+						)}
+						{searchResults && searchResults.length === 0 && (
+							<Typography
+								variant="body2"
+								color="text.secondary"
+							>
+								No one found with a spot set here.
+							</Typography>
+						)}
+						{searchResults && searchResults.length > 1 && (
+							<Stack gap={0.5}>
+								{searchResults.map((result) => (
+									<Button
+										key={result.bggUsername}
+										variant={
+											selectedResult?.bggUsername ===
+											result.bggUsername
+												? 'contained'
+												: 'outlined'
+										}
+										onClick={() =>
+											setSelectedResult(result)
+										}
+										sx={{
+											justifyContent: 'space-between',
+											textTransform: 'none',
+										}}
+									>
+										{result.bggUsername}
+										<Typography
+											component="span"
+											variant="body2"
+										>
+											{result.square}
+										</Typography>
+									</Button>
+								))}
+							</Stack>
+						)}
+						{selectedResult && (
+							<MeetupSpotSummary
+								square={selectedResult.square}
+								description={selectedResult.description}
+								label={`${selectedResult.bggUsername}'s spot · Hall 1A`}
+							/>
+						)}
+					</>
+				)}
+
+				<Divider />
 				<Typography variant="body2" color="text.secondary">
 					Click a square to set where you'll be. The red glow (and
 					number) shows how many people (including you) have picked
@@ -183,6 +324,7 @@ export const MeetupLocationPage = () => {
 							counts={counts ?? {}}
 							selected={square}
 							onSelect={handleSelectSquare}
+							marker={selectedResult?.square ?? null}
 						/>
 					)}
 				</Stack>

@@ -7,10 +7,12 @@ import {
 import { Button, Stack, Typography } from '@mui/material';
 import classNames from 'classnames';
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
+import { useBggUsername } from '../../hooks/useBggUsername';
 import { useListId } from '../../hooks/useListId';
 import { MeetupChanges, MeetupEntry, useMeetups } from '../../hooks/useMeetups';
 import { useUser } from '../../hooks/useUser';
@@ -92,6 +94,11 @@ export const MeetupsPage = () => {
 	const listId = useListId();
 	const { entries, isLoading, error, updateMeetup } = useMeetups();
 	const [completedOpen, setCompletedOpen] = useState(false);
+	const { bggUsername, verification, fetchVerification } = useBggUsername();
+
+	useEffect(() => {
+		if (bggUsername) fetchVerification();
+	}, [bggUsername, fetchVerification]);
 
 	if (userLoading) return <Spinner />;
 
@@ -106,6 +113,44 @@ export const MeetupsPage = () => {
 				<p>
 					<LoginLink /> to see your meetups.
 				</p>
+			</Stack>
+		);
+	}
+
+	// Same proof-of-ownership bar the backend enforces (requireVerifiedContext
+	// in api/meetups/index.ts) - shown as its own states here instead of just
+	// surfacing that route's 403 as plain error text.
+	if (!bggUsername) {
+		return (
+			<Stack
+				sx={{ width: '100%', maxWidth: 640, marginX: 'auto' }}
+				paddingInline="1rem"
+				paddingBottom="2rem"
+			>
+				<Title title="Meetups" left={<BackButton />} />
+				<Typography>
+					Set your BGG username in <Link to="/settings">Settings</Link>{' '}
+					before using meetups.
+				</Typography>
+			</Stack>
+		);
+	}
+
+	if (!verification) return <Spinner />;
+
+	if (!verification.confirmed) {
+		return (
+			<Stack
+				sx={{ width: '100%', maxWidth: 640, marginX: 'auto' }}
+				paddingInline="1rem"
+				paddingBottom="2rem"
+			>
+				<Title title="Meetups" left={<BackButton />} />
+				<Typography>
+					Verify your BGG username in <Link to="/settings">Settings</Link>{' '}
+					before using meetups - this proves the person meeting up is
+					actually you.
+				</Typography>
 			</Stack>
 		);
 	}

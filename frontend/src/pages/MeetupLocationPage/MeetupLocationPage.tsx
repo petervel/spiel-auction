@@ -112,7 +112,11 @@ export const MeetupLocationPage = () => {
 
 	if (!user) {
 		return (
-			<Stack paddingInline="2rem" paddingBottom="2rem">
+			<Stack
+				paddingInline="2rem"
+				paddingBottom="2rem"
+				sx={{ width: '100%', maxWidth: 540, marginInline: 'auto' }}
+			>
 				<Title
 					title={TITLE}
 					left={<BackButton to="/settings" />}
@@ -126,7 +130,11 @@ export const MeetupLocationPage = () => {
 
 	if (!bggUsername) {
 		return (
-			<Stack paddingInline="2rem" paddingBottom="2rem">
+			<Stack
+				paddingInline="2rem"
+				paddingBottom="2rem"
+				sx={{ width: '100%', maxWidth: 540, marginInline: 'auto' }}
+			>
 				<Title
 					title={TITLE}
 					left={<BackButton to="/settings" />}
@@ -144,7 +152,11 @@ export const MeetupLocationPage = () => {
 
 	if (!verification.confirmed) {
 		return (
-			<Stack paddingInline="2rem" paddingBottom="2rem">
+			<Stack
+				paddingInline="2rem"
+				paddingBottom="2rem"
+				sx={{ width: '100%', maxWidth: 540, marginInline: 'auto' }}
+			>
 				<Title
 					title={TITLE}
 					left={<BackButton to="/settings" />}

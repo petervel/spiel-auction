@@ -57,11 +57,17 @@ export const checkThreadForHash = async (
 		const rawArticles = parsed?.thread?.articles?.article;
 		if (!rawArticles) return false;
 
-		const wantedUsername = bggUsername.toLowerCase();
+		// Trimmed defensively, not just at the point bggUsername is saved -
+		// utf8mb4_unicode_ci's PAD SPACE collation means MySQL itself treats
+		// "foo " and "foo" as the same value for a unique lookup, so a row
+		// saved before trimming was added there can still surface a
+		// whitespace-padded value here, which this strict JS === would
+		// otherwise never match against BGG's own clean username.
+		const wantedUsername = bggUsername.trim().toLowerCase();
 		return toArray(rawArticles).some((article: Record<string, any>) => {
-			const articleUsername = decode(
-				`${article["@_username"]}`,
-			).toLowerCase();
+			const articleUsername = decode(`${article["@_username"]}`)
+				.trim()
+				.toLowerCase();
 			const articleText = decode(`${article.body}`);
 			return (
 				articleUsername === wantedUsername && articleText.includes(hash)

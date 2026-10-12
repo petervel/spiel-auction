@@ -163,7 +163,10 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 			{ square: string | null; description: string | null }
 		> = {};
 		for (const row of locationRows) {
-			const key = row.user.bggUsername?.toLowerCase();
+			// Trimmed as well as lowercased - see usersByBggUsername.ts for
+			// why a legacy row can still carry whitespace a plain JS Map/
+			// object key compare won't forgive the way MySQL's collation does.
+			const key = row.user.bggUsername?.trim().toLowerCase();
 			// First match wins if multiple accounts share a username.
 			if (!key || locationByUsername[key]) continue;
 			locationByUsername[key] = {

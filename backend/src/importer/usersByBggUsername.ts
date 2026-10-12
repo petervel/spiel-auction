@@ -22,7 +22,12 @@ export const getUserIdsByUsername = async (
 	if (usernames.length === 0) return result;
 
 	const addToGroup = (bggUsername: string, userId: number) => {
-		const key = bggUsername.toLowerCase();
+		// Trimmed as well as lowercased - a legacy row saved before
+		// bggUsername was trimmed on input can still carry padding
+		// whitespace (MySQL's PAD SPACE collation hides it at the DB
+		// lookup level, but a plain Map key here is a strict JS string
+		// compare, same issue as checkThreadForHash).
+		const key = bggUsername.trim().toLowerCase();
 		const existing = result.get(key);
 		if (existing) {
 			if (!existing.includes(userId)) existing.push(userId);

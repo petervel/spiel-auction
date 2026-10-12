@@ -289,12 +289,26 @@ router.post(
 	authenticateUser,
 	async (req: AuthenticatedRequest, res) => {
 		try {
-			const { bggUsername } = req.body;
+			let { bggUsername } = req.body;
 
 			if (typeof bggUsername !== "string" && bggUsername !== null) {
 				return res.status(400).json({
 					error: "bggUsername must be a string or null",
 				});
+			}
+
+			// A copy-pasted username (e.g. from a BGG profile URL, or a
+			// "@username"-style mention) can carry invisible leading/trailing
+			// whitespace or a leading "@" that was never part of the real BGG
+			// username - utf8mb4_unicode_ci is a PAD SPACE collation, so MySQL
+			// treats "foo " and "foo" as the same value for lookups/
+			// uniqueness, but a strict JS === (e.g. in checkThreadForHash,
+			// matching this against BGG's own clean username) does not.
+			// Trimming to zero-width is empty too, so that collapses to
+			// "removed" the same as submitting "".
+			if (typeof bggUsername === "string") {
+				bggUsername =
+					bggUsername.trim().replace(/^@/, "").trim() || null;
 			}
 
 			if (!req.user?.id) {

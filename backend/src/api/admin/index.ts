@@ -98,7 +98,12 @@ router.get(
 				(user) =>
 					user.bggUsername &&
 					user.bggVerifications.some(
-						(v) => v.bggUsername === user.bggUsername,
+						// Trimmed/lowercased - see usersByBggUsername.ts for why a
+						// legacy BggVerification row can carry whitespace a plain
+						// JS === won't forgive the way MySQL's collation does.
+						(v) =>
+							v.bggUsername?.trim().toLowerCase() ===
+							user.bggUsername?.trim().toLowerCase(),
 					),
 			).length;
 
@@ -162,8 +167,13 @@ router.get(
 			return res.json({
 				users: users.map(({ bggVerifications, ...user }) => ({
 					...user,
+					// Trimmed/lowercased - see usersByBggUsername.ts for why a
+					// legacy BggVerification row can carry whitespace a plain
+					// JS === won't forgive the way MySQL's collation does.
 					verified: bggVerifications.some(
-						(v) => v.bggUsername === user.bggUsername,
+						(v) =>
+							v.bggUsername?.trim().toLowerCase() ===
+							user.bggUsername?.trim().toLowerCase(),
 					),
 				})),
 			});

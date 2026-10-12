@@ -48,7 +48,9 @@ router.post(
 		try {
 			await prisma.userDismissedItem.upsert({
 				where: { userId_itemId: { userId: req.userId, itemId } },
-				update: {}, // nothing to update if it exists
+				// Bump dismissedAt even if the row already exists, so
+				// re-dismissing re-covers any bids placed since the last dismiss.
+				update: { dismissedAt: new Date() },
 				create: { userId: req.userId, itemId },
 			});
 

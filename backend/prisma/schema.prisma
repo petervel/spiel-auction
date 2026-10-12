@@ -126,6 +126,12 @@ model UserDismissedItem {
   userId Int
   item   Item @relation(fields: [itemId], references: [id])
   itemId Int
+  // Bumped on every (re-)dismiss. /api/outbids only honors this dismissal
+  // for comments already posted by now - a bid the dismissing user places
+  // afterwards brings the item back, since dismissing it was a statement
+  // about the fight as it stood then, not a standing wish to never see
+  // this item again regardless of what they do next.
+  dismissedAt DateTime @default(now())
 
   @@unique([userId, itemId])
 }

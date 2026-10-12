@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `UserDismissedItem` ADD COLUMN `dismissedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3);

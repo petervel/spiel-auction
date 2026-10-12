@@ -60,16 +60,34 @@ router.get(
 						deleted: false,
 					},
 				},
-				dismissedByUsers: { none: { userId: req.userId } },
 			},
-			include: { comments: true },
+			include: {
+				comments: true,
+				dismissedByUsers: { where: { userId: req.userId } },
+			},
 		});
 
 		const result = {
-			items: items.filter(
-				(item) =>
-					item.highestBidder?.toLowerCase() != bidder.toLowerCase(),
-			),
+			items: items.filter((item) => {
+				if (item.highestBidder?.toLowerCase() === bidder.toLowerCase()) {
+					return false;
+				}
+
+				const dismissal = item.dismissedByUsers[0];
+				if (!dismissal) return true;
+
+				// A dismissal only covers the fight as it stood at the time -
+				// if the bidder has placed a new bid on this item since, they're
+				// back in it, and the old "don't show me this" no longer holds.
+				const rebidSinceDismissal = item.comments.some(
+					(comment) =>
+						comment.username === bidder &&
+						!comment.deleted &&
+						comment.oldBid !== null &&
+						comment.postDate > dismissal.dismissedAt,
+				);
+				return rebidSinceDismissal;
+			}),
 		};
 
 		await redisClient.set(cacheKey, JSON.stringify(result));

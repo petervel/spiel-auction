@@ -26,10 +26,25 @@ const buildPayload = (
 	...overrides,
 });
 
+// The body's "Auction ends: Sun 11 Oct, random time" has no year, so it
+// resolves against whatever referenceYear is passed in - a fixed real year
+// (the payload's own 2026) eventually lands in the past relative to
+// whenever this suite actually runs, which flips isEnded to true and fails
+// the "builds a real item" case below for reasons that have nothing to do
+// with what it's testing. REFERENCE_YEAR is deliberately a year nobody
+// reading this will see arrive, so "11 Oct" stays in the future forever
+// rather than becoming a ticking time bomb like the original 2026 did.
+const REFERENCE_YEAR = 2099;
+
 describe("toXmlApiSource + ItemWrapper.fromXml", () => {
 	it("builds a real item from a newitem payload, reusing ItemWrapper's own body parsing unmodified", () => {
 		const source = toXmlApiSource(buildPayload());
-		const item = ItemWrapper.fromXml(382717, source, 1700000000, 2026);
+		const item = ItemWrapper.fromXml(
+			382717,
+			source,
+			1700000000,
+			REFERENCE_YEAR,
+		);
 
 		expect(item.id).toBe(13054483);
 		expect(item.objectName).toBe("Caldera Park");
@@ -45,7 +60,12 @@ describe("toXmlApiSource + ItemWrapper.fromXml", () => {
 		const source = toXmlApiSource(buildPayload());
 		expect(source.comment).toBeUndefined();
 
-		const item = ItemWrapper.fromXml(382717, source, 1700000000, 2026);
+		const item = ItemWrapper.fromXml(
+			382717,
+			source,
+			1700000000,
+			REFERENCE_YEAR,
+		);
 		expect(item.getOutbidBidders(0)).toEqual([]);
 	});
 

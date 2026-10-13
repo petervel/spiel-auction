@@ -64,8 +64,8 @@ const DialogContentInner = ({
 			<DialogContent>
 				<Stack gap={2} paddingTop={0.5}>
 					<Typography variant="body2" color="text.secondary">
-						For meeting up with someone outside the auction itself,
-						or adding something extra to an existing meetup.
+						For meeting up with someone outside the auction itself.
+						Don't use this to arrange your normal auction trades.
 					</Typography>
 					<TextField
 						select

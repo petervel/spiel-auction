@@ -52,3 +52,101 @@ export const getDisplayLocation = (
 	}
 	return entry.meetup.location;
 };
+
+export const gameNamesOf = (entry: MeetupEntry) =>
+	entry.items.map((item) => item.objectName).join(', ');
+
+export const byTimeThenCounterpart = (a: MeetupEntry, b: MeetupEntry) => {
+	if (a.meetup.time !== b.meetup.time) {
+		return a.meetup.time.localeCompare(b.meetup.time);
+	}
+	return a.counterpart.localeCompare(b.counterpart);
+};
+
+// Time's not a useful sort key here - every unscheduled entry sits on the
+// same default "15:00" (there's no day yet to actually attach a time to),
+// so sorting by it like the scheduled sections do would just fall through
+// to counterpart anyway. Game name is more useful: it's what you're
+// scanning for before you've agreed on a day to put someone under.
+export const byGameName = (a: MeetupEntry, b: MeetupEntry) =>
+	gameNamesOf(a).localeCompare(gameNamesOf(b));
+
+export type DaySection = {
+	key: string;
+	label: string;
+	selling: MeetupEntry[];
+	buying: MeetupEntry[];
+};
+
+export const makeSection = (
+	key: string,
+	label: string,
+	entries: MeetupEntry[],
+	sortFn: (a: MeetupEntry, b: MeetupEntry) => number,
+): DaySection => ({
+	key,
+	label,
+	selling: entries.filter((entry) => entry.role === 'selling').sort(sortFn),
+	buying: entries.filter((entry) => entry.role === 'buying').sort(sortFn),
+});
+
+// Unscheduled first, then only the days that actually have a meetup on
+// them - a day nobody has picked yet just doesn't get a heading.
+export const groupByDay = (entries: MeetupEntry[]): DaySection[] => {
+	const sections: DaySection[] = [];
+
+	const unscheduled = entries.filter((entry) => entry.meetup.day === null);
+	if (unscheduled.length > 0) {
+		sections.push(
+			makeSection('UNSCHEDULED', 'Unscheduled', unscheduled, byGameName),
+		);
+	}
+
+	for (const day of DAY_ORDER) {
+		const dayEntries = entries.filter((entry) => entry.meetup.day === day);
+		if (dayEntries.length > 0) {
+			sections.push(
+				makeSection(day, DAY_LABELS[day], dayEntries, byTimeThenCounterpart),
+			);
+		}
+	}
+
+	return sections;
+};
+
+// Most recently completed first - shared by the Completed section (on both
+// the main Meetups page and a single day's page) so the two never disagree
+// on order.
+export const sortByCompletedAtDesc = (
+	entries: MeetupEntry[],
+): MeetupEntry[] =>
+	[...entries].sort((a, b) => {
+		const aTime = a.meetup.completedAt
+			? new Date(a.meetup.completedAt).getTime()
+			: 0;
+		const bTime = b.meetup.completedAt
+			? new Date(b.meetup.completedAt).getTime()
+			: 0;
+		return bTime - aTime;
+	});
+
+// Matches the TradeFloorGrid's own grid (columns A-E, rows 1-8) - anything
+// else is either the unset default or a freeform custom location, neither
+// of which has a square to plot.
+const SQUARE_PATTERN = /^[A-E][1-8]$/;
+
+// Not-yet-completed meetups only - a completed one's square no longer
+// matters, it already happened. Counts by whichever square the meetup
+// would actually be found at (see getDisplayLocation), not any fixed side's
+// own location, so both buying and selling entries plot correctly.
+export const computeSquareCounts = (
+	entries: MeetupEntry[],
+): Record<string, number> => {
+	const counts: Record<string, number> = {};
+	for (const entry of entries) {
+		const square = getDisplayLocation(entry);
+		if (!SQUARE_PATTERN.test(square)) continue;
+		counts[square] = (counts[square] ?? 0) + 1;
+	}
+	return counts;
+};

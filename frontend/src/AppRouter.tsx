@@ -13,6 +13,7 @@ import { ItemPage } from './pages/ItemPage/ItemPage';
 import { LatestPage } from './pages/LatestPage/LatestPage';
 import { LikedPage } from './pages/LatestPage/LikedPage';
 import { MeetupLocationPage } from './pages/MeetupLocationPage/MeetupLocationPage';
+import { MeetupDayPage } from './pages/MeetupsPage/MeetupDayPage';
 import { MeetupsPage } from './pages/MeetupsPage/MeetupsPage';
 import { ObjectPage } from './pages/ObjectPage/ObjectPage';
 import { SearchPage } from './pages/SearchPage/SearchPage';
@@ -40,6 +41,7 @@ export const AppRouter = () => {
 			<Route path="/duplicates" element={<DuplicatesPage />} />
 			<Route path="/deleted" element={<DeletedPage />} />
 			<Route path="/meetups" element={<MeetupsPage />} />
+			<Route path="/meetups/:day" element={<MeetupDayPage />} />
 			<Route path="/admin" element={<AdminPage />} />
 			<Route path="/admin/fairs" element={<AdminFairsPage />} />
 			<Route path="/donate" element={<DonatePage />} />

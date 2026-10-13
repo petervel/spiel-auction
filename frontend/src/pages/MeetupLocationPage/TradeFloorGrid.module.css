@@ -38,6 +38,15 @@ body:global(.dark) .grid {
 	fill: var(--map-cell-hover);
 }
 
+.cellReadOnly {
+	cursor: default;
+}
+
+.cellReadOnly:hover,
+.cellReadOnly:focus-visible {
+	fill: var(--map-backdrop);
+}
+
 .cell:focus-visible {
 	outline: 2px solid #3b6fd6;
 	outline-offset: -2px;

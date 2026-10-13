@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import css from './TradeFloorGrid.module.css';
 
 const COLUMNS = ['A', 'B', 'C', 'D', 'E'];
@@ -148,6 +149,14 @@ type TradeFloorGridProps = {
 	// spot) - e.g. the result of looking up someone else's square. Purely
 	// decorative, non-interactive.
 	marker?: string | null;
+	// Disables click/keyboard interaction and hover feedback entirely - for
+	// a purely informational view (e.g. a per-day meetup summary) where
+	// there's nothing to select.
+	readOnly?: boolean;
+	// What a square's count means in its aria-label - the interactive "set
+	// your location" grid counts people; a read-only summary might count
+	// something else (e.g. meetups).
+	describeCount?: (count: number) => string;
 };
 
 export const TradeFloorGrid = ({
@@ -155,6 +164,8 @@ export const TradeFloorGrid = ({
 	selected,
 	onSelect,
 	marker,
+	readOnly = false,
+	describeCount = (count) => `${count} people here`,
 }: TradeFloorGridProps) => {
 	const viewBoxWidth = GRID_LEFT + GRID_WIDTH + 120;
 	const viewBoxHeight = GRID_TOP + GRID_HEIGHT + 220;
@@ -164,7 +175,11 @@ export const TradeFloorGrid = ({
 			className={css.grid}
 			viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
 			role="group"
-			aria-label="Trade floor grid - click a square to set your meetup location"
+			aria-label={
+				readOnly
+					? 'Trade floor grid'
+					: 'Trade floor grid - click a square to set your meetup location'
+			}
 		>
 			<defs>
 				<filter id="glow-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -272,19 +287,33 @@ export const TradeFloorGrid = ({
 								y={y}
 								width={COLUMN_WIDTHS[i]}
 								height={ROW_HEIGHTS[j]}
-								className={css.cell}
-								onClick={() => onSelect(square)}
-								onKeyDown={(evt) => {
-									if (evt.key === 'Enter' || evt.key === ' ') {
-										evt.preventDefault();
-										onSelect(square);
-									}
-								}}
-								tabIndex={0}
-								role="button"
-								aria-pressed={isSelected}
+								className={classNames(
+									css.cell,
+									readOnly && css.cellReadOnly,
+								)}
+								onClick={
+									readOnly ? undefined : () => onSelect(square)
+								}
+								onKeyDown={
+									readOnly
+										? undefined
+										: (evt) => {
+												if (
+													evt.key === 'Enter' ||
+													evt.key === ' '
+												) {
+													evt.preventDefault();
+													onSelect(square);
+												}
+											}
+								}
+								tabIndex={readOnly ? -1 : 0}
+								role={readOnly ? undefined : 'button'}
+								aria-pressed={readOnly ? undefined : isSelected}
 								aria-label={`Square ${square}${
-									counts[square] ? `, ${counts[square]} people here` : ''
+									counts[square]
+										? `, ${describeCount(counts[square])}`
+										: ''
 								}`}
 							/>
 							<text x={x + 10} y={y + 28} className={css.cellLabel}>

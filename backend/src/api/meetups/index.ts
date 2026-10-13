@@ -527,4 +527,286 @@ router.post(
 	},
 );
 
+// PATCH /api/meetups/custom - changes who a custom meetup is with, plus
+// whatever other fields are given, in one write. Only ever for a pure
+// custom meetup (no real bid relationship) - one that's also a genuine
+// buying/selling pair is locked to whoever actually bid, same restriction
+// as DELETE /custom's "clear, don't remove" branch, just stricter (reject
+// outright rather than partially apply).
+router.patch(
+	"/custom",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const context = await requireVerifiedContext(req, res);
+			if (!context) return;
+			const { myUsername, fairId, listId } = context;
+
+			const {
+				counterpartUsername,
+				role,
+				newCounterpartUsername,
+				day,
+				location,
+				time,
+				completed,
+				notes,
+				description,
+			} = req.body;
+
+			if (
+				typeof counterpartUsername !== "string" ||
+				!counterpartUsername.trim()
+			) {
+				res.status(400).json({ error: "counterpartUsername is required" });
+				return;
+			}
+			if (role !== "buying" && role !== "selling") {
+				res.status(400).json({ error: "role must be 'buying' or 'selling'" });
+				return;
+			}
+			if (
+				typeof newCounterpartUsername !== "string" ||
+				!newCounterpartUsername.trim()
+			) {
+				res
+					.status(400)
+					.json({ error: "newCounterpartUsername is required" });
+				return;
+			}
+			if (typeof description !== "string" || !description.trim()) {
+				res.status(400).json({ error: "description is required" });
+				return;
+			}
+			if (day !== undefined && day !== null && !VALID_DAYS.has(day)) {
+				res.status(400).json({
+					error: `day must be one of ${[...VALID_DAYS].join(", ")}, or null`,
+				});
+				return;
+			}
+			if (location !== undefined && typeof location !== "string") {
+				res.status(400).json({ error: "location must be a string" });
+				return;
+			}
+			if (time !== undefined && typeof time !== "string") {
+				res.status(400).json({ error: "time must be a string" });
+				return;
+			}
+			if (completed !== undefined && typeof completed !== "boolean") {
+				res.status(400).json({ error: "completed must be a boolean" });
+				return;
+			}
+			if (notes !== undefined && notes !== null && typeof notes !== "string") {
+				res.status(400).json({ error: "notes must be a string or null" });
+				return;
+			}
+
+			const oldCounterpart = counterpartUsername.trim();
+			const newCounterpart = newCounterpartUsername.trim();
+			if (newCounterpart.toLowerCase() === myUsername.toLowerCase()) {
+				res
+					.status(400)
+					.json({ error: "You can't add a meetup with yourself." });
+				return;
+			}
+
+			const oldBuyerUsername =
+				role === "buying" ? myUsername : oldCounterpart;
+			const oldSellerUsername =
+				role === "buying" ? oldCounterpart : myUsername;
+
+			const existingMeetup = await prisma.meetup.findUnique({
+				where: {
+					fairId_buyerUsername_sellerUsername: {
+						fairId,
+						buyerUsername: oldBuyerUsername,
+						sellerUsername: oldSellerUsername,
+					},
+				},
+			});
+			if (!existingMeetup?.isCustom) {
+				res
+					.status(404)
+					.json({ error: "No custom meetup found for this pair." });
+				return;
+			}
+
+			const qualifyingItem = await prisma.item.findFirst({
+				where: {
+					listId,
+					deleted: false,
+					hasBids: true,
+					highestBidder: oldBuyerUsername,
+					username: oldSellerUsername,
+				},
+				select: { id: true },
+			});
+			if (qualifyingItem) {
+				res.status(400).json({
+					error:
+						"Can't change the trade partner for a meetup backed by a real auction relationship.",
+				});
+				return;
+			}
+
+			const newBuyerUsername =
+				role === "buying" ? myUsername : newCounterpart;
+			const newSellerUsername =
+				role === "buying" ? newCounterpart : myUsername;
+
+			if (
+				newBuyerUsername.toLowerCase() !== oldBuyerUsername.toLowerCase() ||
+				newSellerUsername.toLowerCase() !== oldSellerUsername.toLowerCase()
+			) {
+				const conflict = await prisma.meetup.findUnique({
+					where: {
+						fairId_buyerUsername_sellerUsername: {
+							fairId,
+							buyerUsername: newBuyerUsername,
+							sellerUsername: newSellerUsername,
+						},
+					},
+					select: { id: true },
+				});
+				if (conflict) {
+					res.status(409).json({
+						error: "You already have a meetup with that person in this role.",
+					});
+					return;
+				}
+			}
+
+			const completedData =
+				completed !== undefined
+					? { completed, completedAt: completed ? new Date() : null }
+					: {};
+			const notesData =
+				notes !== undefined
+					? role === "buying"
+						? { buyerNotes: notes }
+						: { sellerNotes: notes }
+					: {};
+
+			const meetup = await prisma.meetup.update({
+				where: { id: existingMeetup.id },
+				data: {
+					buyerUsername: newBuyerUsername,
+					sellerUsername: newSellerUsername,
+					lastEditedBy: myUsername,
+					customDescription: description.trim(),
+					...(day !== undefined ? { day } : {}),
+					...(location !== undefined ? { location } : {}),
+					...(time !== undefined ? { time } : {}),
+					...completedData,
+					...notesData,
+				},
+			});
+
+			res.status(200).json({
+				meetup: {
+					counterpartUsername: newCounterpart,
+					day: meetup.day,
+					location: meetup.location,
+					time: meetup.time,
+					completed: meetup.completed,
+					completedAt: meetup.completedAt,
+					updatedAt: meetup.updatedAt,
+					lastEditedBy: meetup.lastEditedBy,
+					customDescription: meetup.customDescription,
+					myNotes:
+						(role === "buying"
+							? meetup.buyerNotes
+							: meetup.sellerNotes) ?? null,
+				},
+			});
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
+// DELETE /api/meetups/custom - removes a custom meetup. If the pair has no
+// real bid relationship backing it, the whole row goes - it only existed
+// because of this custom claim. If it does (an addendum on a genuine
+// buying/selling pair, see POST /custom), only the custom fields are
+// cleared; the real meetup (day/time/location/notes) stays, since that
+// relationship is still real and shouldn't vanish along with the addendum.
+router.delete(
+	"/custom",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const context = await requireVerifiedContext(req, res);
+			if (!context) return;
+			const { myUsername, fairId, listId } = context;
+
+			const { counterpartUsername, role } = req.body;
+
+			if (
+				typeof counterpartUsername !== "string" ||
+				!counterpartUsername.trim()
+			) {
+				res.status(400).json({ error: "counterpartUsername is required" });
+				return;
+			}
+			if (role !== "buying" && role !== "selling") {
+				res.status(400).json({ error: "role must be 'buying' or 'selling'" });
+				return;
+			}
+
+			const counterpart = counterpartUsername.trim();
+			const buyerUsername = role === "buying" ? myUsername : counterpart;
+			const sellerUsername = role === "buying" ? counterpart : myUsername;
+			const where = {
+				fairId_buyerUsername_sellerUsername: {
+					fairId,
+					buyerUsername,
+					sellerUsername,
+				},
+			};
+
+			const existingMeetup = await prisma.meetup.findUnique({
+				where,
+				select: { isCustom: true },
+			});
+			if (!existingMeetup?.isCustom) {
+				res
+					.status(404)
+					.json({ error: "No custom meetup found for this pair." });
+				return;
+			}
+
+			const qualifyingItem = await prisma.item.findFirst({
+				where: {
+					listId,
+					deleted: false,
+					hasBids: true,
+					highestBidder: buyerUsername,
+					username: sellerUsername,
+				},
+				select: { id: true },
+			});
+
+			if (qualifyingItem) {
+				await prisma.meetup.update({
+					where,
+					data: {
+						isCustom: false,
+						customDescription: null,
+						lastEditedBy: myUsername,
+					},
+				});
+			} else {
+				await prisma.meetup.delete({ where });
+			}
+
+			res.status(200).json({ success: true });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
+
 export default router;

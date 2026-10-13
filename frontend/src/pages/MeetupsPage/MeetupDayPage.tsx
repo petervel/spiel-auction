@@ -23,7 +23,7 @@ import {
 	DAY_LABELS,
 	sortByCompletedAtDesc,
 } from './meetupDisplay';
-import { RoleGroup } from './MeetupRow';
+import { RenameInput, RoleGroup } from './MeetupRow';
 import css from './MeetupsPage.module.css';
 
 const VALID_DAYS = new Set<string>(Object.keys(DAY_LABELS));
@@ -45,7 +45,14 @@ export const MeetupDayPage = () => {
 	const { day: dayParamRaw } = useParams<{ day: string }>();
 	const dayParam = dayParamRaw?.toUpperCase();
 	const { user, isLoading: userLoading } = useUser();
-	const { entries, isLoading, error, updateMeetup } = useMeetups();
+	const {
+		entries,
+		isLoading,
+		error,
+		updateMeetup,
+		renameCustomMeetup,
+		deleteCustomMeetup,
+	} = useMeetups();
 	const { bggUsername, verification, fetchVerification } = useBggUsername();
 	const [mapOpen, setMapOpen] = useState(false);
 
@@ -129,6 +136,19 @@ export const MeetupDayPage = () => {
 			counterpartUsername: entry.counterpart,
 			role: entry.role,
 			...changes,
+		});
+
+	const onRenameFor = (entry: MeetupEntry) => (input: RenameInput) =>
+		renameCustomMeetup({
+			counterpartUsername: entry.counterpart,
+			role: entry.role,
+			...input,
+		});
+
+	const onDeleteFor = (entry: MeetupEntry) => () =>
+		deleteCustomMeetup({
+			counterpartUsername: entry.counterpart,
+			role: entry.role,
 		});
 
 	const dayEntries = entries.filter((entry) => entry.meetup.day === dayParam);
@@ -217,6 +237,8 @@ export const MeetupDayPage = () => {
 									label="Selling"
 									entries={selling}
 									onChangeFor={onChangeFor}
+									onRenameFor={onRenameFor}
+									onDeleteFor={onDeleteFor}
 								/>
 							)}
 							{buying.length > 0 && (
@@ -224,11 +246,15 @@ export const MeetupDayPage = () => {
 									label="Buying"
 									entries={buying}
 									onChangeFor={onChangeFor}
+									onRenameFor={onRenameFor}
+									onDeleteFor={onDeleteFor}
 								/>
 							)}
 							<CompletedSection
 								entries={completed}
 								onChangeFor={onChangeFor}
+								onRenameFor={onRenameFor}
+								onDeleteFor={onDeleteFor}
 							/>
 						</>
 					)}

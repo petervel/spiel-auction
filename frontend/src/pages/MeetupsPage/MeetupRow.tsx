@@ -7,7 +7,11 @@ import {
 import { Stack, Typography } from '@mui/material';
 import classNames from 'classnames';
 import { useEffect, useRef, useState } from 'react';
-import { MeetupChanges, MeetupEntry } from '../../hooks/useMeetups';
+import {
+	MeetupChanges,
+	MeetupEntry,
+	RenameCustomMeetupInput,
+} from '../../hooks/useMeetups';
 import {
 	gameNamesOf,
 	getDisplayLocation,
@@ -20,14 +24,23 @@ import { MessageComposeDialog } from './MessageComposeDialog';
 
 // Shared by the main Meetups page and a single day's page, so a row looks
 // and behaves identically wherever it's shown.
+export type RenameInput = Omit<
+	RenameCustomMeetupInput,
+	'counterpartUsername' | 'role'
+>;
+
 export const RoleGroup = ({
 	label,
 	entries,
 	onChangeFor,
+	onRenameFor,
+	onDeleteFor,
 }: {
 	label: string;
 	entries: MeetupEntry[];
 	onChangeFor: (entry: MeetupEntry) => (changes: MeetupChanges) => void;
+	onRenameFor: (entry: MeetupEntry) => (input: RenameInput) => Promise<unknown>;
+	onDeleteFor: (entry: MeetupEntry) => () => Promise<unknown>;
 }) => (
 	<Stack gap={0.75}>
 		<Typography variant="subtitle2" color="text.secondary">
@@ -39,6 +52,8 @@ export const RoleGroup = ({
 					key={`${entry.role}-${entry.counterpart}`}
 					entry={entry}
 					onChange={onChangeFor(entry)}
+					onRename={onRenameFor(entry)}
+					onDelete={onDeleteFor(entry)}
 				/>
 			))}
 		</div>
@@ -48,9 +63,13 @@ export const RoleGroup = ({
 export const MeetupRow = ({
 	entry,
 	onChange,
+	onRename,
+	onDelete,
 }: {
 	entry: MeetupEntry;
 	onChange: (changes: MeetupChanges) => void;
+	onRename: (input: RenameInput) => Promise<unknown>;
+	onDelete: () => Promise<unknown>;
 }) => {
 	// Collapsed by default. Expanding just reveals the full read-only detail -
 	// editing is a separate step behind its own icon, so tapping a row to
@@ -207,6 +226,12 @@ export const MeetupRow = ({
 							onChange(changes);
 							setIsEditing(false);
 						}}
+						onRename={async (input) => {
+							await onRename(input);
+							setIsEditing(false);
+						}}
+						onCancel={() => setIsEditing(false)}
+						onDelete={onDelete}
 					/>
 				)}
 			</div>

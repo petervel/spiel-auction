@@ -55,6 +55,21 @@ export type CustomMeetupInput = {
 	description: string;
 };
 
+export type CustomMeetupRef = {
+	counterpartUsername: string;
+	role: MeetupRole;
+};
+
+// Changes the trade partner of a pure custom meetup (no real bid
+// relationship - the server rejects it otherwise), bundling whatever other
+// field changes are pending into the same write.
+export type RenameCustomMeetupInput = Omit<MeetupChanges, 'description'> & {
+	counterpartUsername: string;
+	role: MeetupRole;
+	newCounterpartUsername: string;
+	description: string;
+};
+
 const fetchMeetups = async (): Promise<{ entries: MeetupEntry[] }> => {
 	const response = await fetch('/api/meetups', { credentials: 'include' });
 	if (!response.ok) {
@@ -94,6 +109,34 @@ const addCustomMeetup = async (input: CustomMeetupInput) => {
 	return response.json();
 };
 
+const renameCustomMeetup = async (input: RenameCustomMeetupInput) => {
+	const response = await fetch('/api/meetups/custom', {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		credentials: 'include',
+		body: JSON.stringify(input),
+	});
+	if (!response.ok) {
+		const body = await response.json().catch(() => null);
+		throw new Error(body?.error ?? 'Failed to rename meetup');
+	}
+	return response.json();
+};
+
+const deleteCustomMeetup = async (ref: CustomMeetupRef) => {
+	const response = await fetch('/api/meetups/custom', {
+		method: 'DELETE',
+		headers: { 'Content-Type': 'application/json' },
+		credentials: 'include',
+		body: JSON.stringify(ref),
+	});
+	if (!response.ok) {
+		const body = await response.json().catch(() => null);
+		throw new Error(body?.error ?? 'Failed to delete meetup');
+	}
+	return response.json();
+};
+
 export const useMeetups = () => {
 	const queryClient = useQueryClient();
 
@@ -110,6 +153,14 @@ export const useMeetups = () => {
 		onSuccess: () => queryClient.invalidateQueries(['meetups']),
 	});
 
+	const renameCustomMutation = useMutation(renameCustomMeetup, {
+		onSuccess: () => queryClient.invalidateQueries(['meetups']),
+	});
+
+	const deleteCustomMutation = useMutation(deleteCustomMeetup, {
+		onSuccess: () => queryClient.invalidateQueries(['meetups']),
+	});
+
 	return {
 		entries: query.data?.entries ?? [],
 		isLoading: query.isLoading,
@@ -118,5 +169,9 @@ export const useMeetups = () => {
 		isUpdating: mutation.isLoading,
 		addCustomMeetup: customMutation.mutateAsync,
 		isAddingCustomMeetup: customMutation.isLoading,
+		renameCustomMeetup: renameCustomMutation.mutateAsync,
+		isRenamingCustomMeetup: renameCustomMutation.isLoading,
+		deleteCustomMeetup: deleteCustomMutation.mutateAsync,
+		isDeletingCustomMeetup: deleteCustomMutation.isLoading,
 	};
 };

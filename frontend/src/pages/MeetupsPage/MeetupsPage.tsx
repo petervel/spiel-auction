@@ -13,15 +13,22 @@ import { useUser } from '../../hooks/useUser';
 import { AddCustomMeetupDialog } from './AddCustomMeetupDialog';
 import { CompletedSection } from './CompletedSection';
 import { groupByDay, sortByCompletedAtDesc } from './meetupDisplay';
-import { RoleGroup } from './MeetupRow';
+import { RenameInput, RoleGroup } from './MeetupRow';
 import css from './MeetupsPage.module.css';
 import { exportMeetupsToXlsx } from './xlsxExport';
 
 export const MeetupsPage = () => {
 	const { user, isLoading: userLoading } = useUser();
 	const listId = useListId();
-	const { entries, isLoading, error, updateMeetup, addCustomMeetup } =
-		useMeetups();
+	const {
+		entries,
+		isLoading,
+		error,
+		updateMeetup,
+		addCustomMeetup,
+		renameCustomMeetup,
+		deleteCustomMeetup,
+	} = useMeetups();
 	const [addingCustom, setAddingCustom] = useState(false);
 	const { bggUsername, verification, fetchVerification } = useBggUsername();
 
@@ -97,6 +104,19 @@ export const MeetupsPage = () => {
 			...changes,
 		});
 
+	const onRenameFor = (entry: MeetupEntry) => (input: RenameInput) =>
+		renameCustomMeetup({
+			counterpartUsername: entry.counterpart,
+			role: entry.role,
+			...input,
+		});
+
+	const onDeleteFor = (entry: MeetupEntry) => () =>
+		deleteCustomMeetup({
+			counterpartUsername: entry.counterpart,
+			role: entry.role,
+		});
+
 	return (
 		<>
 			<Stack
@@ -156,6 +176,8 @@ export const MeetupsPage = () => {
 												label="Selling"
 												entries={section.selling}
 												onChangeFor={onChangeFor}
+												onRenameFor={onRenameFor}
+												onDeleteFor={onDeleteFor}
 											/>
 										)}
 										{section.buying.length > 0 && (
@@ -163,6 +185,8 @@ export const MeetupsPage = () => {
 												label="Buying"
 												entries={section.buying}
 												onChangeFor={onChangeFor}
+												onRenameFor={onRenameFor}
+												onDeleteFor={onDeleteFor}
 											/>
 										)}
 									</Stack>
@@ -171,6 +195,8 @@ export const MeetupsPage = () => {
 								<CompletedSection
 									entries={completed}
 									onChangeFor={onChangeFor}
+									onRenameFor={onRenameFor}
+									onDeleteFor={onDeleteFor}
 								/>
 							</>
 						)}

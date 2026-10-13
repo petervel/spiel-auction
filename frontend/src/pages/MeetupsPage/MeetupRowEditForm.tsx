@@ -1,5 +1,7 @@
+import { DeleteRounded } from '@mui/icons-material';
 import {
 	Button,
+	IconButton,
 	MenuItem,
 	Stack,
 	TextField,
@@ -8,7 +10,7 @@ import {
 import { useState } from 'react';
 import { MeetupChanges, MeetupDay, MeetupEntry } from '../../hooks/useMeetups';
 import { DAY_OPTIONS, DEFAULT_TIME, HALL_1A } from './meetupDisplay';
-import { MeetupInfoTooltip } from './MeetupInfoTooltip';
+import { RenameInput } from './MeetupRow';
 import css from './MeetupsPage.module.css';
 
 type LocationMode = 'HALL_1A' | 'OTHER';
@@ -22,9 +24,15 @@ type LocationMode = 'HALL_1A' | 'OTHER';
 export const MeetupRowEditForm = ({
 	entry,
 	onSave,
+	onRename,
+	onCancel,
+	onDelete,
 }: {
 	entry: MeetupEntry;
 	onSave: (changes: MeetupChanges) => void;
+	onRename: (input: RenameInput) => Promise<unknown>;
+	onCancel: () => void;
+	onDelete?: () => Promise<unknown>;
 }) => {
 	const [draftDay, setDraftDay] = useState<MeetupDay | ''>(
 		() => entry.meetup.day ?? '',
@@ -45,9 +53,20 @@ export const MeetupRowEditForm = ({
 	// all - giving one to an ordinary bid-backed meetup is POST
 	// /api/meetups/custom's job (see "Add a meetup"), not an edit here.
 	const isCustom = entry.meetup.customDescription !== null;
+	// The trade partner can only be changed for a *pure* custom meetup (no
+	// real items behind it) - one that's also a genuine bid relationship is
+	// locked to whoever actually bid (see the qualifyingItem check in
+	// PATCH /api/meetups/custom).
+	const isPureCustom = isCustom && entry.items.length === 0;
 	const [draftDescription, setDraftDescription] = useState(
 		() => entry.meetup.customDescription ?? '',
 	);
+	const [draftCounterpart, setDraftCounterpart] = useState(
+		() => entry.counterpart,
+	);
+	const [renaming, setRenaming] = useState(false);
+	const [renameError, setRenameError] = useState<string | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	const changeDraftDay = (day: MeetupDay | '') => {
 		setDraftDay(day);
@@ -71,16 +90,51 @@ export const MeetupRowEditForm = ({
 		setDraftLocation(mode === 'HALL_1A' ? HALL_1A : '');
 	};
 
-	const canSave = !isCustom || draftDescription.trim().length > 0;
+	const canSave =
+		(!isCustom || draftDescription.trim().length > 0) &&
+		(!isPureCustom || draftCounterpart.trim().length > 0);
 
-	const save = () => {
-		onSave({
+	const save = async () => {
+		const fieldChanges = {
 			day: (draftDay || null) as MeetupDay | null,
 			time: draftTime,
 			location: draftLocation,
 			notes: draftNotes || null,
 			...(isCustom ? { description: draftDescription } : {}),
-		});
+		};
+
+		if (isPureCustom && draftCounterpart.trim() !== entry.counterpart) {
+			setRenaming(true);
+			setRenameError(null);
+			try {
+				await onRename({
+					...fieldChanges,
+					// isPureCustom guarantees isCustom, so fieldChanges.description
+					// is always set - restated as a plain string here since the
+					// conditional spread above doesn't let TS narrow that itself.
+					description: draftDescription,
+					newCounterpartUsername: draftCounterpart.trim(),
+				});
+			} catch (err) {
+				setRenameError((err as Error).message);
+			} finally {
+				setRenaming(false);
+			}
+			return;
+		}
+
+		onSave(fieldChanges);
+	};
+
+	const handleDelete = async () => {
+		if (!onDelete) return;
+		if (!window.confirm('Delete this custom meetup?')) return;
+		setDeleting(true);
+		try {
+			await onDelete();
+		} finally {
+			setDeleting(false);
+		}
 	};
 
 	const lastUpdatedLabel = entry.meetup.updatedAt
@@ -98,6 +152,22 @@ export const MeetupRowEditForm = ({
 
 	return (
 		<Stack gap="1rem" className={css.details}>
+			{locationMode === 'HALL_1A' &&
+				(entry.counterpartLocation?.square ||
+					entry.counterpartLocation?.description) && (
+					<Stack gap={0.5}>
+						{entry.counterpartLocation?.square && (
+							<Typography variant="body2" color="text.secondary">
+								Their spot: {entry.counterpartLocation.square}
+							</Typography>
+						)}
+						{entry.counterpartLocation?.description && (
+							<Typography variant="body2" color="text.secondary">
+								Info: {entry.counterpartLocation.description}
+							</Typography>
+						)}
+					</Stack>
+				)}
 			{isCustom && (
 				<TextField
 					label="Description"
@@ -109,6 +179,19 @@ export const MeetupRowEditForm = ({
 					error={!draftDescription.trim()}
 					helperText={
 						!draftDescription.trim() ? 'Required' : undefined
+					}
+					fullWidth
+				/>
+			)}
+			{isPureCustom && (
+				<TextField
+					label="Trade partner (BGG username)"
+					size="small"
+					value={draftCounterpart}
+					onChange={(evt) => setDraftCounterpart(evt.target.value)}
+					error={!draftCounterpart.trim()}
+					helperText={
+						!draftCounterpart.trim() ? 'Required' : undefined
 					}
 					fullWidth
 				/>
@@ -170,6 +253,18 @@ export const MeetupRowEditForm = ({
 				onChange={(evt) => setDraftNotes(evt.target.value)}
 				fullWidth
 			/>
+			{renameError && (
+				<Typography color="error" variant="body2">
+					{renameError}
+				</Typography>
+			)}
+			<Typography
+				variant="caption"
+				color="text.secondary"
+				sx={{ fontStyle: 'italic', display: 'block', textAlign: 'right' }}
+			>
+				{lastUpdatedLabel}
+			</Typography>
 			<Stack
 				direction="row"
 				gap={2}
@@ -177,32 +272,31 @@ export const MeetupRowEditForm = ({
 				justifyContent="space-between"
 				sx={{ mb: 1 }}
 			>
-				<Button
-					size="small"
-					variant="contained"
-					disabled={!canSave}
-					onClick={save}
-				>
-					Save
-				</Button>
-				<MeetupInfoTooltip label={lastUpdatedLabel} />
-			</Stack>
-			{locationMode === 'HALL_1A' &&
-				(entry.counterpartLocation?.square ||
-					entry.counterpartLocation?.description) && (
-					<Stack gap={0.5}>
-						{entry.counterpartLocation?.square && (
-							<Typography variant="body2" color="text.secondary">
-								Their spot: {entry.counterpartLocation.square}
-							</Typography>
-						)}
-						{entry.counterpartLocation?.description && (
-							<Typography variant="body2" color="text.secondary">
-								Info: {entry.counterpartLocation.description}
-							</Typography>
-						)}
-					</Stack>
+				<Stack direction="row" gap={1}>
+					<Button
+						size="small"
+						variant="contained"
+						disabled={!canSave || renaming}
+						onClick={save}
+					>
+						Save
+					</Button>
+					<Button size="small" variant="outlined" onClick={onCancel}>
+						Cancel
+					</Button>
+				</Stack>
+				{isCustom && onDelete && (
+					<IconButton
+						size="small"
+						color="error"
+						onClick={handleDelete}
+						disabled={deleting}
+						aria-label="Delete this custom meetup"
+					>
+						<DeleteRounded fontSize="small" />
+					</IconButton>
 				)}
+			</Stack>
 		</Stack>
 	);
 };

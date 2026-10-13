@@ -177,6 +177,10 @@ model Meetup {
   // column (API resolves "mine" from role), never the other party's.
   buyerNotes     String?   @db.Text
   sellerNotes    String?   @db.Text
+  // Whichever side's POST last touched this row - buyerUsername or
+  // sellerUsername, never a third party (see the defense-in-depth
+  // qualifyingItem check in POST /api/meetups).
+  lastEditedBy   String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

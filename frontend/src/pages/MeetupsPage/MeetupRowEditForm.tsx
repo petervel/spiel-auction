@@ -1,16 +1,14 @@
-import { InfoOutlined } from '@mui/icons-material';
 import {
 	Button,
-	IconButton,
 	MenuItem,
 	Stack,
 	TextField,
-	Tooltip,
 	Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { MeetupChanges, MeetupDay, MeetupEntry } from '../../hooks/useMeetups';
 import { DAY_OPTIONS, DEFAULT_TIME, HALL_1A } from './meetupDisplay';
+import { MeetupInfoTooltip } from './MeetupInfoTooltip';
 import css from './MeetupsPage.module.css';
 
 type LocationMode = 'HALL_1A' | 'OTHER';
@@ -76,7 +74,16 @@ export const MeetupRowEditForm = ({
 	};
 
 	const lastUpdatedLabel = entry.meetup.updatedAt
-		? `Last updated ${new Date(entry.meetup.updatedAt).toLocaleString()}`
+		? `Last updated ${new Date(entry.meetup.updatedAt).toLocaleString()}${
+				entry.meetup.lastEditedBy
+					? ` by ${
+							entry.meetup.lastEditedBy.toLowerCase() ===
+							entry.counterpart.toLowerCase()
+								? entry.counterpart
+								: 'you'
+						}`
+					: ''
+			}`
 		: 'Not edited yet';
 
 	return (
@@ -148,11 +155,7 @@ export const MeetupRowEditForm = ({
 				<Button size="small" variant="contained" onClick={save}>
 					Save
 				</Button>
-				<Tooltip title={lastUpdatedLabel}>
-					<IconButton size="small" aria-label={lastUpdatedLabel}>
-						<InfoOutlined fontSize="small" />
-					</IconButton>
-				</Tooltip>
+				<MeetupInfoTooltip label={lastUpdatedLabel} />
 			</Stack>
 			{locationMode === 'HALL_1A' &&
 				(entry.counterpartLocation?.square ||

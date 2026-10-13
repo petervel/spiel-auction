@@ -22,6 +22,7 @@ export type MeetupEntry = {
 		completed: boolean;
 		completedAt: string | null;
 		updatedAt: string | null;
+		lastEditedBy: string | null;
 		// Always "mine" - the server resolves this from role, so the
 		// other party's notes never reach the client at all.
 		myNotes: string | null;

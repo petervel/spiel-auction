@@ -202,6 +202,7 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 					completed: meetup?.completed ?? false,
 					completedAt: meetup?.completedAt ?? null,
 					updatedAt: meetup?.updatedAt ?? null,
+					lastEditedBy: meetup?.lastEditedBy ?? null,
 					// Only ever "mine" for this viewer - never the other
 					// party's column, regardless of role.
 					myNotes:
@@ -328,6 +329,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				fairId,
 				buyerUsername,
 				sellerUsername,
+				lastEditedBy: myUsername,
 				...(day !== undefined ? { day } : {}),
 				...(location !== undefined ? { location } : {}),
 				...(time !== undefined ? { time } : {}),
@@ -335,6 +337,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...notesData,
 			},
 			update: {
+				lastEditedBy: myUsername,
 				...(day !== undefined ? { day } : {}),
 				...(location !== undefined ? { location } : {}),
 				...(time !== undefined ? { time } : {}),
@@ -351,6 +354,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				completed: meetup.completed,
 				completedAt: meetup.completedAt,
 				updatedAt: meetup.updatedAt,
+				lastEditedBy: meetup.lastEditedBy,
 				myNotes:
 					(role === "buying"
 						? meetup.buyerNotes

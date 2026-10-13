@@ -3,10 +3,11 @@ import {
 	InfoOutlined,
 	MailOutlineRounded,
 } from '@mui/icons-material';
-import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import classNames from 'classnames';
 import { MeetupEntry } from '../../hooks/useMeetups';
 import { DAY_LABELS, HALL_1A } from './meetupDisplay';
+import { MeetupInfoTooltip } from './MeetupInfoTooltip';
 import css from './MeetupsPage.module.css';
 
 // The read-only detail a row expands to by default - editing is a separate
@@ -22,7 +23,16 @@ export const MeetupRowDetails = ({
 	onSendMessage: () => void;
 }) => {
 	const lastUpdatedLabel = entry.meetup.updatedAt
-		? `Last updated ${new Date(entry.meetup.updatedAt).toLocaleString()}`
+		? `Last updated ${new Date(entry.meetup.updatedAt).toLocaleString()}${
+				entry.meetup.lastEditedBy
+					? ` by ${
+							entry.meetup.lastEditedBy.toLowerCase() ===
+							entry.counterpart.toLowerCase()
+								? entry.counterpart
+								: 'you'
+						}`
+					: ''
+			}`
 		: 'Not edited yet';
 
 	// Unlike getDisplayTime (which still hides a default 15:00 as long as
@@ -88,15 +98,10 @@ export const MeetupRowDetails = ({
 								</span>
 							)}
 					</Typography>
-					<Tooltip title={lastUpdatedLabel}>
-						<IconButton
-							size="small"
-							aria-label={lastUpdatedLabel}
-							sx={{ flexShrink: 0 }}
-						>
-							<InfoOutlined fontSize="small" />
-						</IconButton>
-					</Tooltip>
+					<MeetupInfoTooltip
+						label={lastUpdatedLabel}
+						sx={{ flexShrink: 0 }}
+					/>
 				</Stack>
 				{entry.meetup.location === HALL_1A &&
 					entry.counterpartLocation?.description && (

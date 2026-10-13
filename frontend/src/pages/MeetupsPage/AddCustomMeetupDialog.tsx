@@ -60,7 +60,7 @@ const DialogContentInner = ({
 
 	return (
 		<>
-			<DialogTitle>Add a meetup</DialogTitle>
+			<DialogTitle>Add custom meetup</DialogTitle>
 			<DialogContent>
 				<Stack gap={2} paddingTop={0.5}>
 					<Typography variant="body2" color="text.secondary">

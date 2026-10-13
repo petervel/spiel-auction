@@ -282,12 +282,11 @@ export const MeetupsPage = () => {
 						)}
 
 						<Button
-							variant="outlined"
-							size="small"
+							variant="contained"
 							onClick={() => setAddingCustom(true)}
-							sx={{ alignSelf: 'flex-start' }}
+							sx={{ alignSelf: 'center' }}
 						>
-							Add a meetup
+							Add custom meetup
 						</Button>
 					</>
 				)}

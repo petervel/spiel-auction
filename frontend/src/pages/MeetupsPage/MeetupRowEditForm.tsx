@@ -41,6 +41,13 @@ export const MeetupRowEditForm = ({
 	const [draftNotes, setDraftNotes] = useState(
 		() => entry.meetup.myNotes ?? '',
 	);
+	// Only a meetup that already has a customDescription gets this field at
+	// all - giving one to an ordinary bid-backed meetup is POST
+	// /api/meetups/custom's job (see "Add a meetup"), not an edit here.
+	const isCustom = entry.meetup.customDescription !== null;
+	const [draftDescription, setDraftDescription] = useState(
+		() => entry.meetup.customDescription ?? '',
+	);
 
 	const changeDraftDay = (day: MeetupDay | '') => {
 		setDraftDay(day);
@@ -64,12 +71,15 @@ export const MeetupRowEditForm = ({
 		setDraftLocation(mode === 'HALL_1A' ? HALL_1A : '');
 	};
 
+	const canSave = !isCustom || draftDescription.trim().length > 0;
+
 	const save = () => {
 		onSave({
 			day: (draftDay || null) as MeetupDay | null,
 			time: draftTime,
 			location: draftLocation,
 			notes: draftNotes || null,
+			...(isCustom ? { description: draftDescription } : {}),
 		});
 	};
 
@@ -88,6 +98,21 @@ export const MeetupRowEditForm = ({
 
 	return (
 		<Stack gap="1rem" className={css.details}>
+			{isCustom && (
+				<TextField
+					label="Description"
+					size="small"
+					multiline
+					minRows={2}
+					value={draftDescription}
+					onChange={(evt) => setDraftDescription(evt.target.value)}
+					error={!draftDescription.trim()}
+					helperText={
+						!draftDescription.trim() ? 'Required' : undefined
+					}
+					fullWidth
+				/>
+			)}
 			<Stack direction="row" gap={2} flexWrap="wrap" alignItems="center">
 				<TextField
 					select
@@ -152,7 +177,12 @@ export const MeetupRowEditForm = ({
 				justifyContent="space-between"
 				sx={{ mb: 1 }}
 			>
-				<Button size="small" variant="contained" onClick={save}>
+				<Button
+					size="small"
+					variant="contained"
+					disabled={!canSave}
+					onClick={save}
+				>
 					Save
 				</Button>
 				<MeetupInfoTooltip label={lastUpdatedLabel} />

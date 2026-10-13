@@ -2,6 +2,7 @@ import {
 	AccessTimeRounded,
 	CheckRounded,
 	ExpandMoreRounded,
+	HandshakeRounded,
 	PlaceRounded,
 } from '@mui/icons-material';
 import { Button, Stack, Typography } from '@mui/material';
@@ -16,6 +17,7 @@ import { useBggUsername } from '../../hooks/useBggUsername';
 import { useListId } from '../../hooks/useListId';
 import { MeetupChanges, MeetupEntry, useMeetups } from '../../hooks/useMeetups';
 import { useUser } from '../../hooks/useUser';
+import { AddCustomMeetupDialog } from './AddCustomMeetupDialog';
 import { MeetupRowDetails } from './MeetupRowDetails';
 import { MeetupRowEditForm } from './MeetupRowEditForm';
 import { MessageComposeDialog } from './MessageComposeDialog';
@@ -92,8 +94,10 @@ const groupByDay = (entries: MeetupEntry[]): DaySection[] => {
 export const MeetupsPage = () => {
 	const { user, isLoading: userLoading } = useUser();
 	const listId = useListId();
-	const { entries, isLoading, error, updateMeetup } = useMeetups();
+	const { entries, isLoading, error, updateMeetup, addCustomMeetup } =
+		useMeetups();
 	const [completedOpen, setCompletedOpen] = useState(false);
+	const [addingCustom, setAddingCustom] = useState(false);
 	const { bggUsername, verification, fetchVerification } = useBggUsername();
 
 	useEffect(() => {
@@ -177,98 +181,123 @@ export const MeetupsPage = () => {
 		});
 
 	return (
-		<Stack
-			sx={{ width: '100%', maxWidth: 640, marginX: 'auto' }}
-			paddingInline="1rem"
-			paddingBottom="2rem"
-			gap={3}
-		>
-			<Title
-				title="Meetups"
-				left={<BackButton />}
-				right={
-					<Button
-						variant="contained"
-						size="small"
-						disabled={entries.length === 0}
-						onClick={() => exportMeetupsToXlsx(entries, listId)}
-					>
-						Export
-					</Button>
-				}
-			/>
+		<>
+			<Stack
+				sx={{ width: '100%', maxWidth: 640, marginX: 'auto' }}
+				paddingInline="1rem"
+				paddingBottom="2rem"
+				gap={3}
+			>
+				<Title
+					title="Meetups"
+					left={<BackButton />}
+					right={
+						<Button
+							variant="contained"
+							size="small"
+							disabled={entries.length === 0}
+							onClick={() => exportMeetupsToXlsx(entries, listId)}
+						>
+							Export
+						</Button>
+					}
+				/>
 
-			{isLoading ? (
-				<Spinner />
-			) : error ? (
-				<Typography color="error">{error.message}</Typography>
-			) : entries.length === 0 ? (
-				<Typography color="text.secondary">
-					No meetups yet - these show up once you're winning (or have
-					won) an item, or you've sold (or are selling) one with at
-					least one bid.
-				</Typography>
-			) : (
-				<>
-					{daySections.map((section) => (
-						<Stack key={section.key} gap={1.5}>
-							<Typography variant="h6">
-								{section.label}
+				{isLoading ? (
+					<Spinner />
+				) : error ? (
+					<Typography color="error">{error.message}</Typography>
+				) : (
+					<>
+						{entries.length === 0 ? (
+							<Typography color="text.secondary">
+								No meetups yet - these show up once you're
+								winning (or have won) an item, or you've sold
+								(or are selling) one with at least one bid.
 							</Typography>
-							{section.selling.length > 0 && (
-								<RoleGroup
-									label="Selling"
-									entries={section.selling}
-									onChangeFor={onChangeFor}
-								/>
-							)}
-							{section.buying.length > 0 && (
-								<RoleGroup
-									label="Buying"
-									entries={section.buying}
-									onChangeFor={onChangeFor}
-								/>
-							)}
-						</Stack>
-					))}
+						) : (
+							<>
+								{daySections.map((section) => (
+									<Stack key={section.key} gap={1.5}>
+										<Typography variant="h6">
+											{section.label}
+										</Typography>
+										{section.selling.length > 0 && (
+											<RoleGroup
+												label="Selling"
+												entries={section.selling}
+												onChangeFor={onChangeFor}
+											/>
+										)}
+										{section.buying.length > 0 && (
+											<RoleGroup
+												label="Buying"
+												entries={section.buying}
+												onChangeFor={onChangeFor}
+											/>
+										)}
+									</Stack>
+								))}
 
-					{completed.length > 0 && (
-						<Stack gap={1}>
-							<button
-								type="button"
-								className={css.completedHeader}
-								onClick={() =>
-									setCompletedOpen((open) => !open)
-								}
-								aria-expanded={completedOpen}
-							>
-								<ExpandMoreRounded
-									fontSize="small"
-									className={classNames(
-										css.chevron,
-										completedOpen && css.chevronOpen,
-									)}
-								/>
-								<Typography variant="h6">
-									Completed ({completed.length})
-								</Typography>
-							</button>
-							{completedOpen && (
-								<div className={css.list}>
-									{completed.map((entry) => (
-										<MeetupRow
-											key={`${entry.role}-${entry.counterpart}`}
-											entry={entry}
-											onChange={onChangeFor(entry)}
-										/>
-									))}
-								</div>
-							)}
-						</Stack>
-					)}
-				</>
-			)}
-		</Stack>
+								{completed.length > 0 && (
+									<Stack gap={1}>
+										<button
+											type="button"
+											className={css.completedHeader}
+											onClick={() =>
+												setCompletedOpen(
+													(open) => !open,
+												)
+											}
+											aria-expanded={completedOpen}
+										>
+											<ExpandMoreRounded
+												fontSize="small"
+												className={classNames(
+													css.chevron,
+													completedOpen &&
+														css.chevronOpen,
+												)}
+											/>
+											<Typography variant="h6">
+												Completed ({completed.length})
+											</Typography>
+										</button>
+										{completedOpen && (
+											<div className={css.list}>
+												{completed.map((entry) => (
+													<MeetupRow
+														key={`${entry.role}-${entry.counterpart}`}
+														entry={entry}
+														onChange={onChangeFor(
+															entry,
+														)}
+													/>
+												))}
+											</div>
+										)}
+									</Stack>
+								)}
+							</>
+						)}
+
+						<Button
+							variant="outlined"
+							size="small"
+							onClick={() => setAddingCustom(true)}
+							sx={{ alignSelf: 'flex-start' }}
+						>
+							Add a meetup
+						</Button>
+					</>
+				)}
+			</Stack>
+			<AddCustomMeetupDialog
+				open={addingCustom}
+				onClose={() => setAddingCustom(false)}
+				onAdd={addCustomMeetup}
+			/>
+		</>
 	);
 };
 
@@ -362,7 +391,12 @@ const MeetupRow = ({
 		}
 	};
 
-	const gameNames = gameNamesOf(entry);
+	// A pure custom meetup (see POST /api/meetups/custom) has no items to
+	// name - its description stands in for the game name here instead.
+	const gameNames =
+		entry.items.length > 0
+			? gameNamesOf(entry)
+			: entry.meetup.customDescription ?? '';
 
 	return (
 		<div
@@ -388,7 +422,13 @@ const MeetupRow = ({
 						onClick={toggleExpanded}
 						aria-expanded={expanded}
 					>
-						<span className={css.price}>€{entry.totalPrice}</span>
+						{entry.items.length > 0 ? (
+							<span className={css.price}>€{entry.totalPrice}</span>
+						) : (
+							<span className={css.price}>
+								<HandshakeRounded fontSize="small" />
+							</span>
+						)}
 						<span className={css.main}>
 							<span className={css.game}>{gameNames}</span>
 							<span className={css.counterpart}>

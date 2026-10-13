@@ -121,11 +121,11 @@ model UserLikedItem {
 // preference, not a fact about the real bidder, so it's never fanned out
 // to other accounts sharing that username (contrast usersByBggUsername.ts).
 model UserDismissedItem {
-  id     Int  @id @default(autoincrement())
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
-  item   Item @relation(fields: [itemId], references: [id])
-  itemId Int
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  item        Item     @relation(fields: [itemId], references: [id])
+  itemId      Int
   // Bumped on every (re-)dismiss. /api/outbids only honors this dismissal
   // for comments already posted by now - a bid the dismissing user places
   // afterwards brings the item back, since dismissing it was a statement
@@ -163,26 +163,33 @@ enum Day {
 // order being disturbed by someone later tweaking the day/time/location
 // of an already-completed meetup.
 model Meetup {
-  id             Int       @id @default(autoincrement())
-  fair           Fair      @relation(fields: [fairId], references: [id])
-  fairId         Int
-  buyerUsername  String
-  sellerUsername String
-  day            Day?
-  location       String    @default("Hall 1A")
-  time           String    @default("15:00")
-  completed      Boolean   @default(false)
-  completedAt    DateTime?
+  id                Int       @id @default(autoincrement())
+  fair              Fair      @relation(fields: [fairId], references: [id])
+  fairId            Int
+  buyerUsername     String
+  sellerUsername    String
+  day               Day?
+  location          String    @default("Hall 1A")
+  time              String    @default("15:00")
+  completed         Boolean   @default(false)
+  completedAt       DateTime?
   // Private per-side notes - each party only ever sees/edits their own
   // column (API resolves "mine" from role), never the other party's.
-  buyerNotes     String?   @db.Text
-  sellerNotes    String?   @db.Text
+  buyerNotes        String?   @db.Text
+  sellerNotes       String?   @db.Text
   // Whichever side's POST last touched this row - buyerUsername or
   // sellerUsername, never a third party (see the defense-in-depth
   // qualifyingItem check in POST /api/meetups).
-  lastEditedBy   String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  lastEditedBy      String?
+  // Set via POST /api/meetups/custom - a meetup with this counterpart
+  // that isn't backed by any real bid relationship (or an addendum on one
+  // that is, e.g. "also bringing you a gift"). customDescription is
+  // mandatory whenever isCustom is true, but not enforced at the DB
+  // level since Prisma/MySQL can't express "required iff" declaratively.
+  isCustom          Boolean   @default(false)
+  customDescription String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@unique([fairId, buyerUsername, sellerUsername])
 }

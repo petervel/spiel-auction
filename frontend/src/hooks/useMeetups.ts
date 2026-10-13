@@ -23,6 +23,9 @@ export type MeetupEntry = {
 		completedAt: string | null;
 		updatedAt: string | null;
 		lastEditedBy: string | null;
+		// Additive, never a replacement for the real item names/price - see
+		// backend/src/api/meetups/index.ts.
+		customDescription: string | null;
 		// Always "mine" - the server resolves this from role, so the
 		// other party's notes never reach the client at all.
 		myNotes: string | null;
@@ -37,11 +40,20 @@ export type MeetupUpdate = {
 	time?: string;
 	completed?: boolean;
 	notes?: string | null;
+	// Only valid when the meetup already has a customDescription - the
+	// server rejects it otherwise (see POST /api/meetups).
+	description?: string;
 };
 
 // What a row can change about its own meetup - counterpartUsername/role
 // are derived server-side from the entry itself, never edited directly.
 export type MeetupChanges = Omit<MeetupUpdate, 'counterpartUsername' | 'role'>;
+
+export type CustomMeetupInput = {
+	counterpartUsername: string;
+	role: MeetupRole;
+	description: string;
+};
 
 const fetchMeetups = async (): Promise<{ entries: MeetupEntry[] }> => {
 	const response = await fetch('/api/meetups', { credentials: 'include' });
@@ -68,6 +80,20 @@ const updateMeetup = async (update: MeetupUpdate) => {
 	return response.json();
 };
 
+const addCustomMeetup = async (input: CustomMeetupInput) => {
+	const response = await fetch('/api/meetups/custom', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		credentials: 'include',
+		body: JSON.stringify(input),
+	});
+	if (!response.ok) {
+		const body = await response.json().catch(() => null);
+		throw new Error(body?.error ?? 'Failed to add meetup');
+	}
+	return response.json();
+};
+
 export const useMeetups = () => {
 	const queryClient = useQueryClient();
 
@@ -80,11 +106,17 @@ export const useMeetups = () => {
 		onSuccess: () => queryClient.invalidateQueries(['meetups']),
 	});
 
+	const customMutation = useMutation(addCustomMeetup, {
+		onSuccess: () => queryClient.invalidateQueries(['meetups']),
+	});
+
 	return {
 		entries: query.data?.entries ?? [],
 		isLoading: query.isLoading,
 		error: query.error,
 		updateMeetup: mutation.mutate,
 		isUpdating: mutation.isLoading,
+		addCustomMeetup: customMutation.mutateAsync,
+		isAddingCustomMeetup: customMutation.isLoading,
 	};
 };

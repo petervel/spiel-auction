@@ -112,6 +112,30 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				});
 		}
 
+		// Custom meetups (see POST /api/meetups/custom) have no backing Item,
+		// so they're invisible to the buyingItems/sellingItems queries above -
+		// fetched directly by participant instead, and merged in as their own
+		// entry (items: []) if one doesn't already exist for that pair.
+		const customMeetups = await prisma.meetup.findMany({
+			where: {
+				fairId,
+				isCustom: true,
+				OR: [{ buyerUsername: myUsername }, { sellerUsername: myUsername }],
+			},
+		});
+		for (const meetup of customMeetups) {
+			const isBuyer =
+				meetup.buyerUsername.toLowerCase() === myUsername.toLowerCase();
+			const role: Role = isBuyer ? "buying" : "selling";
+			const counterpart = isBuyer
+				? meetup.sellerUsername
+				: meetup.buyerUsername;
+			const key = `${role}:${counterpart.toLowerCase()}`;
+			if (!entriesByKey.has(key)) {
+				entriesByKey.set(key, { role, counterpart, items: [] });
+			}
+		}
+
 		const entries = [...entriesByKey.values()];
 		const counterpartUsernames = [
 			...new Set(entries.map((entry) => entry.counterpart)),
@@ -203,6 +227,11 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 					completedAt: meetup?.completedAt ?? null,
 					updatedAt: meetup?.updatedAt ?? null,
 					lastEditedBy: meetup?.lastEditedBy ?? null,
+					// Additive, never a replacement for the real item names/price
+					// above - a custom description can exist alongside a genuine
+					// bid relationship with the same counterpart (see POST
+					// /api/meetups/custom).
+					customDescription: meetup?.customDescription ?? null,
 					// Only ever "mine" for this viewer - never the other
 					// party's column, regardless of role.
 					myNotes:
@@ -241,6 +270,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 			time,
 			completed,
 			notes,
+			description,
 		} = req.body;
 
 		if (typeof counterpartUsername !== "string" || !counterpartUsername) {
@@ -273,6 +303,13 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 			res.status(400).json({ error: "notes must be a string or null" });
 			return;
 		}
+		if (
+			description !== undefined &&
+			(typeof description !== "string" || !description.trim())
+		) {
+			res.status(400).json({ error: "description must be a non-empty string" });
+			return;
+		}
 
 		const buyerUsername: string =
 			role === "buying" ? myUsername : counterpartUsername;
@@ -281,20 +318,45 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 
 		// Defense in depth: only let this pair write a Meetup if there's an
 		// actual qualifying transaction between them in this fair, so a
-		// verified user can't plant a row for an unrelated username.
-		const qualifyingItem = await prisma.item.findFirst({
-			where: {
-				listId,
-				deleted: false,
-				hasBids: true,
-				highestBidder: buyerUsername,
-				username: sellerUsername,
-			},
-			select: { id: true },
-		});
-		if (!qualifyingItem) {
+		// verified user can't plant a row for an unrelated username. A
+		// pre-existing custom meetup (POST /api/meetups/custom) also
+		// qualifies - that's its own legitimate, already-verified claim to
+		// this pair, just not one backed by a bid.
+		const [qualifyingItem, existingMeetup] = await Promise.all([
+			prisma.item.findFirst({
+				where: {
+					listId,
+					deleted: false,
+					hasBids: true,
+					highestBidder: buyerUsername,
+					username: sellerUsername,
+				},
+				select: { id: true },
+			}),
+			prisma.meetup.findUnique({
+				where: {
+					fairId_buyerUsername_sellerUsername: {
+						fairId,
+						buyerUsername,
+						sellerUsername,
+					},
+				},
+				select: { isCustom: true },
+			}),
+		]);
+		if (!qualifyingItem && !existingMeetup?.isCustom) {
 			res.status(403).json({
 				error: "No matching buying/selling relationship found for this fair.",
+			});
+			return;
+		}
+
+		// Editing the description is only meaningful for a meetup that's
+		// already custom - giving one to an ordinary bid-backed meetup is
+		// POST /api/meetups/custom's job, not this endpoint's.
+		if (description !== undefined && !existingMeetup?.isCustom) {
+			res.status(400).json({
+				error: "This meetup has no custom description to edit.",
 			});
 			return;
 		}
@@ -317,6 +379,11 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 					: { sellerNotes: notes }
 				: {};
 
+		const descriptionData =
+			description !== undefined
+				? { customDescription: description.trim() }
+				: {};
+
 		const meetup = await prisma.meetup.upsert({
 			where: {
 				fairId_buyerUsername_sellerUsername: {
@@ -335,6 +402,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...(time !== undefined ? { time } : {}),
 				...completedData,
 				...notesData,
+				...descriptionData,
 			},
 			update: {
 				lastEditedBy: myUsername,
@@ -343,6 +411,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...(time !== undefined ? { time } : {}),
 				...completedData,
 				...notesData,
+				...descriptionData,
 			},
 		});
 
@@ -355,6 +424,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				completedAt: meetup.completedAt,
 				updatedAt: meetup.updatedAt,
 				lastEditedBy: meetup.lastEditedBy,
+				customDescription: meetup.customDescription,
 				myNotes:
 					(role === "buying"
 						? meetup.buyerNotes
@@ -366,5 +436,95 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		res.status(500).json({ error: "Database error" });
 	}
 });
+
+// POST /api/meetups/custom - adds a meetup with a counterpart that isn't
+// (or isn't only) backed by a real bid relationship, e.g. meeting up for
+// something outside the auction, or an addendum like "also bringing you a
+// gift" on top of a genuine buying/selling pair. Unlike POST /, there's no
+// qualifyingItem check - the verified context itself is the only
+// authorization needed to make this specific, explicit claim.
+router.post(
+	"/custom",
+	authenticateUser,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const context = await requireVerifiedContext(req, res);
+			if (!context) return;
+			const { myUsername, fairId } = context;
+
+			const { counterpartUsername, role, description } = req.body;
+
+			if (
+				typeof counterpartUsername !== "string" ||
+				!counterpartUsername.trim()
+			) {
+				res.status(400).json({ error: "counterpartUsername is required" });
+				return;
+			}
+			if (role !== "buying" && role !== "selling") {
+				res.status(400).json({ error: "role must be 'buying' or 'selling'" });
+				return;
+			}
+			if (typeof description !== "string" || !description.trim()) {
+				res.status(400).json({ error: "description is required" });
+				return;
+			}
+
+			const counterpart = counterpartUsername.trim();
+			if (counterpart.toLowerCase() === myUsername.toLowerCase()) {
+				res
+					.status(400)
+					.json({ error: "You can't add a meetup with yourself." });
+				return;
+			}
+
+			const buyerUsername = role === "buying" ? myUsername : counterpart;
+			const sellerUsername = role === "buying" ? counterpart : myUsername;
+
+			const meetup = await prisma.meetup.upsert({
+				where: {
+					fairId_buyerUsername_sellerUsername: {
+						fairId,
+						buyerUsername,
+						sellerUsername,
+					},
+				},
+				create: {
+					fairId,
+					buyerUsername,
+					sellerUsername,
+					isCustom: true,
+					customDescription: description.trim(),
+					lastEditedBy: myUsername,
+				},
+				update: {
+					isCustom: true,
+					customDescription: description.trim(),
+					lastEditedBy: myUsername,
+				},
+			});
+
+			res.status(200).json({
+				meetup: {
+					day: meetup.day,
+					location: meetup.location,
+					time: meetup.time,
+					completed: meetup.completed,
+					completedAt: meetup.completedAt,
+					updatedAt: meetup.updatedAt,
+					lastEditedBy: meetup.lastEditedBy,
+					customDescription: meetup.customDescription,
+					myNotes:
+						(role === "buying"
+							? meetup.buyerNotes
+							: meetup.sellerNotes) ?? null,
+				},
+			});
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
+	},
+);
 
 export default router;

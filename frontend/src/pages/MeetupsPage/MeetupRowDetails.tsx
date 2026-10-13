@@ -44,6 +44,14 @@ export const MeetupRowDetails = ({
 
 	return (
 		<Stack gap="1rem" className={css.details}>
+			{/* Additive, not a replacement - a pure custom meetup (no items)
+			already shows its description as the "game name" in the collapsed
+			row, so it's only repeated here when there's also a real item. */}
+			{entry.items.length > 0 && entry.meetup.customDescription && (
+				<Typography variant="body2" color="text.secondary">
+					{entry.meetup.customDescription}
+				</Typography>
+			)}
 			{entry.items.length > 1 && (
 				<Stack gap={0.25}>
 					{entry.items.map((item) => (

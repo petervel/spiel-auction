@@ -32,6 +32,7 @@ model User {
   notifyOnNewBid             Boolean @default(true)
   notifyOnAuctionWon         Boolean @default(true)
   notifyOnWishlistItemListed Boolean @default(true)
+  notifyOnMeetupReminder     Boolean @default(true)
 
   // Days this user expects to be trading at the fair, used to fill in the
   // [day] token in their geekmail templates below (joined as "Thursday or

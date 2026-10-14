@@ -3,6 +3,7 @@ dotenv.config();
 
 import cron from "node-cron";
 import { runImportCycle } from "./importer/runImportCycle";
+import { sendMeetupReminders } from "./importer/notifications/meetupReminderNotifier";
 import { queryWithTimeout } from "./importer/util/helpers";
 
 cron.schedule("* * * * *", async () => {
@@ -19,3 +20,20 @@ cron.schedule("* * * * *", async () => {
 		console.error("Import cycle failed or timed out: ", message);
 	}
 });
+
+// 30 minutes before the schema's default meetup time (15:00) - pinned to
+// the fair's own timezone regardless of what timezone this container runs
+// in (see meetupReminderNotifier.ts).
+cron.schedule(
+	"30 14 * * *",
+	async () => {
+		console.log("Sending meetup reminders... ", Date());
+		try {
+			await sendMeetupReminders();
+		} catch (error) {
+			const message = error instanceof Error ? error.message : error;
+			console.error("Meetup reminder send failed: ", message);
+		}
+	},
+	{ timezone: "Europe/Berlin" },
+);

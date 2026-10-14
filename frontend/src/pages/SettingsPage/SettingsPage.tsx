@@ -488,6 +488,22 @@ export const SettingsPage = () => {
 										}
 										label="New listing for a wishlisted game"
 									/>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={
+													notificationPreferences.notifyOnMeetupReminder
+												}
+												disabled={preferencesSaving}
+												onChange={() =>
+													togglePreference(
+														'notifyOnMeetupReminder',
+													)
+												}
+											/>
+										}
+										label="Meetup reminder (30 min before trading starts)"
+									/>
 								</Stack>
 								<Stack gap={2} direction="row">
 									<Button

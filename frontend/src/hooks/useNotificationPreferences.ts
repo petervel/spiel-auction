@@ -6,6 +6,7 @@ export type NotificationPreferences = {
 	notifyOnNewBid: boolean;
 	notifyOnAuctionWon: boolean;
 	notifyOnWishlistItemListed: boolean;
+	notifyOnMeetupReminder: boolean;
 };
 
 export const useNotificationPreferences = () => {
@@ -17,6 +18,7 @@ export const useNotificationPreferences = () => {
 		notifyOnNewBid: user?.notifyOnNewBid ?? true,
 		notifyOnAuctionWon: user?.notifyOnAuctionWon ?? true,
 		notifyOnWishlistItemListed: user?.notifyOnWishlistItemListed ?? true,
+		notifyOnMeetupReminder: user?.notifyOnMeetupReminder ?? true,
 	};
 
 	const setPreferences = useCallback(

@@ -20,6 +20,7 @@ import { CompletedSection } from './CompletedSection';
 import {
 	byTimeThenCounterpart,
 	computeSquareCounts,
+	computeSquareRoleCounts,
 	DAY_LABELS,
 	sortByCompletedAtDesc,
 } from './meetupDisplay';
@@ -166,7 +167,20 @@ export const MeetupDayPage = () => {
 	// Only not-yet-completed meetups - one that's already happened no
 	// longer needs a spot on the map.
 	const squareCounts = computeSquareCounts(active);
-	const hasMap = Object.keys(squareCounts).length > 0;
+	const squareRoleCounts = computeSquareRoleCounts(active);
+	// Shown as the ring (via `selected`, same visual as "your own spot" on
+	// the Meetup Info map) rather than a count/glow, so it reads as "this
+	// is you" and never gets confused with a meetup partner's square.
+	const mySquare = user.currentUserFair?.locationSquare ?? null;
+
+	const mapCaption =
+		active.length === 0
+			? completed.length > 0
+				? `No remaining ${title} meetups to show - they're all completed.`
+				: `No ${title} meetups to show yet.`
+			: Object.keys(squareCounts).length > 0
+				? `The number on a square shows how many remaining ${title} meetups are happening there - blue for buying, green for selling, a blend for both.`
+				: `None of your remaining ${title} meetups have selected a location square.`;
 
 	return (
 		<Stack
@@ -183,46 +197,40 @@ export const MeetupDayPage = () => {
 				<Typography color="error">{error.message}</Typography>
 			) : (
 				<>
-					{hasMap && (
-						<Stack gap={1}>
-							<button
-								type="button"
-								className={css.completedHeader}
-								onClick={() => setMapOpen((prev) => !prev)}
-								aria-expanded={mapOpen}
-							>
-								<ExpandMoreRounded
-									fontSize="small"
-									className={classNames(
-										css.chevron,
-										mapOpen && css.chevronOpen,
-									)}
-								/>
-								<Typography variant="h6">Map</Typography>
-							</button>
-							{mapOpen && (
-								<>
-									<Typography
-										variant="body2"
-										color="text.secondary"
-									>
-										Where your not-yet-completed {title}{' '}
-										meetups are happening - the number shows
-										how many are at each square.
-									</Typography>
-									<Stack alignItems="center">
-										<TradeFloorGrid
-											counts={squareCounts}
-											selected={null}
-											onSelect={() => {}}
-											readOnly
-											describeCount={describeMeetupCount}
-										/>
-									</Stack>
-								</>
-							)}
-						</Stack>
-					)}
+					<Stack gap={1}>
+						<button
+							type="button"
+							className={css.completedHeader}
+							onClick={() => setMapOpen((prev) => !prev)}
+							aria-expanded={mapOpen}
+						>
+							<ExpandMoreRounded
+								fontSize="small"
+								className={classNames(
+									css.chevron,
+									mapOpen && css.chevronOpen,
+								)}
+							/>
+							<Typography variant="h6">Map</Typography>
+						</button>
+						{mapOpen && (
+							<>
+								<Typography variant="body2" color="text.secondary">
+									Your own spot is highlighted. {mapCaption}
+								</Typography>
+								<Stack alignItems="center">
+									<TradeFloorGrid
+										counts={squareCounts}
+										selected={mySquare}
+										onSelect={() => {}}
+										readOnly
+										describeCount={describeMeetupCount}
+										roleCounts={squareRoleCounts}
+									/>
+								</Stack>
+							</>
+						)}
+					</Stack>
 
 					{selling.length === 0 &&
 					buying.length === 0 &&

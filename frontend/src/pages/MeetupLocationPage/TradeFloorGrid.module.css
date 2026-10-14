@@ -91,6 +91,44 @@ body:global(.dark) .grid {
 	pointer-events: none;
 }
 
+/* The readOnly per-day map's count badge - colored by role the same way
+   MeetupsPage.module.css's .buying/.selling rows are (blue you're buying,
+   green you're selling; a gradient between them when a square has both -
+   see the linearGradient in TradeFloorGrid.tsx), slightly transparent so a
+   pillar underneath still shows through rather than getting fully hidden. */
+.meetupBubble {
+	stroke: #ffffff;
+	stroke-width: 3;
+	opacity: 0.82;
+	pointer-events: none;
+}
+
+.meetupBubbleBuying {
+	fill: var(--colour-main);
+}
+
+.meetupBubbleSelling {
+	fill: var(--colour-seen);
+}
+
+.meetupBubbleBuyingStop {
+	stop-color: var(--colour-main);
+}
+
+.meetupBubbleSellingStop {
+	stop-color: var(--colour-seen);
+}
+
+.meetupBubbleLabel {
+	fill: #ffffff;
+	font-size: 24px;
+	font-weight: 800;
+	text-anchor: middle;
+	dominant-baseline: central;
+	pointer-events: none;
+	user-select: none;
+}
+
 /* White fill with a dark outline (via paint-order) so the count stays
    legible regardless of the cell's own color or how intense the glow
    underneath it is. */

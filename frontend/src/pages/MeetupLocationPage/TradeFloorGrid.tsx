@@ -130,6 +130,11 @@ const glowOpacity = (count: number) =>
 	GLOW_MIN_OPACITY +
 	glowIntensity(count) * (GLOW_MAX_OPACITY - GLOW_MIN_OPACITY);
 
+// A fixed-size solid badge, not an intensity heatmap - the readOnly (per-day
+// meetups) map cares about "is there a count here at all, and what is it",
+// not density across up to ~40 people like the interactive one does.
+const MEETUP_BUBBLE_RADIUS = 30;
+
 // A classic map-pin silhouette (Material Design's "place" glyph), in its
 // own 24x24 space with the tip - what should land exactly on the target
 // square - at (12, 22). Scaled/translated into position per use, same as
@@ -157,6 +162,10 @@ type TradeFloorGridProps = {
 	// your location" grid counts people; a read-only summary might count
 	// something else (e.g. meetups).
 	describeCount?: (count: number) => string;
+	// readOnly only - colors a square's badge by role (buying: the app's
+	// standard blue, selling: its standard green, both: a gradient between
+	// them), instead of the plain neutral badge used when this is omitted.
+	roleCounts?: Record<string, { buying: number; selling: number }>;
 };
 
 export const TradeFloorGrid = ({
@@ -166,6 +175,7 @@ export const TradeFloorGrid = ({
 	marker,
 	readOnly = false,
 	describeCount = (count) => `${count} people here`,
+	roleCounts,
 }: TradeFloorGridProps) => {
 	const viewBoxWidth = GRID_LEFT + GRID_WIDTH + 120;
 	const viewBoxHeight = GRID_TOP + GRID_HEIGHT + 220;
@@ -185,6 +195,18 @@ export const TradeFloorGrid = ({
 				<filter id="glow-blur" x="-50%" y="-50%" width="200%" height="200%">
 					<feGaussianBlur stdDeviation="8" />
 				</filter>
+				{/* A square with both a buying and a selling meetup gets this
+				    blue-to-green blend rather than one color winning out. */}
+				<linearGradient
+					id="meetup-bubble-gradient"
+					x1="0%"
+					y1="0%"
+					x2="100%"
+					y2="100%"
+				>
+					<stop offset="0%" className={css.meetupBubbleBuyingStop} />
+					<stop offset="100%" className={css.meetupBubbleSellingStop} />
+				</linearGradient>
 				<marker
 					id="entrance-arrowhead"
 					markerUnits="userSpaceOnUse"
@@ -344,9 +366,13 @@ export const TradeFloorGrid = ({
 				})}
 			</g>
 
-			{/* Heatmap glow + people count, drawn on top of cells/pillars but
+			{/* Count per square, drawn on top of cells/pillars but
 			    pointer-events: none so clicks still reach the cell rect
-			    underneath. */}
+			    underneath. The interactive (pick-your-own-spot) grid shows
+			    this as a density heatmap glow; the readOnly (per-day meetups)
+			    grid shows a plain solid badge instead - there's no "which
+			    square is quieter" question to answer there, just "is there
+			    a meetup here, and how many". */}
 			{ROWS.map((row, j) =>
 				COLUMNS.map((col, i) => {
 					const square = `${col}${row}`;
@@ -354,6 +380,39 @@ export const TradeFloorGrid = ({
 					if (count === 0) return null;
 					const cx = GRID_LEFT + COLUMN_LEFTS[i] + COLUMN_WIDTHS[i] / 2;
 					const cy = GRID_TOP + ROW_TOPS[j] + ROW_HEIGHTS[j] / 2;
+					if (readOnly) {
+						const buyingCount = roleCounts?.[square]?.buying ?? 0;
+						const sellingCount = roleCounts?.[square]?.selling ?? 0;
+						const bothRoles = buyingCount > 0 && sellingCount > 0;
+						return (
+							<g key={square}>
+								<circle
+									cx={cx}
+									cy={cy}
+									r={MEETUP_BUBBLE_RADIUS}
+									className={classNames(
+										css.meetupBubble,
+										!bothRoles &&
+											(sellingCount > 0
+												? css.meetupBubbleSelling
+												: css.meetupBubbleBuying),
+									)}
+									fill={
+										bothRoles
+											? 'url(#meetup-bubble-gradient)'
+											: undefined
+									}
+								/>
+								<text
+									x={cx}
+									y={cy}
+									className={css.meetupBubbleLabel}
+								>
+									{count}
+								</text>
+							</g>
+						);
+					}
 					return (
 						<g key={square}>
 							<circle

@@ -150,3 +150,20 @@ export const computeSquareCounts = (
 	}
 	return counts;
 };
+
+// Same squares as computeSquareCounts, broken down by role instead of
+// just totaled - lets the map color a square by whether it's a buying
+// meetup, a selling one, or both (see TradeFloorGrid's roleCounts prop).
+export const computeSquareRoleCounts = (
+	entries: MeetupEntry[],
+): Record<string, { buying: number; selling: number }> => {
+	const counts: Record<string, { buying: number; selling: number }> = {};
+	for (const entry of entries) {
+		const square = getDisplayLocation(entry);
+		if (!SQUARE_PATTERN.test(square)) continue;
+		const bucket = counts[square] ?? { buying: 0, selling: 0 };
+		bucket[entry.role] += 1;
+		counts[square] = bucket;
+	}
+	return counts;
+};

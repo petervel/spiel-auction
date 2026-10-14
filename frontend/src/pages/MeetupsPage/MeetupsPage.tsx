@@ -15,6 +15,7 @@ import { CompletedSection } from './CompletedSection';
 import { groupByDay, sortByCompletedAtDesc } from './meetupDisplay';
 import { RenameInput, RoleGroup } from './MeetupRow';
 import css from './MeetupsPage.module.css';
+import { MyMeetupSpotLink } from './MyMeetupSpotLink';
 import { exportMeetupsToXlsx } from './xlsxExport';
 
 export const MeetupsPage = () => {
@@ -138,6 +139,10 @@ export const MeetupsPage = () => {
 							Export
 						</Button>
 					}
+				/>
+				<MyMeetupSpotLink
+					square={user.currentUserFair?.locationSquare ?? null}
+					description={user.currentUserFair?.locationDescription ?? null}
 				/>
 
 				{isLoading ? (

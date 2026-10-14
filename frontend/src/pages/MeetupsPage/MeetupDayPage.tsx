@@ -26,6 +26,7 @@ import {
 } from './meetupDisplay';
 import { RenameInput, RoleGroup } from './MeetupRow';
 import css from './MeetupsPage.module.css';
+import { MyMeetupSpotLink } from './MyMeetupSpotLink';
 
 const VALID_DAYS = new Set<string>(Object.keys(DAY_LABELS));
 
@@ -172,6 +173,7 @@ export const MeetupDayPage = () => {
 	// the Meetup Info map) rather than a count/glow, so it reads as "this
 	// is you" and never gets confused with a meetup partner's square.
 	const mySquare = user.currentUserFair?.locationSquare ?? null;
+	const myDescription = user.currentUserFair?.locationDescription ?? null;
 
 	const mapCaption =
 		active.length === 0
@@ -190,6 +192,7 @@ export const MeetupDayPage = () => {
 			gap={3}
 		>
 			<Title title={title} left={<BackButton to="/meetups" />} />
+			<MyMeetupSpotLink square={mySquare} description={myDescription} />
 
 			{isLoading ? (
 				<Spinner />

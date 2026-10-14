@@ -140,10 +140,17 @@ export const MeetupsPage = () => {
 						</Button>
 					}
 				/>
-				<MyMeetupSpotLink
-					square={user.currentUserFair?.locationSquare ?? null}
-					description={user.currentUserFair?.locationDescription ?? null}
-				/>
+				<Stack gap={0.5}>
+					<Typography variant="subtitle2" color="text.secondary">
+						What others see about you
+					</Typography>
+					<MyMeetupSpotLink
+						square={user.currentUserFair?.locationSquare ?? null}
+						description={
+							user.currentUserFair?.locationDescription ?? null
+						}
+					/>
+				</Stack>
 
 				{isLoading ? (
 					<Spinner />

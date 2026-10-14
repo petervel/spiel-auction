@@ -213,6 +213,12 @@ body:global(.dark) .buying .price {
 
 .dayHeading:hover {
 	text-decoration: underline;
+	/* Not currentColor, and not --colour-text either - index.css's global
+	   `h6 { color: var(--colour-title) }` rule (there's no MUI CssBaseline
+	   in this app overriding it) makes the heading text itself render in
+	   --colour-title, not this link's own --colour-text, so the underline
+	   has to be pinned to that same variable to actually match it. */
+	text-decoration-color: var(--colour-title);
 }
 
 .chevron {

@@ -241,11 +241,18 @@ model Fair {
   // status decides whether the importer fetches/updates this fair; hidden
   // decides whether normal users see it as a selectable option in the UI.
   hidden               Boolean    @default(false)
-  // The real-world date this fair is held. Used as the reference year
-  // when resolving imprecise end-date notations in item bodies (e.g.
-  // "Auction ends: Thu 17 Nov" has no year) - without this, parsing
-  // always assumed the current year, which is wrong for any fair other
-  // than the one happening right now.
+  // The real-world date this fair is held - specifically its official
+  // opening day (always a Thursday for Essen Spiel, though the calendar
+  // date moves every year). Used both as the reference year when resolving
+  // imprecise end-date notations in item bodies (e.g. "Auction ends: Thu
+  // 17 Nov" has no year - without this, parsing always assumed the current
+  // year, which is wrong for any fair other than the one happening right
+  // now), and by meetupReminderNotifier.ts to resolve "today" to the
+  // correct MeetupDay by calendar-date offset from this Thursday
+  // (WEDNESDAY = eventDate - 1, for early-trader access, through SUNDAY =
+  // eventDate + 3) instead of just matching on weekday name, which would
+  // otherwise fire on every matching weekday year-round, not just fair
+  // week.
   eventDate            DateTime
   geeklistId           Int        @unique
   lastUpdated          Int        @default(0)

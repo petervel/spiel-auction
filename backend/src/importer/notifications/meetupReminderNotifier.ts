@@ -11,19 +11,47 @@ const FAIR_TIMEZONE = "Europe/Berlin";
 const REMINDER_LOCATION = "Hall 1A";
 const REMINDER_TIME = "15:00";
 
-const DAY_VALUES: string[] = Object.values(Day);
+// Offset in whole days from Fair.eventDate (its official opening day -
+// always a Thursday for Essen Spiel, though the calendar date moves every
+// year) to each possible meetup day. WEDNESDAY is early-trader access,
+// the day before the official opening.
+const DAY_OFFSET_FROM_EVENT_DATE: Record<Day, number> = {
+	WEDNESDAY: -1,
+	THURSDAY: 0,
+	FRIDAY: 1,
+	SATURDAY: 2,
+	SUNDAY: 3,
+};
 
-// Resolves to null outside WEDNESDAY-SUNDAY (including every day of a week
-// with no fair running at all) - callers no-op on null rather than firing
-// on, say, a stray Tuesday.
-const currentDayInFairTimezone = (): Day | null => {
-	const weekday = new Intl.DateTimeFormat("en-US", {
-		timeZone: FAIR_TIMEZONE,
-		weekday: "long",
-	})
-		.format(new Date())
-		.toUpperCase();
-	return DAY_VALUES.includes(weekday) ? (weekday as Day) : null;
+// "YYYY-MM-DD" in the fair's own timezone, not the server's - a date-only
+// comparison against Fair.eventDate (itself just a calendar date, no
+// meaningful time component), so this never depends on what time of day it
+// happens to be on either side.
+const todayDateStringInFairTimezone = (): string =>
+	new Intl.DateTimeFormat("en-CA", { timeZone: FAIR_TIMEZONE }).format(
+		new Date(),
+	);
+
+// Resolves "today" to a MeetupDay for this specific fair, by its own
+// eventDate - not just by weekday name, which would otherwise match every
+// single week of the year, not just fair week (this is exactly the bug
+// that prompted using eventDate here). Null if today isn't WEDNESDAY-
+// SUNDAY of this fair's own week at all.
+const resolveTodayForFair = (eventDate: Date): Day | null => {
+	const todayUtcMidnight = new Date(
+		`${todayDateStringInFairTimezone()}T00:00:00.000Z`,
+	);
+	const eventUtcMidnight = new Date(
+		`${eventDate.toISOString().slice(0, 10)}T00:00:00.000Z`,
+	);
+	const offsetDays = Math.round(
+		(todayUtcMidnight.getTime() - eventUtcMidnight.getTime()) / 86_400_000,
+	);
+
+	const match = (
+		Object.entries(DAY_OFFSET_FROM_EVENT_DATE) as [Day, number][]
+	).find(([, offset]) => offset === offsetDays);
+	return match?.[0] ?? null;
 };
 
 // Runs once a day at 14:30 Europe/Berlin (see cli-importer.ts) - 30 minutes
@@ -32,22 +60,25 @@ const currentDayInFairTimezone = (): Day | null => {
 // is something the pair already agreed on themselves, not something this
 // generic "trading starts soon" nudge needs to cover.
 export const sendMeetupReminders = async () => {
-	const today = currentDayInFairTimezone();
-	if (!today) return;
-
 	const fairs = await prisma.fair.findMany({
 		where: { status: "ACTIVE" },
-		select: { id: true },
+		select: { id: true, eventDate: true },
 	});
 
-	await Promise.all(fairs.map((fair) => sendRemindersForFair(fair.id, today)));
+	const dueToday = fairs
+		.map((fair) => ({ fairId: fair.id, today: resolveTodayForFair(fair.eventDate) }))
+		.filter(
+			(entry): entry is { fairId: number; today: Day } => entry.today !== null,
+		);
+
+	await Promise.all(
+		dueToday.map(({ fairId, today }) => sendRemindersForFair(fairId, today)),
+	);
 };
 
 const buildBody = (count: number, square: string | null) => {
 	const tradeWord = count === 1 ? "trade" : "trades";
-	const squarePart = square
-		? `Your spot is ${square}.`
-		: "";
+	const squarePart = square ? `Your spot is ${square}.` : "";
 	return `You have ${count} ${tradeWord} at ${REMINDER_LOCATION}, ${REMINDER_TIME}. ${squarePart}`;
 };
 

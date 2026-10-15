@@ -101,7 +101,7 @@ const FairFields = ({
 		</Stack>
 		<Stack direction="row" gap={2} flexWrap="wrap">
 			<TextField
-				label="Event date"
+				label="Event date (official opening day, a Thursday)"
 				size="small"
 				type="date"
 				value={draft.eventDate}
@@ -109,6 +109,7 @@ const FairFields = ({
 					setDraft({ ...draft, eventDate: evt.target.value })
 				}
 				InputLabelProps={{ shrink: true }}
+				helperText="Also used for meetup reminders"
 				sx={{ flex: '1 1 160px' }}
 			/>
 			<TextField

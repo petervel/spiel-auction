@@ -11,22 +11,20 @@ const xmlDir = "/app/data";
 // Cloudflare hard-blocks this IP on /rss/ (seen in production).
 const RSS_ENABLED = process.env.RSS_ENABLED !== "false";
 
-// Production held 15min intervals for 8.75h with zero 429s - 10min is a
-// conservative step down from that, not back to the old 4min that banned us.
-const MIN_INTERVAL_MS = 600_000;   // 10 minutes — reset to this on any change
-const MAX_INTERVAL_MS = 600_000;   // 10 minutes — ceiling for backoff on a benign miss (unchanged/generic error)
-// Production trace: successful retries always resolved on the 3rd attempt,
-// never the 2nd - 45s spacing pushes that out to 90s (4th at 135s for stragglers).
-const RETRY_INTERVAL_MS = 45_000;  // between quick queued-retries; skips the global gate below (see runLoop)
+// BGG no longer returns the "still rebuilding" queued placeholder for this
+// endpoint (confirmed in production) - a fetch either succeeds with real
+// (possibly stale) data or fails outright, so xmlapi is now a flat
+// heartbeat with no adaptive backoff/retry on the result. The old queued-
+// chase retries (45s apart, up to 4x) were themselves what traced back to
+// the 429s this app got banned over - removing them, not just the interval
+// itself, is what should take most of that risk down with it.
+const XMLAPI_HEARTBEAT_INTERVAL_MS = 5 * 60_000; // 5 minutes
 
+// Still used by the RSS tier's own backoff (see fetchRssPages) - RSS keeps
+// its existing retry/backoff behavior untouched.
 // Production 429s traced at a flat ~60min lockout regardless of retry
 // count - no benefit to escalating or retrying sooner.
 const RATE_LIMIT_INTERVAL_MS = 3_600_000; // 60 minutes, flat
-
-// A few quick retries in case the list settles, then back off for real
-// instead of burning requests chasing a moving target.
-const QUEUED_RETRY_LIMIT = 4;
-const STILL_NOT_READY_INTERVAL_MS = 30 * 60_000; // 30 minutes
 
 // BGG's rate limit applies across the whole app's request volume, not per-
 // fair/endpoint (confirmed: two sources firing close together both got 429'd).
@@ -194,8 +192,6 @@ const fetchXML = async (
       return { ok: false, rateLimited: false };
     }
 
-    // Skipped for quick queued-chase retries (see runLoop) - same request,
-    // not a fresh one competing for the shared budget.
     if (!options?.skipGlobalGate) {
       await waitForGlobalGap();
     }
@@ -225,20 +221,17 @@ const fetchXML = async (
   }
 };
 
-// Returns null if valid, "queued" if BGG is still processing, or an error string.
-const checkXML = (xmlContent: string): null | "queued" | string => {
+// Returns null if valid, or an error string. Used by both tiers -
+// xmlapi no longer gets a "still processing" placeholder to detect here
+// (see XMLAPI_HEARTBEAT_INTERVAL_MS above), and RSS's own XML shape never
+// matched that message pattern in the first place.
+const checkXML = (xmlContent: string): null | string => {
   const parser = new xml2js.Parser();
-  let result: null | "queued" | string = null;
+  let result: null | string = null;
 
-  parser.parseString(xmlContent, (err, parsed) => {
+  parser.parseString(xmlContent, (err) => {
     if (err) {
       result = `Failed to parse XML: ${err}`;
-      return;
-    }
-    if (
-      parsed?.message?.includes("Your request for this geeklist has been accepted")
-    ) {
-      result = "queued";
     }
   });
 
@@ -335,23 +328,15 @@ const msSinceLastFetchAttempt = (source: Source): number | null => {
   }
 };
 
-// Returns "changed", "unchanged", "queued", "rateLimited", or false on a
-// non-429 error.
+// Returns "changed", "unchanged", or false on an error.
 const fetchAndStoreXML = async (
   source: Source,
-  options?: { skipGlobalGate?: boolean },
-): Promise<"changed" | "unchanged" | "queued" | "rateLimited" | false> => {
-  const result = await fetchXML(source, options);
-  if (!result.ok) return result.rateLimited ? "rateLimited" : false;
+): Promise<"changed" | "unchanged" | false> => {
+  const result = await fetchXML(source);
+  if (!result.ok) return false;
   const xmlContent = result.xml;
 
   const status = checkXML(xmlContent);
-  if (status === "queued") {
-    log(
-      `[${source.label}] BGG is still processing the geeklist, will retry in ${RETRY_INTERVAL_MS / 1000}s.`,
-    );
-    return "queued";
-  }
   if (status !== null) {
     log(`[${source.label}] ${status}`);
     return false;
@@ -373,14 +358,12 @@ const activeGeeklistIds = new Set<number>();
 const runningLoops = new Set<number>();
 
 const runLoop = async (source: Source) => {
-  let interval = MIN_INTERVAL_MS;
-
   // A restart otherwise fetches immediately regardless of how recently the
   // previous process instance hit BGG - see recordFetchAttempt.
   if (source.tier === "xmlapi") {
     const elapsed = msSinceLastFetchAttempt(source);
-    if (elapsed !== null && elapsed < MIN_INTERVAL_MS) {
-      const wait = MIN_INTERVAL_MS - elapsed;
+    if (elapsed !== null && elapsed < XMLAPI_HEARTBEAT_INTERVAL_MS) {
+      const wait = XMLAPI_HEARTBEAT_INTERVAL_MS - elapsed;
       log(
         `[${source.label}] Last fetch attempt was ${Math.round(elapsed / 1000)}s ago (likely a recent restart) - waiting ${Math.round(wait / 1000)}s before fetching.`,
       );
@@ -388,34 +371,14 @@ const runLoop = async (source: Source) => {
     }
   }
 
+  // Flat heartbeat - no backoff/retry on the result (see
+  // XMLAPI_HEARTBEAT_INTERVAL_MS above for why).
   while (activeGeeklistIds.has(source.geeklistId)) {
-    let result = await fetchAndStoreXML(source);
-
-    // Quickly retry a few times in case the list settles down long enough
-    // for BGG to finish rebuilding, without chasing it indefinitely.
-    let queuedAttempts = 1;
-    while (result === "queued" && queuedAttempts < QUEUED_RETRY_LIMIT) {
-      await sleep(RETRY_INTERVAL_MS);
-      result = await fetchAndStoreXML(source, { skipGlobalGate: true });
-      queuedAttempts++;
-    }
-
-    if (result === "changed") {
-      // Changed: reset backoff to minimum.
-      interval = MIN_INTERVAL_MS;
-    } else if (result === "queued") {
-      // Still not ready after QUEUED_RETRY_LIMIT quick tries - give the
-      // list real time to settle instead of continuing to chase it.
-      interval = STILL_NOT_READY_INTERVAL_MS;
-    } else if (result === "rateLimited") {
-      interval = RATE_LIMIT_INTERVAL_MS;
-    } else {
-      // Unchanged or a non-429 error: double the interval, capped at maximum.
-      interval = Math.min(interval * 2, MAX_INTERVAL_MS);
-    }
-
-    log(`[${source.label}] Next fetch in ${interval / 1000}s.`);
-    await sleep(interval);
+    await fetchAndStoreXML(source);
+    log(
+      `[${source.label}] Next fetch in ${XMLAPI_HEARTBEAT_INTERVAL_MS / 1000}s.`,
+    );
+    await sleep(XMLAPI_HEARTBEAT_INTERVAL_MS);
   }
 
   log(`[${source.label}] Fair no longer active, stopping.`);

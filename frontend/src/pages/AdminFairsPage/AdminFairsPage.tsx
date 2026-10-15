@@ -143,21 +143,37 @@ const FairFields = ({
 	</Stack>
 );
 
+// Collapsed by default - shown behind its own "Add New Fair" button rather
+// than always taking up space at the top of the list.
 const NewFairForm = () => {
 	const { createFair, creating, createError } = useAdminFairs();
 	const [draft, setDraft] = useState<FairDraft>(emptyDraft);
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
+	const [open, setOpen] = useState(false);
 
 	const submit = async (evt: FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();
 		try {
 			const fair = await createFair(toFairInput(draft));
 			setDraft(emptyDraft);
+			setOpen(false);
 			setToastMessage(`Created "${fair.name}"`);
 		} catch {
 			// createError (from the mutation) already renders the message.
 		}
 	};
+
+	if (!open) {
+		return (
+			<Button
+				variant="outlined"
+				onClick={() => setOpen(true)}
+				sx={{ alignSelf: 'center' }}
+			>
+				Add New Fair
+			</Button>
+		);
+	}
 
 	return (
 		<Stack gap={1.5} sx={sectionSx} component="form" onSubmit={submit}>
@@ -166,14 +182,18 @@ const NewFairForm = () => {
 			</Typography>
 			<FairFields draft={draft} setDraft={setDraft} />
 			{createError && <Typography color="error">{createError}</Typography>}
-			<Button
-				type="submit"
-				variant="contained"
-				disabled={creating}
-				sx={{ alignSelf: 'start' }}
-			>
-				Create
-			</Button>
+			<Stack direction="row" gap={1}>
+				<Button type="submit" variant="contained" disabled={creating}>
+					Create
+				</Button>
+				<Button
+					type="button"
+					onClick={() => setOpen(false)}
+					disabled={creating}
+				>
+					Cancel
+				</Button>
+			</Stack>
 			<Snackbar
 				open={!!toastMessage}
 				autoHideDuration={4000}
@@ -308,8 +328,6 @@ export const AdminFairsPage = () => {
 		>
 			<Title title="Manage Fairs" left={<BackButton to="/admin" />} />
 
-			<NewFairForm />
-
 			{loading ? (
 				<Spinner />
 			) : error ? (
@@ -317,6 +335,8 @@ export const AdminFairsPage = () => {
 			) : (
 				fairs.map((fair) => <FairRow key={fair.id} fair={fair} />)
 			)}
+
+			<NewFairForm />
 		</Stack>
 	);
 };

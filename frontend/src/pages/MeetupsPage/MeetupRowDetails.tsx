@@ -1,14 +1,28 @@
 import {
+	CheckRounded,
 	EditRounded,
 	InfoOutlined,
 	MailOutlineRounded,
 } from '@mui/icons-material';
 import { Button, Stack, Typography } from '@mui/material';
 import classNames from 'classnames';
+import { ReactNode } from 'react';
 import { MeetupEntry } from '../../hooks/useMeetups';
 import { DAY_LABELS, HALL_1A } from './meetupDisplay';
 import { MeetupInfoTooltip } from './MeetupInfoTooltip';
 import css from './MeetupsPage.module.css';
+
+// A positive per-side status (Geekmail sent, Prepaid) - a decorative tick,
+// not an actual checkbox (that's edit mode's job), just so it reads as
+// "done" at a glance rather than having to parse the words.
+const StatusLine = ({ children }: { children: ReactNode }) => (
+	<Stack direction="row" gap={0.5} alignItems="center">
+		<CheckRounded fontSize="small" className={css.statusLabel} />
+		<Typography variant="body2" className={css.statusLabel}>
+			{children}
+		</Typography>
+	</Stack>
+);
 
 // The read-only detail a row expands to by default - editing is a separate
 // step behind the Edit button here, so tapping a row to see more never
@@ -42,7 +56,6 @@ export const MeetupRowDetails = ({
 	const showExpandedTime =
 		entry.meetup.day !== null || entry.meetup.location !== HALL_1A;
 
-	const hasPrivateInfo = entry.meetup.prepaid || entry.meetup.myNotes;
 
 	return (
 		<Stack gap="1rem" className={css.details}>
@@ -133,28 +146,29 @@ export const MeetupRowDetails = ({
 						)}
 				</Stack>
 			</Stack>
-			{hasPrivateInfo && (
-				<Stack gap={0.75}>
-					<Typography variant="subtitle2" color="text.secondary">
-						Private/personal information
+			<Stack gap={0.75}>
+				<Typography variant="subtitle2" color="text.secondary">
+					Private/personal information
+				</Typography>
+				{entry.meetup.messageSent ? (
+					<StatusLine>Geekmail sent</StatusLine>
+				) : (
+					<Typography variant="body2" color="text.secondary">
+						Geekmail not sent yet
 					</Typography>
-					{entry.meetup.prepaid && (
-						<Typography variant="body2" className={css.prepaidLabel}>
-							Prepaid
+				)}
+				{entry.meetup.prepaid && <StatusLine>Prepaid</StatusLine>}
+				{entry.meetup.myNotes && (
+					<fieldset className={css.myNotes}>
+						<legend className={css.myNotesLabel}>
+							My notes
+						</legend>
+						<Typography variant="body2" color="text.secondary">
+							{entry.meetup.myNotes}
 						</Typography>
-					)}
-					{entry.meetup.myNotes && (
-						<fieldset className={css.myNotes}>
-							<legend className={css.myNotesLabel}>
-								My notes
-							</legend>
-							<Typography variant="body2" color="text.secondary">
-								{entry.meetup.myNotes}
-							</Typography>
-						</fieldset>
-					)}
-				</Stack>
-			)}
+					</fieldset>
+				)}
+			</Stack>
 			<Stack
 				direction="row"
 				gap={1}

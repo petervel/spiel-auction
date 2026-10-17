@@ -116,33 +116,35 @@ body:global(.dark) .buying .price {
 	background-image:
 		linear-gradient(
 			to top right,
-			transparent calc(50% - 1.5px),
-			currentColor calc(50% - 1.5px),
-			currentColor calc(50% + 1.5px),
-			transparent calc(50% + 1.5px)
+			transparent calc(50% - 0.6px),
+			currentColor calc(50% - 0.6px),
+			currentColor calc(50% + 0.6px),
+			transparent calc(50% + 0.6px)
 		),
 		linear-gradient(
 			to top left,
-			transparent calc(50% - 1.5px),
-			currentColor calc(50% - 1.5px),
-			currentColor calc(50% + 1.5px),
-			transparent calc(50% + 1.5px)
+			transparent calc(50% - 0.6px),
+			currentColor calc(50% - 0.6px),
+			currentColor calc(50% + 0.6px),
+			transparent calc(50% + 0.6px)
 		);
 }
 
-.prepaidLabel {
+/* Shared by any positive per-side status line (Prepaid, Geekmail sent) -
+   colored by role like the price, so it reads as "mine" the same way. */
+.statusLabel {
 	font-weight: 700;
 }
 
-.buying .prepaidLabel {
+.buying .statusLabel {
 	color: var(--colour-main);
 }
 
-body:global(.dark) .buying .prepaidLabel {
+body:global(.dark) .buying .statusLabel {
 	color: hsl(210, 95%, 55%);
 }
 
-.selling .prepaidLabel {
+.selling .statusLabel {
 	color: var(--colour-seen);
 }
 

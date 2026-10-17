@@ -11,6 +11,7 @@ import { useListId } from '../../hooks/useListId';
 import { MeetupChanges, MeetupEntry, useMeetups } from '../../hooks/useMeetups';
 import { useUser } from '../../hooks/useUser';
 import { AddCustomMeetupDialog } from './AddCustomMeetupDialog';
+import { CollapsibleSection } from './CollapsibleSection';
 import { CompletedSection } from './CompletedSection';
 import { groupByDay, sortByCompletedAtDesc } from './meetupDisplay';
 import { RenameInput, RoleGroup } from './MeetupRow';
@@ -66,8 +67,8 @@ export const MeetupsPage = () => {
 			>
 				<Title title="Meetups" left={<BackButton />} />
 				<Typography>
-					Set your BGG username in <Link to="/settings">Settings</Link>{' '}
-					before using meetups.
+					Set your BGG username in{' '}
+					<Link to="/settings">Settings</Link> before using meetups.
 				</Typography>
 			</Stack>
 		);
@@ -84,19 +85,34 @@ export const MeetupsPage = () => {
 			>
 				<Title title="Meetups" left={<BackButton />} />
 				<Typography>
-					Verify your BGG username in <Link to="/settings">Settings</Link>{' '}
-					before using meetups - this proves the person meeting up is
-					actually you.
+					Verify your BGG username in{' '}
+					<Link to="/settings">Settings</Link> before using meetups -
+					this proves the person meeting up is actually you.
 				</Typography>
 			</Stack>
 		);
 	}
 
 	const active = entries.filter((entry) => !entry.meetup.completed);
+	// Still-live auctions - the win/sale itself could still change before
+	// bidding ends, so there's nothing to schedule yet. Split out into
+	// their own collapsed-by-default section rather than cluttering the
+	// day sections below with deals that aren't final. A pure custom
+	// meetup (no items) has no "ended" concept, so it's never unfinished.
+	const unfinished = active.filter((entry) =>
+		entry.items.some((item) => !item.isEnded),
+	);
+	const unfinishedSelling = unfinished.filter(
+		(entry) => entry.role === 'selling',
+	);
+	const unfinishedBuying = unfinished.filter(
+		(entry) => entry.role === 'buying',
+	);
+	const settled = active.filter((entry) => !unfinished.includes(entry));
 	const completed = sortByCompletedAtDesc(
 		entries.filter((entry) => entry.meetup.completed),
 	);
-	const daySections = groupByDay(active);
+	const daySections = groupByDay(settled);
 
 	const onChangeFor = (entry: MeetupEntry) => (changes: MeetupChanges) =>
 		updateMeetup({
@@ -166,6 +182,33 @@ export const MeetupsPage = () => {
 							</Typography>
 						) : (
 							<>
+								{unfinished.length > 0 && (
+									<CollapsibleSection
+										label={`Unfinished (${unfinished.length})`}
+									>
+										<Stack gap={1.5}>
+											{unfinishedSelling.length > 0 && (
+												<RoleGroup
+													label="Selling"
+													entries={unfinishedSelling}
+													onChangeFor={onChangeFor}
+													onRenameFor={onRenameFor}
+													onDeleteFor={onDeleteFor}
+												/>
+											)}
+											{unfinishedBuying.length > 0 && (
+												<RoleGroup
+													label="Buying"
+													entries={unfinishedBuying}
+													onChangeFor={onChangeFor}
+													onRenameFor={onRenameFor}
+													onDeleteFor={onDeleteFor}
+												/>
+											)}
+										</Stack>
+									</CollapsibleSection>
+								)}
+
 								{daySections.map((section) => (
 									<Stack key={section.key} gap={1.5}>
 										{section.key === 'UNSCHEDULED' ? (

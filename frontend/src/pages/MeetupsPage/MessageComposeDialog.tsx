@@ -11,7 +11,7 @@ import {
 import { useState } from 'react';
 import { useGeekmailSettings } from '../../hooks/useGeekmailSettings';
 import { useUser } from '../../hooks/useUser';
-import { MeetupEntry } from '../../hooks/useMeetups';
+import { MeetupChanges, MeetupEntry } from '../../hooks/useMeetups';
 import {
 	buildGeekmailMessage,
 	buildGeekmailUrl,
@@ -25,25 +25,35 @@ export const MessageComposeDialog = ({
 	entry,
 	open,
 	onClose,
+	onChange,
 }: {
 	entry: MeetupEntry;
 	open: boolean;
 	onClose: () => void;
+	onChange: (changes: MeetupChanges) => void;
 }) => (
 	<Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
 		{/* Mounted fresh each time the dialog opens, so its draft state's
 		initializer re-derives from the current template/entry without
 		needing an effect to re-sync it. */}
-		{open && <ComposeDialogContent entry={entry} onClose={onClose} />}
+		{open && (
+			<ComposeDialogContent
+				entry={entry}
+				onClose={onClose}
+				onChange={onChange}
+			/>
+		)}
 	</Dialog>
 );
 
 const ComposeDialogContent = ({
 	entry,
 	onClose,
+	onChange,
 }: {
 	entry: MeetupEntry;
 	onClose: () => void;
+	onChange: (changes: MeetupChanges) => void;
 }) => {
 	const { user } = useUser();
 	const { settings } = useGeekmailSettings();
@@ -63,6 +73,10 @@ const ComposeDialogContent = ({
 			'_blank',
 			'noopener,noreferrer'
 		);
+		// Opening BGG's compose form is as close to "sent" as this app can
+		// observe - check it off automatically rather than relying on the
+		// user to remember to tick it themselves afterward.
+		onChange({ messageSent: true });
 		onClose();
 	};
 

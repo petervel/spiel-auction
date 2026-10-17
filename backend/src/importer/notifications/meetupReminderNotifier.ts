@@ -89,22 +89,34 @@ const sendRemindersForFair = async (fairId: number, today: Day) => {
 			day: today,
 			location: REMINDER_LOCATION,
 			time: REMINDER_TIME,
-			completed: false,
 		},
-		select: { buyerUsername: true, sellerUsername: true },
+		select: {
+			buyerUsername: true,
+			sellerUsername: true,
+			buyerCompleted: true,
+			sellerCompleted: true,
+		},
 	});
 	if (meetups.length === 0) return;
 
 	// Each side of a meetup counts as one of "their" trades - a username
 	// that's party to 3 such rows (as either buyer or seller) has 3
-	// trades, same as the meetups page's own count.
+	// trades, same as the meetups page's own count. Completed is per-side
+	// now, so a side that's already marked its own as done is skipped
+	// from its own count/reminder - the other side (if not also done)
+	// still gets reminded and counted normally.
 	const countsByUsername = new Map<string, number>();
 	for (const meetup of meetups) {
-		for (const username of [meetup.buyerUsername, meetup.sellerUsername]) {
-			const key = username.trim().toLowerCase();
+		if (!meetup.buyerCompleted) {
+			const key = meetup.buyerUsername.trim().toLowerCase();
+			countsByUsername.set(key, (countsByUsername.get(key) ?? 0) + 1);
+		}
+		if (!meetup.sellerCompleted) {
+			const key = meetup.sellerUsername.trim().toLowerCase();
 			countsByUsername.set(key, (countsByUsername.get(key) ?? 0) + 1);
 		}
 	}
+	if (countsByUsername.size === 0) return;
 
 	const userIdsByUsername = await getUserIdsByUsername([
 		...countsByUsername.keys(),

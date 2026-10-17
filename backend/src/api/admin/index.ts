@@ -60,7 +60,12 @@ router.get(
 						})
 					: Promise.resolve([]),
 				prisma.meetup.count({ where: { fairId } }),
-				prisma.meetup.count({ where: { fairId, completed: true } }),
+				// "Completed" here means both sides agree it's done, not just
+				// one - completed is now per-side (buyerCompleted/
+				// sellerCompleted), so either alone would overcount.
+				prisma.meetup.count({
+					where: { fairId, buyerCompleted: true, sellerCompleted: true },
+				}),
 				prisma.userLikedItem.count({ where: { fairId } }),
 				prisma.user.findMany({
 					where: { fairs: { some: { fairId } } },

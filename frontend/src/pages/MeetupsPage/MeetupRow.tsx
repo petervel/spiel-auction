@@ -239,6 +239,7 @@ export const MeetupRow = ({
 				entry={entry}
 				open={isMessaging}
 				onClose={() => setIsMessaging(false)}
+				onChange={onChange}
 			/>
 		</div>
 	);

@@ -1,6 +1,8 @@
 import { DeleteRounded } from '@mui/icons-material';
 import {
 	Button,
+	Checkbox,
+	FormControlLabel,
 	IconButton,
 	MenuItem,
 	Stack,
@@ -48,6 +50,9 @@ export const MeetupRowEditForm = ({
 	);
 	const [draftNotes, setDraftNotes] = useState(
 		() => entry.meetup.myNotes ?? '',
+	);
+	const [draftMessageSent, setDraftMessageSent] = useState(
+		() => entry.meetup.messageSent,
 	);
 	// Only a meetup that already has a customDescription gets this field at
 	// all - giving one to an ordinary bid-backed meetup is POST
@@ -100,6 +105,7 @@ export const MeetupRowEditForm = ({
 			time: draftTime,
 			location: draftLocation,
 			notes: draftNotes || null,
+			messageSent: draftMessageSent,
 			...(isCustom ? { description: draftDescription } : {}),
 		};
 
@@ -252,6 +258,18 @@ export const MeetupRowEditForm = ({
 				value={draftNotes}
 				onChange={(evt) => setDraftNotes(evt.target.value)}
 				fullWidth
+			/>
+			<FormControlLabel
+				control={
+					<Checkbox
+						size="small"
+						checked={draftMessageSent}
+						onChange={(evt) =>
+							setDraftMessageSent(evt.target.checked)
+						}
+					/>
+				}
+				label="I've sent my geekmail"
 			/>
 			{renameError && (
 				<Typography color="error" variant="body2">

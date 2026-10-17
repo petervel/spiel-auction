@@ -21,6 +21,10 @@ export type MeetupEntry = {
 		time: string;
 		completed: boolean;
 		completedAt: string | null;
+		// Whether *I've* sent my geekmail - checked manually, or
+		// automatically when sending through MessageComposeDialog. Always
+		// "mine", same as completed/myNotes - never the other party's.
+		messageSent: boolean;
 		updatedAt: string | null;
 		lastEditedBy: string | null;
 		// Additive, never a replacement for the real item names/price - see
@@ -39,6 +43,7 @@ export type MeetupUpdate = {
 	location?: string;
 	time?: string;
 	completed?: boolean;
+	messageSent?: boolean;
 	notes?: string | null;
 	// Only valid when the meetup already has a customDescription - the
 	// server rejects it otherwise (see POST /api/meetups).

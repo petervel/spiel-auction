@@ -59,6 +59,36 @@ const requireVerifiedContext = async (
 
 type Role = "buying" | "selling";
 
+// completed/completedAt/messageSent are per-side columns (buyerX/sellerX) -
+// this resolves "mine" from role, same as myNotes already does below.
+// Never the counterpart's column, regardless of role.
+const myMeetupFields = (
+	meetup:
+		| {
+				buyerCompleted: boolean;
+				buyerCompletedAt: Date | null;
+				sellerCompleted: boolean;
+				sellerCompletedAt: Date | null;
+				buyerMessageSent: boolean;
+				sellerMessageSent: boolean;
+		  }
+		| null
+		| undefined,
+	role: Role,
+) => ({
+	completed:
+		(role === "buying" ? meetup?.buyerCompleted : meetup?.sellerCompleted) ??
+		false,
+	completedAt:
+		(role === "buying"
+			? meetup?.buyerCompletedAt
+			: meetup?.sellerCompletedAt) ?? null,
+	messageSent:
+		(role === "buying"
+			? meetup?.buyerMessageSent
+			: meetup?.sellerMessageSent) ?? false,
+});
+
 // GET /api/meetups - every counterpart the caller currently has a live
 // buying or selling relationship with in their current fair (won/winning,
 // or sold/selling with at least one bid), each with whatever Meetup
@@ -223,8 +253,7 @@ router.get("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 					day: meetup?.day ?? null,
 					location: meetup?.location ?? "Hall 1A",
 					time: meetup?.time ?? "15:00",
-					completed: meetup?.completed ?? false,
-					completedAt: meetup?.completedAt ?? null,
+					...myMeetupFields(meetup, entry.role),
 					updatedAt: meetup?.updatedAt ?? null,
 					lastEditedBy: meetup?.lastEditedBy ?? null,
 					// Additive, never a replacement for the real item names/price
@@ -269,6 +298,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 			location,
 			time,
 			completed,
+			messageSent,
 			notes,
 			description,
 		} = req.body;
@@ -297,6 +327,10 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		}
 		if (completed !== undefined && typeof completed !== "boolean") {
 			res.status(400).json({ error: "completed must be a boolean" });
+			return;
+		}
+		if (messageSent !== undefined && typeof messageSent !== "boolean") {
+			res.status(400).json({ error: "messageSent must be a boolean" });
 			return;
 		}
 		if (notes !== undefined && notes !== null && typeof notes !== "string") {
@@ -361,12 +395,30 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 			return;
 		}
 
-		// completedAt is bumped to now() on every transition to completed:true
-		// (never reused from updatedAt - see the model comment), and cleared
-		// on the undo path (completed:false) rather than left stale.
+		// completed/completedAt and messageSent are per-side (buyerX/sellerX) -
+		// written to "my" column only, keyed by this request's own role, same
+		// as notes below. *CompletedAt is bumped to now() on every transition
+		// to completed:true (never reused from updatedAt - see the model
+		// comment), and cleared on the undo path (completed:false) rather than
+		// left stale.
 		const completedData =
 			completed !== undefined
-				? { completed, completedAt: completed ? new Date() : null }
+				? role === "buying"
+					? {
+							buyerCompleted: completed,
+							buyerCompletedAt: completed ? new Date() : null,
+						}
+					: {
+							sellerCompleted: completed,
+							sellerCompletedAt: completed ? new Date() : null,
+						}
+				: {};
+
+		const messageSentData =
+			messageSent !== undefined
+				? role === "buying"
+					? { buyerMessageSent: messageSent }
+					: { sellerMessageSent: messageSent }
 				: {};
 
 		// Written to "my" column only, keyed by this request's own role -
@@ -401,6 +453,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...(location !== undefined ? { location } : {}),
 				...(time !== undefined ? { time } : {}),
 				...completedData,
+				...messageSentData,
 				...notesData,
 				...descriptionData,
 			},
@@ -410,6 +463,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...(location !== undefined ? { location } : {}),
 				...(time !== undefined ? { time } : {}),
 				...completedData,
+				...messageSentData,
 				...notesData,
 				...descriptionData,
 			},
@@ -420,8 +474,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				day: meetup.day,
 				location: meetup.location,
 				time: meetup.time,
-				completed: meetup.completed,
-				completedAt: meetup.completedAt,
+				...myMeetupFields(meetup, role),
 				updatedAt: meetup.updatedAt,
 				lastEditedBy: meetup.lastEditedBy,
 				customDescription: meetup.customDescription,
@@ -509,8 +562,7 @@ router.post(
 					day: meetup.day,
 					location: meetup.location,
 					time: meetup.time,
-					completed: meetup.completed,
-					completedAt: meetup.completedAt,
+					...myMeetupFields(meetup, role),
 					updatedAt: meetup.updatedAt,
 					lastEditedBy: meetup.lastEditedBy,
 					customDescription: meetup.customDescription,
@@ -550,6 +602,7 @@ router.patch(
 				location,
 				time,
 				completed,
+				messageSent,
 				notes,
 				description,
 			} = req.body;
@@ -594,6 +647,10 @@ router.patch(
 			}
 			if (completed !== undefined && typeof completed !== "boolean") {
 				res.status(400).json({ error: "completed must be a boolean" });
+				return;
+			}
+			if (messageSent !== undefined && typeof messageSent !== "boolean") {
+				res.status(400).json({ error: "messageSent must be a boolean" });
 				return;
 			}
 			if (notes !== undefined && notes !== null && typeof notes !== "string") {
@@ -678,7 +735,21 @@ router.patch(
 
 			const completedData =
 				completed !== undefined
-					? { completed, completedAt: completed ? new Date() : null }
+					? role === "buying"
+						? {
+								buyerCompleted: completed,
+								buyerCompletedAt: completed ? new Date() : null,
+							}
+						: {
+								sellerCompleted: completed,
+								sellerCompletedAt: completed ? new Date() : null,
+							}
+					: {};
+			const messageSentData =
+				messageSent !== undefined
+					? role === "buying"
+						? { buyerMessageSent: messageSent }
+						: { sellerMessageSent: messageSent }
 					: {};
 			const notesData =
 				notes !== undefined
@@ -698,6 +769,7 @@ router.patch(
 					...(location !== undefined ? { location } : {}),
 					...(time !== undefined ? { time } : {}),
 					...completedData,
+					...messageSentData,
 					...notesData,
 				},
 			});
@@ -708,8 +780,7 @@ router.patch(
 					day: meetup.day,
 					location: meetup.location,
 					time: meetup.time,
-					completed: meetup.completed,
-					completedAt: meetup.completedAt,
+					...myMeetupFields(meetup, role),
 					updatedAt: meetup.updatedAt,
 					lastEditedBy: meetup.lastEditedBy,
 					customDescription: meetup.customDescription,

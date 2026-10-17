@@ -157,12 +157,13 @@ enum Day {
 // (seen verbatim in many sellers' own listings) but either side can
 // override them; day has no default since the user picks it from
 // scratch. updatedAt is the "last edited" tracking, shared by both
-// parties since either can write to this same row. completedAt is
-// separate from updatedAt (not reused) so toggling "completed" off again
-// doesn't need to guess/restore whatever updatedAt was before - and so the
-// Completed section can sort by "most recently completed" without that
-// order being disturbed by someone later tweaking the day/time/location
-// of an already-completed meetup.
+// parties since either can write to this same row. *Completed/
+// *CompletedAt are per-side (not reused from updatedAt) so each party can
+// mark the trade done from their own perspective independently - one side
+// ticking it off doesn't tick it for the other, and the Completed section
+// sorts by "most recently completed" without that order being disturbed by
+// someone later tweaking the day/time/location of an already-completed
+// meetup.
 model Meetup {
   id                Int       @id @default(autoincrement())
   fair              Fair      @relation(fields: [fairId], references: [id])
@@ -172,8 +173,16 @@ model Meetup {
   day               Day?
   location          String    @default("Hall 1A")
   time              String    @default("15:00")
-  completed         Boolean   @default(false)
-  completedAt       DateTime?
+  buyerCompleted    Boolean   @default(false)
+  buyerCompletedAt  DateTime?
+  sellerCompleted   Boolean   @default(false)
+  sellerCompletedAt DateTime?
+  // Whether this side has sent their geekmail to the other - checked off
+  // manually, or automatically by MessageComposeDialog's "Open in BGG"
+  // (see POST /api/meetups's messageSent handling). Purely informational,
+  // never required for anything else on the row.
+  buyerMessageSent  Boolean   @default(false)
+  sellerMessageSent Boolean   @default(false)
   // Private per-side notes - each party only ever sees/edits their own
   // column (API resolves "mine" from role), never the other party's.
   buyerNotes        String?   @db.Text

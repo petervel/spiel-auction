@@ -183,6 +183,11 @@ model Meetup {
   // never required for anything else on the row.
   buyerMessageSent  Boolean   @default(false)
   sellerMessageSent Boolean   @default(false)
+  // Whether this side has already paid (e.g. bank transfer ahead of the
+  // fair) - checked off manually only, no auto-set path like
+  // *MessageSent has. Also purely informational.
+  buyerPrepaid      Boolean   @default(false)
+  sellerPrepaid     Boolean   @default(false)
   // Private per-side notes - each party only ever sees/edits their own
   // column (API resolves "mine" from role), never the other party's.
   buyerNotes        String?   @db.Text

@@ -59,9 +59,9 @@ const requireVerifiedContext = async (
 
 type Role = "buying" | "selling";
 
-// completed/completedAt/messageSent are per-side columns (buyerX/sellerX) -
-// this resolves "mine" from role, same as myNotes already does below.
-// Never the counterpart's column, regardless of role.
+// completed/completedAt/messageSent/prepaid are per-side columns
+// (buyerX/sellerX) - this resolves "mine" from role, same as myNotes
+// already does below. Never the counterpart's column, regardless of role.
 const myMeetupFields = (
 	meetup:
 		| {
@@ -71,6 +71,8 @@ const myMeetupFields = (
 				sellerCompletedAt: Date | null;
 				buyerMessageSent: boolean;
 				sellerMessageSent: boolean;
+				buyerPrepaid: boolean;
+				sellerPrepaid: boolean;
 		  }
 		| null
 		| undefined,
@@ -87,6 +89,9 @@ const myMeetupFields = (
 		(role === "buying"
 			? meetup?.buyerMessageSent
 			: meetup?.sellerMessageSent) ?? false,
+	prepaid:
+		(role === "buying" ? meetup?.buyerPrepaid : meetup?.sellerPrepaid) ??
+		false,
 });
 
 // GET /api/meetups - every counterpart the caller currently has a live
@@ -299,6 +304,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 			time,
 			completed,
 			messageSent,
+			prepaid,
 			notes,
 			description,
 		} = req.body;
@@ -331,6 +337,10 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		}
 		if (messageSent !== undefined && typeof messageSent !== "boolean") {
 			res.status(400).json({ error: "messageSent must be a boolean" });
+			return;
+		}
+		if (prepaid !== undefined && typeof prepaid !== "boolean") {
+			res.status(400).json({ error: "prepaid must be a boolean" });
 			return;
 		}
 		if (notes !== undefined && notes !== null && typeof notes !== "string") {
@@ -421,6 +431,13 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 					: { sellerMessageSent: messageSent }
 				: {};
 
+		const prepaidData =
+			prepaid !== undefined
+				? role === "buying"
+					? { buyerPrepaid: prepaid }
+					: { sellerPrepaid: prepaid }
+				: {};
+
 		// Written to "my" column only, keyed by this request's own role -
 		// never the counterpart's, so one side can't see or overwrite the
 		// other's private notes.
@@ -454,6 +471,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...(time !== undefined ? { time } : {}),
 				...completedData,
 				...messageSentData,
+				...prepaidData,
 				...notesData,
 				...descriptionData,
 			},
@@ -464,6 +482,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...(time !== undefined ? { time } : {}),
 				...completedData,
 				...messageSentData,
+				...prepaidData,
 				...notesData,
 				...descriptionData,
 			},
@@ -603,6 +622,7 @@ router.patch(
 				time,
 				completed,
 				messageSent,
+				prepaid,
 				notes,
 				description,
 			} = req.body;
@@ -651,6 +671,10 @@ router.patch(
 			}
 			if (messageSent !== undefined && typeof messageSent !== "boolean") {
 				res.status(400).json({ error: "messageSent must be a boolean" });
+				return;
+			}
+			if (prepaid !== undefined && typeof prepaid !== "boolean") {
+				res.status(400).json({ error: "prepaid must be a boolean" });
 				return;
 			}
 			if (notes !== undefined && notes !== null && typeof notes !== "string") {
@@ -751,6 +775,12 @@ router.patch(
 						? { buyerMessageSent: messageSent }
 						: { sellerMessageSent: messageSent }
 					: {};
+			const prepaidData =
+				prepaid !== undefined
+					? role === "buying"
+						? { buyerPrepaid: prepaid }
+						: { sellerPrepaid: prepaid }
+					: {};
 			const notesData =
 				notes !== undefined
 					? role === "buying"
@@ -770,6 +800,7 @@ router.patch(
 					...(time !== undefined ? { time } : {}),
 					...completedData,
 					...messageSentData,
+					...prepaidData,
 					...notesData,
 				},
 			});

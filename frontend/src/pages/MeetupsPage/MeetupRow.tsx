@@ -161,7 +161,14 @@ export const MeetupRow = ({
 						aria-expanded={expanded}
 					>
 						{entry.items.length > 0 ? (
-							<span className={css.price}>€{entry.totalPrice}</span>
+							<span
+								className={classNames(
+									css.price,
+									entry.meetup.prepaid && css.prepaid,
+								)}
+							>
+								€{entry.totalPrice}
+							</span>
 						) : (
 							<span className={css.price}>
 								<HandshakeRounded fontSize="small" />

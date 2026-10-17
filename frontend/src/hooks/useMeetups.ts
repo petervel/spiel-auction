@@ -25,6 +25,9 @@ export type MeetupEntry = {
 		// automatically when sending through MessageComposeDialog. Always
 		// "mine", same as completed/myNotes - never the other party's.
 		messageSent: boolean;
+		// Whether *I've* already paid (e.g. bank transfer ahead of the
+		// fair) - checked manually only. Same "mine" rule as messageSent.
+		prepaid: boolean;
 		updatedAt: string | null;
 		lastEditedBy: string | null;
 		// Additive, never a replacement for the real item names/price - see
@@ -44,6 +47,7 @@ export type MeetupUpdate = {
 	time?: string;
 	completed?: boolean;
 	messageSent?: boolean;
+	prepaid?: boolean;
 	notes?: string | null;
 	// Only valid when the meetup already has a customDescription - the
 	// server rejects it otherwise (see POST /api/meetups).

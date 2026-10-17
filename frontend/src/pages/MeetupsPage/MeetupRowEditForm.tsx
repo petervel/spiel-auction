@@ -54,6 +54,9 @@ export const MeetupRowEditForm = ({
 	const [draftMessageSent, setDraftMessageSent] = useState(
 		() => entry.meetup.messageSent,
 	);
+	const [draftPrepaid, setDraftPrepaid] = useState(
+		() => entry.meetup.prepaid,
+	);
 	// Only a meetup that already has a customDescription gets this field at
 	// all - giving one to an ordinary bid-backed meetup is POST
 	// /api/meetups/custom's job (see "Add a meetup"), not an edit here.
@@ -106,6 +109,7 @@ export const MeetupRowEditForm = ({
 			location: draftLocation,
 			notes: draftNotes || null,
 			messageSent: draftMessageSent,
+			prepaid: draftPrepaid,
 			...(isCustom ? { description: draftDescription } : {}),
 		};
 
@@ -158,119 +162,147 @@ export const MeetupRowEditForm = ({
 
 	return (
 		<Stack gap="1rem" className={css.details}>
-			{locationMode === 'HALL_1A' &&
-				(entry.counterpartLocation?.square ||
-					entry.counterpartLocation?.description) && (
-					<Stack gap={0.5}>
-						{entry.counterpartLocation?.square && (
-							<Typography variant="body2" color="text.secondary">
-								Their spot: {entry.counterpartLocation.square}
-							</Typography>
-						)}
-						{entry.counterpartLocation?.description && (
-							<Typography variant="body2" color="text.secondary">
-								Info: {entry.counterpartLocation.description}
-							</Typography>
-						)}
-					</Stack>
+			<Stack gap={0.75}>
+				<Typography variant="subtitle2" color="text.secondary">
+					Shared information
+				</Typography>
+				{locationMode === 'HALL_1A' &&
+					(entry.counterpartLocation?.square ||
+						entry.counterpartLocation?.description) && (
+						<Stack gap={0.5}>
+							{entry.counterpartLocation?.square && (
+								<Typography variant="body2" color="text.secondary">
+									Their spot: {entry.counterpartLocation.square}
+								</Typography>
+							)}
+							{entry.counterpartLocation?.description && (
+								<Typography variant="body2" color="text.secondary">
+									Info: {entry.counterpartLocation.description}
+								</Typography>
+							)}
+						</Stack>
+					)}
+				{isCustom && (
+					<TextField
+						label="Description"
+						size="small"
+						multiline
+						minRows={2}
+						value={draftDescription}
+						onChange={(evt) => setDraftDescription(evt.target.value)}
+						error={!draftDescription.trim()}
+						helperText={
+							!draftDescription.trim() ? 'Required' : undefined
+						}
+						fullWidth
+					/>
 				)}
-			{isCustom && (
+				{isPureCustom && (
+					<TextField
+						label="Trade partner (BGG username)"
+						size="small"
+						value={draftCounterpart}
+						onChange={(evt) => setDraftCounterpart(evt.target.value)}
+						error={!draftCounterpart.trim()}
+						helperText={
+							!draftCounterpart.trim() ? 'Required' : undefined
+						}
+						fullWidth
+					/>
+				)}
+				<Stack direction="row" gap={2} flexWrap="wrap" alignItems="center">
+					<TextField
+						select
+						label="Day"
+						size="small"
+						value={draftDay}
+						onChange={(evt) =>
+							changeDraftDay(evt.target.value as MeetupDay | '')
+						}
+						sx={{ flex: '1 1 150px', minWidth: 150 }}
+					>
+						{DAY_OPTIONS.map((option) => (
+							<MenuItem key={option.value} value={option.value}>
+								{option.label}
+							</MenuItem>
+						))}
+					</TextField>
+					<TextField
+						label="Time"
+						size="small"
+						value={draftTime}
+						onChange={(evt) => setDraftTime(evt.target.value)}
+						sx={{ flex: '1 1 110px', minWidth: 110 }}
+					/>
+					<TextField
+						select
+						label="Location"
+						size="small"
+						value={locationMode}
+						onChange={(evt) =>
+							changeLocationMode(evt.target.value as LocationMode)
+						}
+						sx={{ flex: '1 1 150px', minWidth: 150 }}
+					>
+						<MenuItem value="HALL_1A">{HALL_1A}</MenuItem>
+						<MenuItem value="OTHER">Custom</MenuItem>
+					</TextField>
+					{locationMode === 'OTHER' && (
+						<TextField
+							label="Where will you meet?"
+							size="small"
+							value={draftLocation}
+							onChange={(evt) => setDraftLocation(evt.target.value)}
+							sx={{ flex: '2 1 240px', minWidth: 240 }}
+						/>
+					)}
+				</Stack>
+			</Stack>
+			<Stack gap={0.75}>
+				<Typography variant="subtitle2" color="text.secondary">
+					Private/personal information
+				</Typography>
 				<TextField
-					label="Description"
+					label="My notes"
+					placeholder="Private - only you can see this"
 					size="small"
 					multiline
 					minRows={2}
-					value={draftDescription}
-					onChange={(evt) => setDraftDescription(evt.target.value)}
-					error={!draftDescription.trim()}
-					helperText={
-						!draftDescription.trim() ? 'Required' : undefined
-					}
+					value={draftNotes}
+					onChange={(evt) => setDraftNotes(evt.target.value)}
 					fullWidth
 				/>
-			)}
-			{isPureCustom && (
-				<TextField
-					label="Trade partner (BGG username)"
-					size="small"
-					value={draftCounterpart}
-					onChange={(evt) => setDraftCounterpart(evt.target.value)}
-					error={!draftCounterpart.trim()}
-					helperText={
-						!draftCounterpart.trim() ? 'Required' : undefined
-					}
-					fullWidth
-				/>
-			)}
-			<Stack direction="row" gap={2} flexWrap="wrap" alignItems="center">
-				<TextField
-					select
-					label="Day"
-					size="small"
-					value={draftDay}
-					onChange={(evt) =>
-						changeDraftDay(evt.target.value as MeetupDay | '')
-					}
-					sx={{ flex: '1 1 150px', minWidth: 150 }}
-				>
-					{DAY_OPTIONS.map((option) => (
-						<MenuItem key={option.value} value={option.value}>
-							{option.label}
-						</MenuItem>
-					))}
-				</TextField>
-				<TextField
-					label="Time"
-					size="small"
-					value={draftTime}
-					onChange={(evt) => setDraftTime(evt.target.value)}
-					sx={{ flex: '1 1 110px', minWidth: 110 }}
-				/>
-				<TextField
-					select
-					label="Location"
-					size="small"
-					value={locationMode}
-					onChange={(evt) =>
-						changeLocationMode(evt.target.value as LocationMode)
-					}
-					sx={{ flex: '1 1 150px', minWidth: 150 }}
-				>
-					<MenuItem value="HALL_1A">{HALL_1A}</MenuItem>
-					<MenuItem value="OTHER">Custom</MenuItem>
-				</TextField>
-				{locationMode === 'OTHER' && (
-					<TextField
-						label="Where will you meet?"
-						size="small"
-						value={draftLocation}
-						onChange={(evt) => setDraftLocation(evt.target.value)}
-						sx={{ flex: '2 1 240px', minWidth: 240 }}
+				<Stack gap={0}>
+					<FormControlLabel
+						control={
+							<Checkbox
+								size="small"
+								checked={draftMessageSent}
+								onChange={(evt) =>
+									setDraftMessageSent(evt.target.checked)
+								}
+							/>
+						}
+						label="Geekmail sent"
 					/>
-				)}
-			</Stack>
-			<TextField
-				label="My notes"
-				placeholder="Private - only you can see this"
-				size="small"
-				multiline
-				minRows={2}
-				value={draftNotes}
-				onChange={(evt) => setDraftNotes(evt.target.value)}
-				fullWidth
-			/>
-			<FormControlLabel
-				control={
-					<Checkbox
-						size="small"
-						checked={draftMessageSent}
-						onChange={(evt) =>
-							setDraftMessageSent(evt.target.checked)
+					<FormControlLabel
+						control={
+							<Checkbox
+								size="small"
+								checked={draftPrepaid}
+								onChange={(evt) =>
+									setDraftPrepaid(evt.target.checked)
+								}
+							/>
+						}
+						label={
+							entry.role === 'buying'
+								? "I've already paid"
+								: 'Money received'
 						}
 					/>
-				}
-				label="I've sent my geekmail"
-			/>
+				</Stack>
+			</Stack>
 			{renameError && (
 				<Typography color="error" variant="body2">
 					{renameError}

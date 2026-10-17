@@ -105,6 +105,47 @@ body:global(.dark) .buying .price {
 	font-weight: 400;
 }
 
+/* Prepaid (mine only - see Meetup.buyerPrepaid/sellerPrepaid) - drawn in
+   currentColor, not a fixed color, so it automatically matches whichever
+   role accent (buying blue / selling green, including the dark-mode
+   variant) already applies to this row - same colour as the price itself,
+   no separate color rule needed here. A big X corner-to-corner, not just a
+   thin strikethrough - two diagonal gradient "bars" crossing the whole
+   chip. Pure CSS, no extra markup. */
+.price.prepaid {
+	background-image:
+		linear-gradient(
+			to top right,
+			transparent calc(50% - 1.5px),
+			currentColor calc(50% - 1.5px),
+			currentColor calc(50% + 1.5px),
+			transparent calc(50% + 1.5px)
+		),
+		linear-gradient(
+			to top left,
+			transparent calc(50% - 1.5px),
+			currentColor calc(50% - 1.5px),
+			currentColor calc(50% + 1.5px),
+			transparent calc(50% + 1.5px)
+		);
+}
+
+.prepaidLabel {
+	font-weight: 700;
+}
+
+.buying .prepaidLabel {
+	color: var(--colour-main);
+}
+
+body:global(.dark) .buying .prepaidLabel {
+	color: hsl(210, 95%, 55%);
+}
+
+.selling .prepaidLabel {
+	color: var(--colour-seen);
+}
+
 .main {
 	flex: 1 1 auto;
 	min-width: 0;

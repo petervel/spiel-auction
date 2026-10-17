@@ -217,7 +217,7 @@ const markDeletedItems = async (listId: number, now: number) => {
 	await prisma.item.updateMany({
 		where: {
 			listId,
-			lastSeen: { lt: now - 3600 },
+			lastSeen: { lt: now - 10*60 },
 			deleted: false,
 		},
 		data: { deleted: true },
@@ -228,7 +228,7 @@ const markDeletedComments = async (listId: number, now: number) => {
 	await prisma.itemComment.updateMany({
 		where: {
 			listId,
-			lastSeen: { lt: now - 3600 },
+			lastSeen: { lt: now - 10*60 },
 			deleted: false,
 		},
 		data: { deleted: true },

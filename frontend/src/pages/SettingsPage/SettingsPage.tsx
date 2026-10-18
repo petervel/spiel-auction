@@ -2,6 +2,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import HandshakeRoundedIcon from '@mui/icons-material/HandshakeRounded';
+import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import {
 	Box,
 	Button,
@@ -16,8 +20,9 @@ import {
 	Tabs,
 	TextField,
 	Typography,
+	useMediaQuery,
 } from '@mui/material';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, ReactElement, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
@@ -100,16 +105,48 @@ export const SettingsPage = () => {
 
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+	// Matches AuctionItem/TabLayout/WishlistPage's own breakpoint - below
+	// it, tabs show icon + a short label instead of the full text, which
+	// otherwise forces the bar to scroll (see the Settings tabs mockup).
+	const isDesktop = useMediaQuery('(min-width:768px)');
+
 	// Notifications only appears once push is actually usable (same
 	// condition the section itself was already gated on) - no point
 	// offering a tab that'd just be empty.
-	const tabs: { key: TabKey; label: string }[] = [
-		{ key: 'account', label: 'Account' },
-		{ key: 'meetup', label: 'Meetups' },
+	const tabs: {
+		key: TabKey;
+		label: string;
+		shortLabel: string;
+		icon: ReactElement;
+	}[] = [
+		{
+			key: 'account',
+			label: 'Account',
+			shortLabel: 'Account',
+			icon: <PersonRoundedIcon fontSize="small" />,
+		},
+		{
+			key: 'meetup',
+			label: 'Meetups',
+			shortLabel: 'Meetups',
+			icon: <HandshakeRoundedIcon fontSize="small" />,
+		},
 		...(pushSupported
-			? [{ key: 'notifications' as const, label: 'Notifications' }]
+			? [
+					{
+						key: 'notifications' as const,
+						label: 'Notifications',
+						shortLabel: 'Alerts',
+						icon: <NotificationsRoundedIcon fontSize="small" />,
+					},
+				]
 			: []),
-		{ key: 'general', label: 'General' },
+		{
+			key: 'general',
+			label: 'General',
+			shortLabel: 'General',
+			icon: <TuneRoundedIcon fontSize="small" />,
+		},
 	];
 	const [tab, setTab] = useState<TabKey>('account');
 
@@ -245,12 +282,23 @@ export const SettingsPage = () => {
 				<Tabs
 					value={tab}
 					onChange={(_, value) => setTab(value)}
-					variant="scrollable"
-					scrollButtons="auto"
+					variant={isDesktop ? 'scrollable' : 'fullWidth'}
+					scrollButtons={isDesktop ? 'auto' : false}
 					allowScrollButtonsMobile
 				>
 					{tabs.map((t) => (
-						<Tab key={t.key} value={t.key} label={t.label} />
+						<Tab
+							key={t.key}
+							value={t.key}
+							label={isDesktop ? t.label : t.shortLabel}
+							icon={isDesktop ? undefined : t.icon}
+							iconPosition="top"
+							sx={
+								isDesktop
+									? undefined
+									: { minWidth: 0, px: 0.5, fontSize: '0.7rem' }
+							}
+						/>
 					))}
 				</Tabs>
 			</Box>

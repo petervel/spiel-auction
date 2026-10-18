@@ -105,7 +105,7 @@ export const SettingsPage = () => {
 	// offering a tab that'd just be empty.
 	const tabs: { key: TabKey; label: string }[] = [
 		{ key: 'account', label: 'Account' },
-		{ key: 'meetup', label: 'Meetup' },
+		{ key: 'meetup', label: 'Meetups' },
 		...(pushSupported
 			? [{ key: 'notifications' as const, label: 'Notifications' }]
 			: []),
@@ -417,25 +417,6 @@ export const SettingsPage = () => {
 								)}
 							</Stack>
 						)}
-					</Stack>
-
-					<Stack gap={1.5} sx={sectionSx}>
-						<Typography variant="subtitle2" color="text.secondary">
-							Wishlist
-						</Typography>
-						<Typography variant="body2">
-							Import your BGG wishlist to build your wishlist
-							here.
-						</Typography>
-						<Button
-							type="button"
-							variant="contained"
-							disabled={!bggUsername}
-							component={Link}
-							to="/wishlist/import"
-						>
-							Import from BGG
-						</Button>
 					</Stack>
 				</>
 			)}

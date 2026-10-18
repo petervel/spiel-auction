@@ -10,6 +10,7 @@ import {
 	SelectChangeEvent,
 	Stack,
 	Typography,
+	useMediaQuery,
 } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -18,6 +19,7 @@ import { Container } from '../../components/Container/Container';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
+import { useBggUsername } from '../../hooks/useBggUsername';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import { useRememberSorting } from '../../hooks/useRememberSorting';
 import { useUser } from '../../hooks/useUser';
@@ -33,6 +35,10 @@ const latestPostTimestamp = (object: WishlistObject) =>
 
 export const WishlistPage = () => {
 	const { user, isLoading: userLoading } = useUser();
+	const { bggUsername } = useBggUsername();
+	// Matches AuctionItem/TabLayout's own breakpoint - "Import from BGG"
+	// doesn't fit the title bar below it.
+	const isDesktop = useMediaQuery('(min-width:768px)');
 	const { wishlist, isLoading: wishlistLoading } = useWishlist();
 	const { rememberSorting } = useRememberSorting();
 	const [storedSortMode, setStoredSortMode] = useLocalStorage<SortMode>(
@@ -109,7 +115,21 @@ export const WishlistPage = () => {
 
 	return (
 		<Container>
-			<Title title="Wishlist" />
+			<Title
+				title="Wishlist"
+				right={
+					<Button
+						variant="contained"
+						size="small"
+						disabled={!bggUsername}
+						component={Link}
+						to="/wishlist/import"
+						sx={{ mr: 1 }}
+					>
+						{isDesktop ? 'Import from BGG' : 'Import'}
+					</Button>
+				}
+			/>
 			{objects.length ? (
 				<Stack gap={4}>
 					{sortedWithAuctions.length > 0 && (

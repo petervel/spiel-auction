@@ -6,6 +6,7 @@ export enum SORTING {
 	NAME,
 	PRICE,
 	OUTBID_RECENCY,
+	LATEST_ACTIVITY,
 }
 
 // Every sort option except OUTBID_RECENCY, which only makes sense for a
@@ -93,12 +94,30 @@ const sortByOutbidRecency = (a: Item, b: Item): number => {
 	return outbidTimestamp(b) - outbidTimestamp(a);
 };
 
+// The most recent of: the item's own last edit, and any non-deleted
+// comment's post/edit time (a comment edit bumps activity too, e.g. a
+// bidder correcting their bid). Falls back to postTimestamp alone when
+// an endpoint doesn't include comments.
+const latestActivityTimestamp = (item: Item): number => {
+	const timestamps = [item.postTimestamp, item.editTimestamp];
+	for (const comment of item.comments ?? []) {
+		if (comment.deleted) continue;
+		timestamps.push(comment.postTimestamp, comment.editTimestamp);
+	}
+	return Math.max(...timestamps);
+};
+
+const sortByLatestActivity = (a: Item, b: Item): number => {
+	return latestActivityTimestamp(b) - latestActivityTimestamp(a);
+};
+
 const sortingLookup = {
 	[SORTING.MOST_RECENT]: sortByMostRecent,
 	[SORTING.END_DATE]: sortByEndDate,
 	[SORTING.NAME]: sortByName,
 	[SORTING.PRICE]: sortByPrice,
 	[SORTING.OUTBID_RECENCY]: sortByOutbidRecency,
+	[SORTING.LATEST_ACTIVITY]: sortByLatestActivity,
 };
 
 // Only treated as a swipe when the horizontal movement clearly dominates

@@ -59,6 +59,7 @@ router.get("/:listId", async (req, res) => {
 			deleted: false,
 			...otherFilters,
 		},
+		include: { comments: true },
 		orderBy: { id: "desc" },
 	});
 

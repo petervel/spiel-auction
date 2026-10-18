@@ -39,4 +39,5 @@ const SORT_LABELS: Record<SORTING, string> = {
 	[SORTING.NAME]: 'Name',
 	[SORTING.PRICE]: 'Price',
 	[SORTING.OUTBID_RECENCY]: 'Recently outbid',
+	[SORTING.LATEST_ACTIVITY]: 'Latest activity',
 };

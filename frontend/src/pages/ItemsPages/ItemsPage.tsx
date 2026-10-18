@@ -45,6 +45,10 @@ type ItemsPageProps = {
 	// Only used in flat `items` mode - each group picks its own default via
 	// ItemGroup.defaultSorting instead.
 	defaultSorting?: SORTING;
+	// Only used in flat `items` mode - each group picks its own via
+	// ItemGroup.sortOptions instead. Defaults to DEFAULT_SORT_OPTIONS (see
+	// SortButtons).
+	sortOptions?: SORTING[];
 };
 
 export const ItemsPage = ({
@@ -56,6 +60,7 @@ export const ItemsPage = ({
 	endedLast = false,
 	options,
 	defaultSorting = SORTING.MOST_RECENT,
+	sortOptions,
 }: ItemsPageProps) => {
 	const { rememberSorting } = useRememberSorting();
 
@@ -137,7 +142,11 @@ export const ItemsPage = ({
 			/>
 			{subTitle}
 			{!groups && showSort && (
-				<SortButtons sorting={sorting} setSorting={setSorting} />
+				<SortButtons
+					sorting={sorting}
+					setSorting={setSorting}
+					options={sortOptions}
+				/>
 			)}
 			{visibleGroups ? (
 				visibleGroups.some((group) => group.items.length > 0) ? (

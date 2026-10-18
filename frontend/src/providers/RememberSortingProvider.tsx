@@ -9,7 +9,7 @@ export const RememberSortingProvider = ({
 }) => {
 	const [rememberSorting, setRememberSorting] = useLocalStorage<boolean>(
 		'rememberSorting',
-		false
+		true
 	);
 
 	return (

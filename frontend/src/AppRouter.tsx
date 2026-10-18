@@ -38,6 +38,7 @@ export const AppRouter = () => {
 			<Route path="/login/verify" element={<VerifyLoginPage />} />
 			<Route path="/settings" element={<SettingsPage />} />
 			<Route path="/settings/location" element={<MeetupLocationPage />} />
+			<Route path="/settings/:tab" element={<SettingsPage />} />
 			<Route path="/duplicates" element={<DuplicatesPage />} />
 			<Route path="/deleted" element={<DeletedPage />} />
 			<Route path="/meetups" element={<MeetupsPage />} />

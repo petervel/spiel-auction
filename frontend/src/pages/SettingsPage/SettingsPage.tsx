@@ -23,7 +23,7 @@ import {
 	useMediaQuery,
 } from '@mui/material';
 import { FormEvent, ReactElement, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { MeetupSpotSummary } from '../../components/MeetupSpotSummary/MeetupSpotSummary';
@@ -148,7 +148,20 @@ export const SettingsPage = () => {
 			icon: <TuneRoundedIcon fontSize="small" />,
 		},
 	];
-	const [tab, setTab] = useState<TabKey>('account');
+
+	// The URL is the source of truth (so a tab can be linked to directly)
+	// rather than its own useState - an unknown/missing :tab (e.g. a bare
+	// /settings, or a stale /settings/notifications link from before push
+	// was supported) just falls back to the first tab instead of a 404.
+	const { tab: tabParam } = useParams<{ tab?: string }>();
+	const navigate = useNavigate();
+	const tab: TabKey = tabs.some((t) => t.key === tabParam)
+		? (tabParam as TabKey)
+		: 'account';
+	const setTab = (value: TabKey) =>
+		navigate(value === 'account' ? '/settings' : `/settings/${value}`, {
+			replace: true,
+		});
 
 	// Collapsed by default - two full-size templates plus the day picker
 	// make this by far the tallest section on the page, so it shouldn't

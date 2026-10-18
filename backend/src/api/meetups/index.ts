@@ -59,9 +59,10 @@ const requireVerifiedContext = async (
 
 type Role = "buying" | "selling";
 
-// completed/completedAt/messageSent/prepaid are per-side columns
-// (buyerX/sellerX) - this resolves "mine" from role, same as myNotes
-// already does below. Never the counterpart's column, regardless of role.
+// completed/completedAt/messageSent/prepaid/notifyReminder are per-side
+// columns (buyerX/sellerX) - this resolves "mine" from role, same as
+// myNotes already does below. Never the counterpart's column, regardless
+// of role.
 const myMeetupFields = (
 	meetup:
 		| {
@@ -73,6 +74,8 @@ const myMeetupFields = (
 				sellerMessageSent: boolean;
 				buyerPrepaid: boolean;
 				sellerPrepaid: boolean;
+				buyerNotifyReminder: boolean | null;
+				sellerNotifyReminder: boolean | null;
 		  }
 		| null
 		| undefined,
@@ -92,6 +95,14 @@ const myMeetupFields = (
 	prepaid:
 		(role === "buying" ? meetup?.buyerPrepaid : meetup?.sellerPrepaid) ??
 		false,
+	// Raw tri-state override, not resolved against the account's own
+	// default here - the API has no reason to know that default, and the
+	// frontend already has it (useNotificationPreferences) to combine with
+	// this itself.
+	notifyReminder:
+		(role === "buying"
+			? meetup?.buyerNotifyReminder
+			: meetup?.sellerNotifyReminder) ?? null,
 });
 
 // GET /api/meetups - every counterpart the caller currently has a live
@@ -305,6 +316,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 			completed,
 			messageSent,
 			prepaid,
+			notifyReminder,
 			notes,
 			description,
 		} = req.body;
@@ -341,6 +353,16 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 		}
 		if (prepaid !== undefined && typeof prepaid !== "boolean") {
 			res.status(400).json({ error: "prepaid must be a boolean" });
+			return;
+		}
+		if (
+			notifyReminder !== undefined &&
+			notifyReminder !== null &&
+			typeof notifyReminder !== "boolean"
+		) {
+			res
+				.status(400)
+				.json({ error: "notifyReminder must be a boolean or null" });
 			return;
 		}
 		if (notes !== undefined && notes !== null && typeof notes !== "string") {
@@ -438,6 +460,13 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 					: { sellerPrepaid: prepaid }
 				: {};
 
+		const notifyReminderData =
+			notifyReminder !== undefined
+				? role === "buying"
+					? { buyerNotifyReminder: notifyReminder }
+					: { sellerNotifyReminder: notifyReminder }
+				: {};
+
 		// Written to "my" column only, keyed by this request's own role -
 		// never the counterpart's, so one side can't see or overwrite the
 		// other's private notes.
@@ -472,6 +501,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...completedData,
 				...messageSentData,
 				...prepaidData,
+				...notifyReminderData,
 				...notesData,
 				...descriptionData,
 			},
@@ -483,6 +513,7 @@ router.post("/", authenticateUser, async (req: AuthenticatedRequest, res) => {
 				...completedData,
 				...messageSentData,
 				...prepaidData,
+				...notifyReminderData,
 				...notesData,
 				...descriptionData,
 			},
@@ -623,6 +654,7 @@ router.patch(
 				completed,
 				messageSent,
 				prepaid,
+				notifyReminder,
 				notes,
 				description,
 			} = req.body;
@@ -675,6 +707,16 @@ router.patch(
 			}
 			if (prepaid !== undefined && typeof prepaid !== "boolean") {
 				res.status(400).json({ error: "prepaid must be a boolean" });
+				return;
+			}
+			if (
+				notifyReminder !== undefined &&
+				notifyReminder !== null &&
+				typeof notifyReminder !== "boolean"
+			) {
+				res
+					.status(400)
+					.json({ error: "notifyReminder must be a boolean or null" });
 				return;
 			}
 			if (notes !== undefined && notes !== null && typeof notes !== "string") {
@@ -781,6 +823,12 @@ router.patch(
 						? { buyerPrepaid: prepaid }
 						: { sellerPrepaid: prepaid }
 					: {};
+			const notifyReminderData =
+				notifyReminder !== undefined
+					? role === "buying"
+						? { buyerNotifyReminder: notifyReminder }
+						: { sellerNotifyReminder: notifyReminder }
+					: {};
 			const notesData =
 				notes !== undefined
 					? role === "buying"
@@ -801,6 +849,7 @@ router.patch(
 					...completedData,
 					...messageSentData,
 					...prepaidData,
+					...notifyReminderData,
 					...notesData,
 				},
 			});

@@ -148,6 +148,28 @@ body:global(.dark) .buying .statusLabel {
 	color: var(--colour-seen);
 }
 
+/* The meetup-reminder toggle when muted - deliberately not role-colored
+   (unlike .statusLabel) since "off" should always read the same regardless
+   of buying/selling. */
+.statusLabelInactive {
+	color: var(--colour-disabled);
+	text-decoration: line-through;
+}
+
+/* Layout only, deliberately no color here - combined with .statusLabel/
+   .statusLabelInactive (which do set color) on the same element, so
+   whichever of those two wins the cascade is never fought by this rule
+   too (see the reminder toggle in MeetupRowEditForm). */
+.reminderToggleButton {
+	all: unset;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	min-height: 44px;
+	width: fit-content;
+}
+
 .main {
 	flex: 1 1 auto;
 	min-width: 0;

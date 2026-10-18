@@ -21,19 +21,16 @@ cron.schedule("* * * * *", async () => {
 	}
 });
 
-// 30 minutes before the schema's default meetup time (15:00) - pinned to
-// the fair's own timezone regardless of what timezone this container runs
-// in (see meetupReminderNotifier.ts).
-cron.schedule(
-	"30 14 * * *",
-	async () => {
-		console.log("Sending meetup reminders... ", Date());
-		try {
-			await sendMeetupReminders();
-		} catch (error) {
-			const message = error instanceof Error ? error.message : error;
-			console.error("Meetup reminder send failed: ", message);
-		}
-	},
-	{ timezone: "Europe/Berlin" },
-);
+// Every minute, same cadence as the import cycle above - each meetup is
+// reminded 30 minutes before its own time (not just a single fixed daily
+// slot), so this has to check often enough to catch every meetup's own
+// window. Dedup (so a side is never reminded twice) and the fair's own
+// timezone are both handled inside sendMeetupReminders itself.
+cron.schedule("* * * * *", async () => {
+	try {
+		await sendMeetupReminders();
+	} catch (error) {
+		const message = error instanceof Error ? error.message : error;
+		console.error("Meetup reminder send failed: ", message);
+	}
+});

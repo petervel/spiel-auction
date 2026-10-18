@@ -221,6 +221,7 @@ export const MeetupRow = ({
 				{expanded && !isEditing && (
 					<MeetupRowDetails
 						entry={entry}
+						onChange={onChange}
 						onEdit={() => setIsEditing(true)}
 						onSendMessage={() => setIsMessaging(true)}
 					/>

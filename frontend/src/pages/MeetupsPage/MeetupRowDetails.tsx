@@ -3,11 +3,14 @@ import {
 	EditRounded,
 	InfoOutlined,
 	MailOutlineRounded,
+	NotificationsOffRounded,
+	NotificationsRounded,
 } from '@mui/icons-material';
-import { Button, Stack, Typography } from '@mui/material';
+import { Button, IconButton, Stack, Typography } from '@mui/material';
 import classNames from 'classnames';
 import { ReactNode } from 'react';
-import { MeetupEntry } from '../../hooks/useMeetups';
+import { MeetupChanges, MeetupEntry } from '../../hooks/useMeetups';
+import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { DAY_LABELS, HALL_1A } from './meetupDisplay';
 import { MeetupInfoTooltip } from './MeetupInfoTooltip';
 import css from './MeetupsPage.module.css';
@@ -29,13 +32,22 @@ const StatusLine = ({ children }: { children: ReactNode }) => (
 // also drops you into a form.
 export const MeetupRowDetails = ({
 	entry,
+	onChange,
 	onEdit,
 	onSendMessage,
 }: {
 	entry: MeetupEntry;
+	onChange: (changes: MeetupChanges) => void;
 	onEdit: () => void;
 	onSendMessage: () => void;
 }) => {
+	const { preferences } = useNotificationPreferences();
+	// null means no per-meetup override - fall back to the account's own
+	// Settings preference (see the Meetup model's buyerNotifyReminder
+	// comment). An explicit true/false here always wins once set.
+	const reminderActive =
+		entry.meetup.notifyReminder ?? preferences.notifyOnMeetupReminder;
+
 	const lastUpdatedLabel = entry.meetup.updatedAt
 		? `Last updated ${new Date(entry.meetup.updatedAt).toLocaleString()}${
 				entry.meetup.lastEditedBy
@@ -158,6 +170,20 @@ export const MeetupRowDetails = ({
 					</Typography>
 				)}
 				{entry.meetup.prepaid && <StatusLine>Prepaid</StatusLine>}
+				<IconButton
+					aria-label={
+						reminderActive ? 'Mute reminder' : 'Unmute reminder'
+					}
+					onClick={() => onChange({ notifyReminder: !reminderActive })}
+					sx={{ alignSelf: 'start', p: 1 }}
+					className={reminderActive ? css.statusLabel : css.statusLabelInactive}
+				>
+					{reminderActive ? (
+						<NotificationsRounded fontSize="small" />
+					) : (
+						<NotificationsOffRounded fontSize="small" />
+					)}
+				</IconButton>
 				{entry.meetup.myNotes && (
 					<fieldset className={css.myNotes}>
 						<legend className={css.myNotesLabel}>

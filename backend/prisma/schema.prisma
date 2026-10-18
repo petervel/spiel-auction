@@ -188,6 +188,20 @@ model Meetup {
   // *MessageSent has. Also purely informational.
   buyerPrepaid      Boolean   @default(false)
   sellerPrepaid     Boolean   @default(false)
+  // Per-side override for the "meetup reminder" push notification
+  // (User.notifyOnMeetupReminder) - null means "no override, use that
+  // account's own Settings preference"; an explicit true/false here always
+  // wins once set (see the bell icon in MeetupRowDetails). Nullable by
+  // design, unlike every other boolean on this model, since the whole
+  // point is a three-way default/on/off rather than a plain flag.
+  buyerNotifyReminder  Boolean?
+  sellerNotifyReminder Boolean?
+  // Set once a reminder has actually been sent for that side for this
+  // meetup, so meetupReminderNotifier (which now polls every minute to
+  // catch each meetup's own time, not just one fixed daily slot) never
+  // sends the same side's reminder twice.
+  buyerReminderSentAt  DateTime?
+  sellerReminderSentAt DateTime?
   // Private per-side notes - each party only ever sees/edits their own
   // column (API resolves "mine" from role), never the other party's.
   buyerNotes        String?   @db.Text

@@ -1,4 +1,8 @@
-import { DeleteRounded } from '@mui/icons-material';
+import {
+	DeleteRounded,
+	NotificationsOffRounded,
+	NotificationsRounded,
+} from '@mui/icons-material';
 import {
 	Button,
 	Checkbox,
@@ -9,8 +13,10 @@ import {
 	TextField,
 	Typography,
 } from '@mui/material';
+import classNames from 'classnames';
 import { useState } from 'react';
 import { MeetupChanges, MeetupDay, MeetupEntry } from '../../hooks/useMeetups';
+import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { DAY_OPTIONS, DEFAULT_TIME, HALL_1A } from './meetupDisplay';
 import { RenameInput } from './MeetupRow';
 import css from './MeetupsPage.module.css';
@@ -56,6 +62,14 @@ export const MeetupRowEditForm = ({
 	);
 	const [draftPrepaid, setDraftPrepaid] = useState(
 		() => entry.meetup.prepaid,
+	);
+	const { preferences } = useNotificationPreferences();
+	// Starts from the EFFECTIVE value (the per-meetup override if there is
+	// one, else the account's own Settings default) - same as the bell in
+	// the read-only view. Saving always writes this explicitly, same as
+	// every other field here (see the module comment on "drafted locally").
+	const [draftNotifyReminder, setDraftNotifyReminder] = useState(
+		() => entry.meetup.notifyReminder ?? preferences.notifyOnMeetupReminder,
 	);
 	// Only a meetup that already has a customDescription gets this field at
 	// all - giving one to an ordinary bid-backed meetup is POST
@@ -110,6 +124,7 @@ export const MeetupRowEditForm = ({
 			notes: draftNotes || null,
 			messageSent: draftMessageSent,
 			prepaid: draftPrepaid,
+			notifyReminder: draftNotifyReminder,
 			...(isCustom ? { description: draftDescription } : {}),
 		};
 
@@ -302,6 +317,22 @@ export const MeetupRowEditForm = ({
 						}
 					/>
 				</Stack>
+				<button
+					type="button"
+					className={classNames(
+						css.reminderToggleButton,
+						draftNotifyReminder ? css.statusLabel : css.statusLabelInactive,
+					)}
+					onClick={() => setDraftNotifyReminder((prev) => !prev)}
+					aria-pressed={draftNotifyReminder}
+				>
+					{draftNotifyReminder ? (
+						<NotificationsRounded fontSize="small" />
+					) : (
+						<NotificationsOffRounded fontSize="small" />
+					)}
+					<Typography variant="body2">Reminder</Typography>
+				</button>
 			</Stack>
 			{renameError && (
 				<Typography color="error" variant="body2">

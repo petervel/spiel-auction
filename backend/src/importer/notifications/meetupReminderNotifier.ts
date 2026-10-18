@@ -3,13 +3,18 @@ import prisma from "../../prismaClient";
 import { sendPushToUser } from "../../push/webPushClient";
 import { getUserIdsByUsername } from "../usersByBggUsername";
 
-// Spiel Essen only - this app has no notion of a fair's own timezone, and
-// every other hardcoded "Hall 1A"/"15:00" default already assumes it (see
-// meetupDisplay.ts's HALL_1A/DEFAULT_TIME on the frontend, and the schema's
-// own column defaults on Meetup).
+// Spiel Essen only - this app has no notion of a fair's own timezone (see
+// the schema's own "Hall 1A"/"15:00" column defaults, which assume it too).
 const FAIR_TIMEZONE = "Europe/Berlin";
-const REMINDER_LOCATION = "Hall 1A";
-const REMINDER_TIME = "15:00";
+const REMINDER_MINUTES_BEFORE = 30;
+
+// The schema's own defaults - a meetup still sitting at both of these is
+// one of the generic daily batch (never explicitly scheduled), which gets
+// the richer "N trades, your spot is X" message since it's genuinely one
+// shared time/place. Anything moved off either default is a one-off
+// arrangement with its own time, which can't be worded that way.
+const DEFAULT_LOCATION = "Hall 1A";
+const DEFAULT_TIME = "15:00";
 
 // Offset in whole days from Fair.eventDate (its official opening day -
 // always a Thursday for Essen Spiel, though the calendar date moves every
@@ -54,11 +59,53 @@ const resolveTodayForFair = (eventDate: Date): Day | null => {
 	return match?.[0] ?? null;
 };
 
-// Runs once a day at 14:30 Europe/Berlin (see cli-importer.ts) - 30 minutes
-// before the schema's own default meetup time. Only reminds about meetups
-// still at that default location/time - one moved to a custom arrangement
-// is something the pair already agreed on themselves, not something this
-// generic "trading starts soon" nudge needs to cover.
+// Minutes since midnight, in the fair's own timezone - compared directly
+// against a parsed meetup.time rather than building Date instants, which
+// would otherwise have to account for Europe/Berlin's own DST transition
+// (Spiel Essen sometimes straddles it).
+const currentMinuteOfDayInFairTimezone = (): number => {
+	const parts = new Intl.DateTimeFormat("en-GB", {
+		timeZone: FAIR_TIMEZONE,
+		hour: "2-digit",
+		minute: "2-digit",
+		hourCycle: "h23",
+	}).formatToParts(new Date());
+	const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+	const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+	return hour * 60 + minute;
+};
+
+const parseTimeToMinutes = (time: string): number | null => {
+	const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+	if (!match) return null;
+	return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const buildDefaultSlotBody = (count: number, square: string | null) => {
+	const tradeWord = count === 1 ? "trade" : "trades";
+	const squarePart = square ? `Your spot is ${square}.` : "";
+	return `You have ${count} ${tradeWord} at ${DEFAULT_LOCATION}, ${DEFAULT_TIME}. ${squarePart}`;
+};
+
+// Unlike the default-slot batch, these don't share one time/place, so each
+// has to say its own - "Meetup reminder" alone gave no way to tell where
+// to go or when to be there.
+const buildCustomSlotBody = (
+	entries: { time: string; location: string }[],
+) => {
+	if (entries.length === 1) {
+		return `You have a meetup at ${entries[0].location}, ${entries[0].time}.`;
+	}
+	const parts = entries.map((e) => `${e.time} at ${e.location}`);
+	return `You have ${entries.length} meetups coming up: ${parts.join("; ")}.`;
+};
+
+// Runs every minute (see cli-importer.ts) and reminds about every meetup
+// due in the next 30 minutes, whatever day/time/location it's actually
+// set to - not just ones still sitting at the schema's default "Hall 1A,
+// 15:00". A custom arrangement is still something worth a nudge about,
+// just with a plainer message (see buildDefaultSlotBody vs the generic
+// "Meetup reminder" text below).
 export const sendMeetupReminders = async () => {
 	const fairs = await prisma.fair.findMany({
 		where: { status: "ACTIVE" },
@@ -76,87 +123,204 @@ export const sendMeetupReminders = async () => {
 	);
 };
 
-const buildBody = (count: number, square: string | null) => {
-	const tradeWord = count === 1 ? "trade" : "trades";
-	const squarePart = square ? `Your spot is ${square}.` : "";
-	return `You have ${count} ${tradeWord} at ${REMINDER_LOCATION}, ${REMINDER_TIME}. ${squarePart}`;
-};
+type Side = "buyer" | "seller";
 
 const sendRemindersForFair = async (fairId: number, today: Day) => {
+	const nowMinutes = currentMinuteOfDayInFairTimezone();
+
+	// A cheap first pass - only rows that could still need a reminder for
+	// at least one side. Exact per-meetup timing is checked below, since
+	// that needs each row's own `time` parsed first.
 	const meetups = await prisma.meetup.findMany({
 		where: {
 			fairId,
 			day: today,
-			location: REMINDER_LOCATION,
-			time: REMINDER_TIME,
+			OR: [{ buyerReminderSentAt: null }, { sellerReminderSentAt: null }],
 		},
 		select: {
+			id: true,
+			time: true,
+			location: true,
 			buyerUsername: true,
 			sellerUsername: true,
 			buyerCompleted: true,
 			sellerCompleted: true,
+			buyerNotifyReminder: true,
+			sellerNotifyReminder: true,
+			buyerReminderSentAt: true,
+			sellerReminderSentAt: true,
 		},
 	});
 	if (meetups.length === 0) return;
 
-	// Each side of a meetup counts as one of "their" trades - a username
-	// that's party to 3 such rows (as either buyer or seller) has 3
-	// trades, same as the meetups page's own count. Completed is per-side
-	// now, so a side that's already marked its own as done is skipped
-	// from its own count/reminder - the other side (if not also done)
-	// still gets reminded and counted normally.
-	const countsByUsername = new Map<string, number>();
+	// Every side landing in its own 30-minutes-before window right now -
+	// a side that's already completed its own meetup, or already been
+	// reminded, is skipped (the other side, if still eligible, isn't).
+	type DueSide = {
+		meetupId: number;
+		side: Side;
+		username: string;
+		isDefaultSlot: boolean;
+	};
+	const dueSides: DueSide[] = [];
 	for (const meetup of meetups) {
-		if (!meetup.buyerCompleted) {
-			const key = meetup.buyerUsername.trim().toLowerCase();
-			countsByUsername.set(key, (countsByUsername.get(key) ?? 0) + 1);
+		const meetupMinutes = parseTimeToMinutes(meetup.time);
+		if (meetupMinutes === null) continue;
+		const minutesUntil = meetupMinutes - nowMinutes;
+		if (minutesUntil < 0 || minutesUntil > REMINDER_MINUTES_BEFORE) continue;
+
+		const isDefaultSlot =
+			meetup.location === DEFAULT_LOCATION && meetup.time === DEFAULT_TIME;
+
+		if (!meetup.buyerCompleted && meetup.buyerReminderSentAt === null) {
+			dueSides.push({
+				meetupId: meetup.id,
+				side: "buyer",
+				username: meetup.buyerUsername,
+				isDefaultSlot,
+			});
 		}
-		if (!meetup.sellerCompleted) {
-			const key = meetup.sellerUsername.trim().toLowerCase();
-			countsByUsername.set(key, (countsByUsername.get(key) ?? 0) + 1);
+		if (!meetup.sellerCompleted && meetup.sellerReminderSentAt === null) {
+			dueSides.push({
+				meetupId: meetup.id,
+				side: "seller",
+				username: meetup.sellerUsername,
+				isDefaultSlot,
+			});
 		}
 	}
-	if (countsByUsername.size === 0) return;
+	if (dueSides.length === 0) return;
 
-	const userIdsByUsername = await getUserIdsByUsername([
-		...countsByUsername.keys(),
-	]);
+	const meetupById = new Map(meetups.map((m) => [m.id, m]));
 
-	// A username's count is credited to every account that resolves to it
-	// (see getUserIdsByUsername - two accounts can legitimately share one
-	// real BGG username), summed if an account somehow matches more than
-	// one of this fair's usernames.
-	const countsByUserId = new Map<number, number>();
-	for (const [username, count] of countsByUsername) {
-		for (const userId of userIdsByUsername.get(username) ?? []) {
-			countsByUserId.set(userId, (countsByUserId.get(userId) ?? 0) + count);
+	const usernames = [
+		...new Set(dueSides.map((d) => d.username.trim().toLowerCase())),
+	];
+	const userIdsByUsername = await getUserIdsByUsername(usernames);
+
+	// Resolved to accounts, carrying this side's own per-meetup override
+	// (null = no override, defer to that account's Settings preference,
+	// checked next once we know the account) and whether it's one of the
+	// generic default-slot meetups.
+	type PendingSide = {
+		meetupId: number;
+		side: Side;
+		userId: number;
+		override: boolean | null;
+		isDefaultSlot: boolean;
+	};
+	const pending: PendingSide[] = [];
+	for (const due of dueSides) {
+		const meetup = meetupById.get(due.meetupId)!;
+		const override =
+			due.side === "buyer"
+				? meetup.buyerNotifyReminder
+				: meetup.sellerNotifyReminder;
+		const key = due.username.trim().toLowerCase();
+		for (const userId of userIdsByUsername.get(key) ?? []) {
+			pending.push({
+				meetupId: due.meetupId,
+				side: due.side,
+				userId,
+				override,
+				isDefaultSlot: due.isDefaultSlot,
+			});
 		}
 	}
-	if (countsByUserId.size === 0) return;
 
-	const users = await prisma.user.findMany({
-		where: {
-			id: { in: [...countsByUserId.keys()] },
-			notifyOnMeetupReminder: true,
-		},
-		include: {
-			fairs: { where: { fairId }, select: { locationSquare: true } },
-		},
+	const userIds = [...new Set(pending.map((p) => p.userId))];
+	const users =
+		userIds.length === 0
+			? []
+			: await prisma.user.findMany({
+					where: { id: { in: userIds } },
+					select: {
+						id: true,
+						notifyOnMeetupReminder: true,
+						fairs: { where: { fairId }, select: { locationSquare: true } },
+					},
+				});
+	const userById = new Map(users.map((u) => [u.id, u]));
+
+	// An explicit per-meetup override always wins; null falls back to that
+	// account's own global Settings preference (see the bell icon in
+	// MeetupRowDetails / the Meetup model comment).
+	const enabled = pending.filter((p) => {
+		const user = userById.get(p.userId);
+		return user && (p.override ?? user.notifyOnMeetupReminder);
 	});
 
-	const url = `/meetups/${today.toLowerCase()}`;
+	// Grouped separately per user - a default-slot batch gets one richer
+	// "N trades" push (they all share the one time/place), a custom-slot
+	// batch gets its own, listing each meetup's own time/place since those
+	// can all differ.
+	const defaultSlotCountByUserId = new Map<number, number>();
+	const customSlotEntriesByUserId = new Map<
+		number,
+		{ time: string; location: string }[]
+	>();
+	for (const p of enabled) {
+		if (p.isDefaultSlot) {
+			defaultSlotCountByUserId.set(
+				p.userId,
+				(defaultSlotCountByUserId.get(p.userId) ?? 0) + 1,
+			);
+			continue;
+		}
+		const meetup = meetupById.get(p.meetupId)!;
+		const entries = customSlotEntriesByUserId.get(p.userId) ?? [];
+		entries.push({ time: meetup.time, location: meetup.location });
+		customSlotEntriesByUserId.set(p.userId, entries);
+	}
 
-	await Promise.all(
-		users.map((user) =>
-			sendPushToUser(user.id, {
+	const url = `/meetups/${today.toLowerCase()}`;
+	const sends: Promise<unknown>[] = [];
+	for (const [userId, count] of defaultSlotCountByUserId) {
+		const square = userById.get(userId)?.fairs[0]?.locationSquare ?? null;
+		sends.push(
+			sendPushToUser(userId, {
 				title: "Trading starts in 30 minutes",
-				body: buildBody(
-					countsByUserId.get(user.id)!,
-					user.fairs[0]?.locationSquare ?? null,
-				),
+				body: buildDefaultSlotBody(count, square),
 				icon: "/icon/notify-meetup.svg",
 				url,
 			}),
-		),
-	);
+		);
+	}
+	for (const [userId, entries] of customSlotEntriesByUserId) {
+		sends.push(
+			sendPushToUser(userId, {
+				title: "Meetup reminder",
+				body: buildCustomSlotBody(entries),
+				icon: "/icon/notify-meetup.svg",
+				url,
+			}),
+		);
+	}
+	await Promise.all(sends);
+
+	// Every evaluated side is marked sent now, whether or not it actually
+	// got a push (opted out, or the username didn't resolve to any
+	// account) - otherwise an ineligible side would just keep getting
+	// re-evaluated every minute for the rest of its own 30-minute window.
+	const buyerMeetupIds = dueSides
+		.filter((d) => d.side === "buyer")
+		.map((d) => d.meetupId);
+	const sellerMeetupIds = dueSides
+		.filter((d) => d.side === "seller")
+		.map((d) => d.meetupId);
+	const now = new Date();
+	await Promise.all([
+		buyerMeetupIds.length === 0
+			? Promise.resolve()
+			: prisma.meetup.updateMany({
+					where: { id: { in: buyerMeetupIds } },
+					data: { buyerReminderSentAt: now },
+				}),
+		sellerMeetupIds.length === 0
+			? Promise.resolve()
+			: prisma.meetup.updateMany({
+					where: { id: { in: sellerMeetupIds } },
+					data: { sellerReminderSentAt: now },
+				}),
+	]);
 };

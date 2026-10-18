@@ -28,6 +28,10 @@ export type MeetupEntry = {
 		// Whether *I've* already paid (e.g. bank transfer ahead of the
 		// fair) - checked manually only. Same "mine" rule as messageSent.
 		prepaid: boolean;
+		// My own override for the "meetup reminder" push notification - null
+		// means no override (falls back to the Settings preference), an
+		// explicit true/false always wins. Same "mine" rule as prepaid.
+		notifyReminder: boolean | null;
 		updatedAt: string | null;
 		lastEditedBy: string | null;
 		// Additive, never a replacement for the real item names/price - see
@@ -48,6 +52,7 @@ export type MeetupUpdate = {
 	completed?: boolean;
 	messageSent?: boolean;
 	prepaid?: boolean;
+	notifyReminder?: boolean | null;
 	notes?: string | null;
 	// Only valid when the meetup already has a customDescription - the
 	// server rejects it otherwise (see POST /api/meetups).

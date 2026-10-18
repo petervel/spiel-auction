@@ -3,6 +3,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import {
+	Box,
 	Button,
 	Checkbox,
 	Chip,
@@ -11,6 +12,8 @@ import {
 	MenuItem,
 	Snackbar,
 	Stack,
+	Tab,
+	Tabs,
 	TextField,
 	Typography,
 } from '@mui/material';
@@ -41,6 +44,8 @@ const sectionSx = {
 	borderRadius: 2,
 	padding: 2,
 } as const;
+
+type TabKey = 'account' | 'meetup' | 'notifications' | 'general';
 
 export const SettingsPage = () => {
 	const { user, isLoading: userLoading } = useUser();
@@ -94,6 +99,19 @@ export const SettingsPage = () => {
 	} = useGeekmailSettings();
 
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+	// Notifications only appears once push is actually usable (same
+	// condition the section itself was already gated on) - no point
+	// offering a tab that'd just be empty.
+	const tabs: { key: TabKey; label: string }[] = [
+		{ key: 'account', label: 'Account' },
+		{ key: 'meetup', label: 'Meetup' },
+		...(pushSupported
+			? [{ key: 'notifications' as const, label: 'Notifications' }]
+			: []),
+		{ key: 'general', label: 'General' },
+	];
+	const [tab, setTab] = useState<TabKey>('account');
 
 	// Collapsed by default - two full-size templates plus the day picker
 	// make this by far the tallest section on the page, so it shouldn't
@@ -223,176 +241,479 @@ export const SettingsPage = () => {
 		>
 			<Title title="Settings" left={<BackButton />} />
 
-			{fairs && fairs.length > 1 && (
-				<Stack gap={1.5} sx={sectionSx}>
-					<Typography variant="subtitle2" color="text.secondary">
-						Fair
-					</Typography>
-					<TextField
-						select
-						value={currentFairId ?? ''}
-						onChange={(evt) => handleFairChange(+evt.target.value)}
-						disabled={switchingFair}
-						fullWidth
-						label="Active fair"
-						variant="standard"
-					>
-						{fairs.map((fair) => (
-							<MenuItem key={fair.id} value={fair.id}>
-								{fair.name}
-							</MenuItem>
-						))}
-					</TextField>
-				</Stack>
-			)}
+			<Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+				<Tabs
+					value={tab}
+					onChange={(_, value) => setTab(value)}
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
+				>
+					{tabs.map((t) => (
+						<Tab key={t.key} value={t.key} label={t.label} />
+					))}
+				</Tabs>
+			</Box>
 
-			<Stack gap={1.5} sx={sectionSx}>
-				<Typography variant="subtitle2" color="text.secondary">
-					BGG Username
-				</Typography>
-				{editingUsername ? (
-					<form onSubmit={save} style={{ width: '100%' }}>
-						<Stack gap={2} alignItems="start">
+			{tab === 'account' && (
+				<>
+					{fairs && fairs.length > 1 && (
+						<Stack gap={1.5} sx={sectionSx}>
+							<Typography
+								variant="subtitle2"
+								color="text.secondary"
+							>
+								Fair
+							</Typography>
 							<TextField
-								name="username"
-								value={editUsername}
+								select
+								value={currentFairId ?? ''}
 								onChange={(evt) =>
-									setEditUsername(evt.target.value)
+									handleFairChange(+evt.target.value)
 								}
-								autoFocus
+								disabled={switchingFair}
 								fullWidth
-								label="BGG username"
+								label="Active fair"
 								variant="standard"
-							/>
-							<Stack gap={2} direction="row">
-								<Button variant="contained" type="submit">
-									Save
-								</Button>
-								{bggUsername && (
-									<Button type="button" onClick={cancel}>
-										Cancel
+							>
+								{fairs.map((fair) => (
+									<MenuItem key={fair.id} value={fair.id}>
+										{fair.name}
+									</MenuItem>
+								))}
+							</TextField>
+						</Stack>
+					)}
+
+					<Stack gap={1.5} sx={sectionSx}>
+						<Typography variant="subtitle2" color="text.secondary">
+							BGG Username
+						</Typography>
+						{editingUsername ? (
+							<form onSubmit={save} style={{ width: '100%' }}>
+								<Stack gap={2} alignItems="start">
+									<TextField
+										name="username"
+										value={editUsername}
+										onChange={(evt) =>
+											setEditUsername(evt.target.value)
+										}
+										autoFocus
+										fullWidth
+										label="BGG username"
+										variant="standard"
+									/>
+									<Stack gap={2} direction="row">
+										<Button
+											variant="contained"
+											type="submit"
+										>
+											Save
+										</Button>
+										{bggUsername && (
+											<Button
+												type="button"
+												onClick={cancel}
+											>
+												Cancel
+											</Button>
+										)}
+									</Stack>
+								</Stack>
+							</form>
+						) : (
+							<Stack
+								direction="row"
+								alignItems="center"
+								gap={1}
+								width="100%"
+							>
+								<Typography flexGrow={1}>
+									{bggUsername}
+								</Typography>
+								<IconButton
+									size="small"
+									aria-label="Edit BGG username"
+									onClick={() => setEditingUsername(true)}
+								>
+									<EditIcon fontSize="small" />
+								</IconButton>
+							</Stack>
+						)}
+						{!editingUsername && bggUsername && (
+							<Stack gap={1} alignItems="start" width="100%">
+								{verification?.confirmed ? (
+									<Chip
+										color="success"
+										size="small"
+										icon={<CheckCircleIcon />}
+										label="BGG username verified"
+									/>
+								) : verification?.exists ? (
+									<>
+										<Chip
+											color="warning"
+											size="small"
+											label="BGG username not verified"
+										/>
+										<Typography variant="body2">
+											Post this code as a reply on{' '}
+											<a
+												href="https://boardgamegeek.com/thread/3773437"
+												target="_blank"
+											>
+												this BGG thread
+											</a>{' '}
+											to prove you own this account:
+										</Typography>
+										<Stack
+											direction="row"
+											alignItems="center"
+											gap={1}
+										>
+											<Typography
+												component="code"
+												sx={{
+													fontFamily: 'monospace',
+													bgcolor: 'action.hover',
+													px: 1,
+													py: 0.5,
+													borderRadius: 1,
+												}}
+											>
+												{verification.hash}
+											</Typography>
+											<IconButton
+												size="small"
+												aria-label="Copy code"
+												onClick={() =>
+													navigator.clipboard.writeText(
+														verification.hash ?? '',
+													)
+												}
+											>
+												<ContentCopyIcon fontSize="small" />
+											</IconButton>
+										</Stack>
+										<Button
+											type="button"
+											variant="contained"
+											size="small"
+											disabled={verifying}
+											onClick={handleCheckVerification}
+										>
+											Check confirmation
+										</Button>
+									</>
+								) : (
+									<Button
+										type="button"
+										size="small"
+										disabled={verifying}
+										onClick={startVerification}
+									>
+										Verify BGG username ownership
 									</Button>
 								)}
 							</Stack>
-						</Stack>
-					</form>
-				) : (
-					<Stack
-						direction="row"
-						alignItems="center"
-						gap={1}
-						width="100%"
-					>
-						<Typography flexGrow={1}>{bggUsername}</Typography>
-						<IconButton
-							size="small"
-							aria-label="Edit BGG username"
-							onClick={() => setEditingUsername(true)}
-						>
-							<EditIcon fontSize="small" />
-						</IconButton>
+						)}
 					</Stack>
-				)}
-				{!editingUsername && bggUsername && (
-					<Stack gap={1} alignItems="start" width="100%">
-						{verification?.confirmed ? (
-							<Chip
-								color="success"
-								size="small"
-								icon={<CheckCircleIcon />}
-								label="BGG username verified"
+
+					<Stack gap={1.5} sx={sectionSx}>
+						<Typography variant="subtitle2" color="text.secondary">
+							Wishlist
+						</Typography>
+						<Typography variant="body2">
+							Import your BGG wishlist to build your wishlist
+							here.
+						</Typography>
+						<Button
+							type="button"
+							variant="contained"
+							disabled={!bggUsername}
+							component={Link}
+							to="/wishlist/import"
+						>
+							Import from BGG
+						</Button>
+					</Stack>
+				</>
+			)}
+
+			{tab === 'meetup' && (
+				<>
+					<Stack gap={1.5} sx={sectionSx}>
+						<Typography variant="subtitle2" color="text.secondary">
+							Meetup
+						</Typography>
+						<Stack
+							direction="row"
+							alignItems="center"
+							gap={1}
+							width="100%"
+						>
+							<MeetupSpotSummary
+								square={meetupSquare}
+								description={meetupDescription}
 							/>
-						) : verification?.exists ? (
+							<IconButton
+								size="small"
+								aria-label="Edit meetup location"
+								component={Link}
+								to="/settings/location"
+							>
+								<EditIcon fontSize="small" />
+							</IconButton>
+						</Stack>
+					</Stack>
+
+					<Stack gap={1.5} sx={sectionSx}>
+						<Stack
+							direction="row"
+							alignItems="center"
+							justifyContent="space-between"
+							component="button"
+							type="button"
+							onClick={() => setTemplatesOpen((open) => !open)}
+							aria-expanded={templatesOpen}
+							sx={{
+								background: 'none',
+								border: 'none',
+								padding: 0,
+								margin: 0,
+								width: '100%',
+								cursor: 'pointer',
+								textAlign: 'left',
+								font: 'inherit',
+								color: 'inherit',
+							}}
+						>
+							<Typography
+								variant="subtitle2"
+								color="text.secondary"
+							>
+								Geekmail templates
+							</Typography>
+							<ExpandMoreRoundedIcon
+								fontSize="small"
+								sx={{
+									color: 'text.secondary',
+									transform: templatesOpen
+										? 'rotate(180deg)'
+										: 'none',
+									transition: 'transform 0.15s',
+								}}
+							/>
+						</Stack>
+
+						{templatesOpen && (
 							<>
-								<Chip
-									color="warning"
-									size="small"
-									label="BGG username not verified"
-								/>
 								<Typography variant="body2">
-									Post this code as a reply on{' '}
-									<a
-										href="https://boardgamegeek.com/thread/3773437"
-										target="_blank"
-									>
-										this BGG thread
-									</a>{' '}
-									to prove you own this account:
+									Used to pre-fill a BGG geekmail when you tap
+									"Send message" on a meetup. Different
+									wording for people buying from you vs.
+									people you're buying from.
 								</Typography>
-								<Stack
-									direction="row"
-									alignItems="center"
-									gap={1}
-								>
-									<Typography
-										component="code"
-										sx={{
-											fontFamily: 'monospace',
-											bgcolor: 'action.hover',
-											px: 1,
-											py: 0.5,
-											borderRadius: 1,
-										}}
-									>
-										{verification.hash}
+
+								<Stack gap={0.5}>
+									<Typography variant="body2">
+										Preferred trade day(s)
 									</Typography>
-									<IconButton
+									<Stack
+										direction="row"
+										gap={0.75}
+										flexWrap="wrap"
+									>
+										{DAY_ORDER.map((day) => {
+											const selected =
+												draftTradeDays.includes(day);
+											return (
+												<Chip
+													key={day}
+													label={DAY_LABELS[
+														day
+													].slice(0, 3)}
+													clickable
+													size="small"
+													color={
+														selected
+															? 'primary'
+															: 'default'
+													}
+													variant={
+														selected
+															? 'filled'
+															: 'outlined'
+													}
+													onClick={() =>
+														setDraftTradeDays(
+															(days) =>
+																selected
+																	? days.filter(
+																			(
+																				d,
+																			) =>
+																				d !==
+																				day,
+																		)
+																	: [
+																			...days,
+																			day,
+																		],
+														)
+													}
+												/>
+											);
+										})}
+									</Stack>
+								</Stack>
+
+								<Stack gap={0.5}>
+									<Typography
+										variant="body2"
+										color="text.secondary"
+									>
+										Tokens
+									</Typography>
+									{[
+										{
+											token: '[game]',
+											desc: 'the game(s) in this meetup',
+										},
+										{
+											token: '[amount]',
+											desc: 'total price',
+										},
+										{
+											token: '[day]',
+											desc: 'your preferred day(s) above, e.g. "Thursday or Friday"',
+										},
+										{
+											token: '[location]',
+											desc: "the meetup's location",
+										},
+										{
+											token: '[name]',
+											desc: 'your own name',
+										},
+									].map(({ token, desc }) => (
+										<Stack
+											key={token}
+											direction="row"
+											gap={1}
+											alignItems="baseline"
+										>
+											<Typography
+												component="code"
+												variant="body2"
+												sx={{
+													fontFamily: 'monospace',
+													bgcolor: 'action.hover',
+													px: 0.75,
+													borderRadius: 1,
+													flexShrink: 0,
+													minWidth: 76,
+												}}
+											>
+												{token}
+											</Typography>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+											>
+												{desc}
+											</Typography>
+										</Stack>
+									))}
+								</Stack>
+
+								<Stack gap={0.5}>
+									<Typography variant="body2">
+										Template for sellers
+										<Typography
+											component="span"
+											variant="body2"
+											color="text.secondary"
+										>
+											{' '}
+											- sent to people buying from you.
+											Also has{' '}
+											<Typography
+												component="code"
+												variant="body2"
+												sx={{ fontFamily: 'monospace' }}
+											>
+												[buyer]
+											</Typography>
+											.
+										</Typography>
+									</Typography>
+									<TextField
+										multiline
+										minRows={6}
+										fullWidth
 										size="small"
-										aria-label="Copy code"
-										onClick={() =>
-											navigator.clipboard.writeText(
-												verification.hash ?? '',
+										value={draftSellerTemplate}
+										onChange={(evt) =>
+											setDraftSellerTemplate(
+												evt.target.value,
 											)
 										}
-									>
-										<ContentCopyIcon fontSize="small" />
-									</IconButton>
+									/>
 								</Stack>
+
+								<Stack gap={0.5}>
+									<Typography variant="body2">
+										Template for buyers
+										<Typography
+											component="span"
+											variant="body2"
+											color="text.secondary"
+										>
+											{' '}
+											- sent to people you're buying from.
+											Also has{' '}
+											<Typography
+												component="code"
+												variant="body2"
+												sx={{ fontFamily: 'monospace' }}
+											>
+												[seller]
+											</Typography>
+											.
+										</Typography>
+									</Typography>
+									<TextField
+										multiline
+										minRows={5}
+										fullWidth
+										size="small"
+										value={draftBuyerTemplate}
+										onChange={(evt) =>
+											setDraftBuyerTemplate(
+												evt.target.value,
+											)
+										}
+									/>
+								</Stack>
+
 								<Button
 									type="button"
 									variant="contained"
 									size="small"
-									disabled={verifying}
-									onClick={handleCheckVerification}
+									disabled={geekmailSaving}
+									onClick={saveGeekmailSettings}
+									sx={{ alignSelf: 'start' }}
 								>
-									Check confirmation
+									Save
 								</Button>
 							</>
-						) : (
-							<Button
-								type="button"
-								size="small"
-								disabled={verifying}
-								onClick={startVerification}
-							>
-								Verify BGG username ownership
-							</Button>
 						)}
 					</Stack>
-				)}
-			</Stack>
+				</>
+			)}
 
-			<Stack gap={1.5} sx={sectionSx}>
-				<Typography variant="subtitle2" color="text.secondary">
-					Meetup
-				</Typography>
-				<Stack direction="row" alignItems="center" gap={1} width="100%">
-					<MeetupSpotSummary
-						square={meetupSquare}
-						description={meetupDescription}
-					/>
-					<IconButton
-						size="small"
-						aria-label="Edit meetup location"
-						component={Link}
-						to="/settings/location"
-					>
-						<EditIcon fontSize="small" />
-					</IconButton>
-				</Stack>
-			</Stack>
-
-			{pushSupported && (
+			{tab === 'notifications' && pushSupported && (
 				<Stack gap={1.5} sx={sectionSx}>
 					<Typography variant="subtitle2" color="text.secondary">
 						Notifications
@@ -536,250 +857,24 @@ export const SettingsPage = () => {
 				</Stack>
 			)}
 
-			<Stack gap={1.5} sx={sectionSx}>
-				<Typography variant="subtitle2" color="text.secondary">
-					Wishlist
-				</Typography>
-				<Typography variant="body2">
-					Import your BGG wishlist to build your wishlist here.
-				</Typography>
-				<Button
-					type="button"
-					variant="contained"
-					disabled={!bggUsername}
-					component={Link}
-					to="/wishlist/import"
-				>
-					Import from BGG
-				</Button>
-			</Stack>
-
-			<Stack gap={1.5} sx={sectionSx}>
-				<Stack
-					direction="row"
-					alignItems="center"
-					justifyContent="space-between"
-					component="button"
-					type="button"
-					onClick={() => setTemplatesOpen((open) => !open)}
-					aria-expanded={templatesOpen}
-					sx={{
-						background: 'none',
-						border: 'none',
-						padding: 0,
-						margin: 0,
-						width: '100%',
-						cursor: 'pointer',
-						textAlign: 'left',
-						font: 'inherit',
-						color: 'inherit',
-					}}
-				>
+			{tab === 'general' && (
+				<Stack gap={1.5} sx={sectionSx}>
 					<Typography variant="subtitle2" color="text.secondary">
-						Geekmail templates
+						Miscellaneous
 					</Typography>
-					<ExpandMoreRoundedIcon
-						fontSize="small"
-						sx={{
-							color: 'text.secondary',
-							transform: templatesOpen
-								? 'rotate(180deg)'
-								: 'none',
-							transition: 'transform 0.15s',
-						}}
+					<FormControlLabel
+						control={
+							<Checkbox
+								checked={rememberSorting}
+								onChange={(evt) =>
+									setRememberSorting(evt.target.checked)
+								}
+							/>
+						}
+						label="Remember sorting order"
 					/>
 				</Stack>
-
-				{templatesOpen && (
-					<>
-						<Typography variant="body2">
-							Used to pre-fill a BGG geekmail when you tap "Send
-							message" on a meetup. Different wording for
-							people buying from you vs. people you're buying
-							from.
-						</Typography>
-
-						<Stack gap={0.5}>
-							<Typography variant="body2">
-								Preferred trade day(s)
-							</Typography>
-							<Stack direction="row" gap={0.75} flexWrap="wrap">
-								{DAY_ORDER.map((day) => {
-									const selected =
-										draftTradeDays.includes(day);
-									return (
-										<Chip
-											key={day}
-											label={DAY_LABELS[day].slice(0, 3)}
-											clickable
-											size="small"
-											color={
-												selected ? 'primary' : 'default'
-											}
-											variant={
-												selected ? 'filled' : 'outlined'
-											}
-											onClick={() =>
-												setDraftTradeDays((days) =>
-													selected
-														? days.filter(
-																(d) =>
-																	d !== day,
-															)
-														: [...days, day],
-												)
-											}
-										/>
-									);
-								})}
-							</Stack>
-						</Stack>
-
-						<Stack gap={0.5}>
-							<Typography variant="body2" color="text.secondary">
-								Tokens
-							</Typography>
-							{[
-								{
-									token: '[game]',
-									desc: 'the game(s) in this meetup',
-								},
-								{ token: '[amount]', desc: 'total price' },
-								{
-									token: '[day]',
-									desc: 'your preferred day(s) above, e.g. "Thursday or Friday"',
-								},
-								{
-									token: '[location]',
-									desc: "the meetup's location",
-								},
-								{ token: '[name]', desc: 'your own name' },
-							].map(({ token, desc }) => (
-								<Stack
-									key={token}
-									direction="row"
-									gap={1}
-									alignItems="baseline"
-								>
-									<Typography
-										component="code"
-										variant="body2"
-										sx={{
-											fontFamily: 'monospace',
-											bgcolor: 'action.hover',
-											px: 0.75,
-											borderRadius: 1,
-											flexShrink: 0,
-											minWidth: 76,
-										}}
-									>
-										{token}
-									</Typography>
-									<Typography
-										variant="body2"
-										color="text.secondary"
-									>
-										{desc}
-									</Typography>
-								</Stack>
-							))}
-						</Stack>
-
-						<Stack gap={0.5}>
-							<Typography variant="body2">
-								Template for sellers
-								<Typography
-									component="span"
-									variant="body2"
-									color="text.secondary"
-								>
-									{' '}
-									- sent to people buying from you. Also has{' '}
-									<Typography
-										component="code"
-										variant="body2"
-										sx={{ fontFamily: 'monospace' }}
-									>
-										[buyer]
-									</Typography>
-									.
-								</Typography>
-							</Typography>
-							<TextField
-								multiline
-								minRows={6}
-								fullWidth
-								size="small"
-								value={draftSellerTemplate}
-								onChange={(evt) =>
-									setDraftSellerTemplate(evt.target.value)
-								}
-							/>
-						</Stack>
-
-						<Stack gap={0.5}>
-							<Typography variant="body2">
-								Template for buyers
-								<Typography
-									component="span"
-									variant="body2"
-									color="text.secondary"
-								>
-									{' '}
-									- sent to people you're buying from. Also
-									has{' '}
-									<Typography
-										component="code"
-										variant="body2"
-										sx={{ fontFamily: 'monospace' }}
-									>
-										[seller]
-									</Typography>
-									.
-								</Typography>
-							</Typography>
-							<TextField
-								multiline
-								minRows={5}
-								fullWidth
-								size="small"
-								value={draftBuyerTemplate}
-								onChange={(evt) =>
-									setDraftBuyerTemplate(evt.target.value)
-								}
-							/>
-						</Stack>
-
-						<Button
-							type="button"
-							variant="contained"
-							size="small"
-							disabled={geekmailSaving}
-							onClick={saveGeekmailSettings}
-							sx={{ alignSelf: 'start' }}
-						>
-							Save
-						</Button>
-					</>
-				)}
-			</Stack>
-
-			<Stack gap={1.5} sx={sectionSx}>
-				<Typography variant="subtitle2" color="text.secondary">
-					Miscellaneous
-				</Typography>
-				<FormControlLabel
-					control={
-						<Checkbox
-							checked={rememberSorting}
-							onChange={(evt) =>
-								setRememberSorting(evt.target.checked)
-							}
-						/>
-					}
-					label="Remember sorting order"
-				/>
-			</Stack>
+			)}
 
 			<Snackbar
 				open={!!toastMessage}

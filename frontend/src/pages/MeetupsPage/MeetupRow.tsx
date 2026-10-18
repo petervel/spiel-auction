@@ -218,10 +218,11 @@ export const MeetupRow = ({
 					</button>
 				</div>
 
+				{expanded && <hr className={css.rowDivider} />}
+
 				{expanded && !isEditing && (
 					<MeetupRowDetails
 						entry={entry}
-						onChange={onChange}
 						onEdit={() => setIsEditing(true)}
 						onSendMessage={() => setIsMessaging(true)}
 					/>

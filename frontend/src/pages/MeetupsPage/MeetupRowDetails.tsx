@@ -1,30 +1,36 @@
 import {
-	CheckRounded,
 	EditRounded,
 	InfoOutlined,
 	MailOutlineRounded,
-	NotificationsOffRounded,
 	NotificationsRounded,
+	PaidRounded,
 } from '@mui/icons-material';
-import { Button, IconButton, Stack, Typography } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import classNames from 'classnames';
 import { ReactNode } from 'react';
-import { MeetupChanges, MeetupEntry } from '../../hooks/useMeetups';
+import { MeetupEntry } from '../../hooks/useMeetups';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { DAY_LABELS, HALL_1A } from './meetupDisplay';
 import { MeetupInfoTooltip } from './MeetupInfoTooltip';
 import css from './MeetupsPage.module.css';
 
-// A positive per-side status (Geekmail sent, Prepaid) - a decorative tick,
-// not an actual checkbox (that's edit mode's job), just so it reads as
-// "done" at a glance rather than having to parse the words.
-const StatusLine = ({ children }: { children: ReactNode }) => (
-	<Stack direction="row" gap={0.5} alignItems="center">
-		<CheckRounded fontSize="small" className={css.statusLabel} />
-		<Typography variant="body2" className={css.statusLabel}>
-			{children}
-		</Typography>
-	</Stack>
+// A positive per-side status (Geekmail sent, Prepaid, Reminder on) - only
+// shown at all once true (no "not sent yet"/"not prepaid" clutter), as a
+// small role-colored pill. Read-only here - toggling any of these three is
+// edit mode's job, same for all of them (see MeetupRowEditForm). Icon
+// sizing lives here once, in css.statusChip's own `svg` rule, rather than
+// repeated per call site.
+const StatusChip = ({
+	icon,
+	children,
+}: {
+	icon: ReactNode;
+	children: ReactNode;
+}) => (
+	<span className={classNames(css.statusChip, css.statusLabel)}>
+		{icon}
+		{children}
+	</span>
 );
 
 // The read-only detail a row expands to by default - editing is a separate
@@ -32,12 +38,10 @@ const StatusLine = ({ children }: { children: ReactNode }) => (
 // also drops you into a form.
 export const MeetupRowDetails = ({
 	entry,
-	onChange,
 	onEdit,
 	onSendMessage,
 }: {
 	entry: MeetupEntry;
-	onChange: (changes: MeetupChanges) => void;
 	onEdit: () => void;
 	onSendMessage: () => void;
 }) => {
@@ -71,130 +75,113 @@ export const MeetupRowDetails = ({
 
 	return (
 		<Stack gap="1rem" className={css.details}>
-			<Stack gap={0.75}>
-				<Typography variant="subtitle2" color="text.secondary">
-					Shared information
+			{/* Additive, not a replacement - a pure custom meetup (no items)
+			already shows its description as the "game name" in the
+			collapsed row, so it's only repeated here when there's also a
+			real item. */}
+			{entry.items.length > 0 && entry.meetup.customDescription && (
+				<Typography variant="body2" color="text.secondary">
+					{entry.meetup.customDescription}
 				</Typography>
-				{/* Additive, not a replacement - a pure custom meetup (no
-				items) already shows its description as the "game name" in
-				the collapsed row, so it's only repeated here when there's
-				also a real item. */}
-				{entry.items.length > 0 && entry.meetup.customDescription && (
-					<Typography variant="body2" color="text.secondary">
-						{entry.meetup.customDescription}
-					</Typography>
-				)}
-				{entry.items.length > 1 && (
-					<Stack gap={0.25}>
-						{entry.items.map((item) => (
-							<Stack
-								key={item.id}
-								direction="row"
-								gap={1}
-								alignItems="center"
-							>
-								<span
-									className={classNames(css.price, css.itemPrice)}
-								>
-									€{item.currentBid ?? 0}
-								</span>
-								<Typography variant="body2" color="text.secondary">
-									{item.objectName}
-								</Typography>
-							</Stack>
-						))}
-					</Stack>
-				)}
-				<Stack gap={0.5}>
-					<Stack
-						direction="row"
-						gap={1}
-						justifyContent="space-between"
-						alignItems="center"
-					>
-						<Typography
-							variant="body2"
-							sx={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: 0.75,
-								flexWrap: 'wrap',
-							}}
+			)}
+			{entry.items.length > 1 && (
+				<Stack gap={0.25}>
+					{entry.items.map((item) => (
+						<Stack
+							key={item.id}
+							direction="row"
+							gap={1}
+							alignItems="center"
 						>
-							<span>
-								{entry.meetup.day
-									? DAY_LABELS[entry.meetup.day]
-									: 'Day not set'}
-								{showExpandedTime && ` · ${entry.meetup.time}`}
-								{' · '}
-								{entry.meetup.location === HALL_1A
-									? HALL_1A
-									: entry.meetup.location}
+							<span className={classNames(css.price, css.itemPrice)}>
+								€{item.currentBid ?? 0}
 							</span>
-							{entry.meetup.location === HALL_1A &&
-								entry.counterpartLocation?.square && (
-									<span className={css.coordinateChip}>
-										{entry.counterpartLocation.square}
-									</span>
-								)}
-						</Typography>
-						<MeetupInfoTooltip
-							label={lastUpdatedLabel}
-							sx={{ flexShrink: 0 }}
-						/>
-					</Stack>
-					{entry.meetup.location === HALL_1A &&
-						entry.counterpartLocation?.description && (
-							<Typography
-								variant="body2"
-								className={css.counterpartInfo}
-							>
-								<InfoOutlined
-									fontSize="small"
-									className={css.counterpartInfoIcon}
-								/>
-								{entry.counterpartLocation.description}
+							<Typography variant="body2" color="text.secondary">
+								{item.objectName}
 							</Typography>
-						)}
+						</Stack>
+					))}
 				</Stack>
-			</Stack>
-			<Stack gap={0.75}>
-				<Typography variant="subtitle2" color="text.secondary">
-					Private/personal information
-				</Typography>
-				{entry.meetup.messageSent ? (
-					<StatusLine>Geekmail sent</StatusLine>
-				) : (
-					<Typography variant="body2" color="text.secondary">
-						Geekmail not sent yet
-					</Typography>
-				)}
-				{entry.meetup.prepaid && <StatusLine>Prepaid</StatusLine>}
-				<IconButton
-					aria-label={
-						reminderActive ? 'Mute reminder' : 'Unmute reminder'
-					}
-					onClick={() => onChange({ notifyReminder: !reminderActive })}
-					sx={{ alignSelf: 'start', p: 1 }}
-					className={reminderActive ? css.statusLabel : css.statusLabelInactive}
+			)}
+			<Stack gap={0.5}>
+				<Stack
+					direction="row"
+					gap={1}
+					justifyContent="space-between"
+					alignItems="center"
 				>
-					{reminderActive ? (
-						<NotificationsRounded fontSize="small" />
-					) : (
-						<NotificationsOffRounded fontSize="small" />
-					)}
-				</IconButton>
-				{entry.meetup.myNotes && (
-					<fieldset className={css.myNotes}>
-						<legend className={css.myNotesLabel}>
-							My notes
-						</legend>
-						<Typography variant="body2" color="text.secondary">
-							{entry.meetup.myNotes}
+					<Typography
+						variant="body1"
+						fontWeight={600}
+						sx={{
+							display: 'flex',
+							alignItems: 'center',
+							gap: 0.75,
+							flexWrap: 'wrap',
+						}}
+					>
+						<span>
+							{entry.meetup.day
+								? DAY_LABELS[entry.meetup.day]
+								: 'Day not set'}
+							{showExpandedTime && ` · ${entry.meetup.time}`}
+							{' · '}
+							{entry.meetup.location === HALL_1A
+								? HALL_1A
+								: entry.meetup.location}
+						</span>
+						{entry.meetup.location === HALL_1A &&
+							entry.counterpartLocation?.square && (
+								<span className={css.coordinateChip}>
+									{entry.counterpartLocation.square}
+								</span>
+							)}
+					</Typography>
+					<MeetupInfoTooltip
+						label={lastUpdatedLabel}
+						sx={{ flexShrink: 0 }}
+					/>
+				</Stack>
+				{entry.meetup.location === HALL_1A &&
+					entry.counterpartLocation?.description && (
+						<Typography variant="body2" className={css.counterpartInfo}>
+							<InfoOutlined
+								fontSize="small"
+								className={css.counterpartInfoIcon}
+							/>
+							{entry.counterpartLocation.description}
 						</Typography>
-					</fieldset>
-				)}
+					)}
 			</Stack>
+			{(entry.meetup.messageSent ||
+				entry.meetup.prepaid ||
+				reminderActive) && (
+				<Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+					{entry.meetup.messageSent && (
+						<StatusChip icon={<MailOutlineRounded />}>
+							Geekmail sent
+						</StatusChip>
+					)}
+					{entry.meetup.prepaid && (
+						<StatusChip icon={<PaidRounded />}>Prepaid</StatusChip>
+					)}
+					{/* Read-only here, same as the other two - toggling it is
+					edit mode's job (see MeetupRowEditForm). */}
+					{reminderActive && (
+						<StatusChip icon={<NotificationsRounded />}>
+							Reminder on
+						</StatusChip>
+					)}
+				</Stack>
+			)}
+			{entry.meetup.myNotes && (
+				<fieldset className={css.myNotes}>
+					<legend className={css.myNotesLabel}>My notes</legend>
+					<Typography variant="body2" color="text.secondary">
+						{entry.meetup.myNotes}
+					</Typography>
+				</fieldset>
+			)}
 			<Stack
 				direction="row"
 				gap={1}

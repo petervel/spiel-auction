@@ -1,12 +1,13 @@
 import {
 	DeleteRounded,
+	InfoOutlined,
+	MailOutlineRounded,
 	NotificationsOffRounded,
 	NotificationsRounded,
+	PaidRounded,
 } from '@mui/icons-material';
 import {
 	Button,
-	Checkbox,
-	FormControlLabel,
 	IconButton,
 	MenuItem,
 	Stack,
@@ -176,151 +177,140 @@ export const MeetupRowEditForm = ({
 		: 'Not edited yet';
 
 	return (
-		<Stack gap="1rem" className={css.details}>
-			<Stack gap={0.75}>
-				<Typography variant="subtitle2" color="text.secondary">
-					Shared information
-				</Typography>
-				{locationMode === 'HALL_1A' &&
-					(entry.counterpartLocation?.square ||
-						entry.counterpartLocation?.description) && (
-						<Stack gap={0.5}>
-							{entry.counterpartLocation?.square && (
-								<Typography variant="body2" color="text.secondary">
-									Their spot: {entry.counterpartLocation.square}
-								</Typography>
-							)}
-							{entry.counterpartLocation?.description && (
-								<Typography variant="body2" color="text.secondary">
-									Info: {entry.counterpartLocation.description}
-								</Typography>
-							)}
-						</Stack>
-					)}
-				{isCustom && (
-					<TextField
-						label="Description"
-						size="small"
-						multiline
-						minRows={2}
-						value={draftDescription}
-						onChange={(evt) => setDraftDescription(evt.target.value)}
-						error={!draftDescription.trim()}
-						helperText={
-							!draftDescription.trim() ? 'Required' : undefined
-						}
-						fullWidth
-					/>
-				)}
-				{isPureCustom && (
-					<TextField
-						label="Trade partner (BGG username)"
-						size="small"
-						value={draftCounterpart}
-						onChange={(evt) => setDraftCounterpart(evt.target.value)}
-						error={!draftCounterpart.trim()}
-						helperText={
-							!draftCounterpart.trim() ? 'Required' : undefined
-						}
-						fullWidth
-					/>
-				)}
-				<Stack direction="row" gap={2} flexWrap="wrap" alignItems="center">
-					<TextField
-						select
-						label="Day"
-						size="small"
-						value={draftDay}
-						onChange={(evt) =>
-							changeDraftDay(evt.target.value as MeetupDay | '')
-						}
-						sx={{ flex: '1 1 150px', minWidth: 150 }}
-					>
-						{DAY_OPTIONS.map((option) => (
-							<MenuItem key={option.value} value={option.value}>
-								{option.label}
-							</MenuItem>
-						))}
-					</TextField>
-					<TextField
-						label="Time"
-						size="small"
-						value={draftTime}
-						onChange={(evt) => setDraftTime(evt.target.value)}
-						sx={{ flex: '1 1 110px', minWidth: 110 }}
-					/>
-					<TextField
-						select
-						label="Location"
-						size="small"
-						value={locationMode}
-						onChange={(evt) =>
-							changeLocationMode(evt.target.value as LocationMode)
-						}
-						sx={{ flex: '1 1 150px', minWidth: 150 }}
-					>
-						<MenuItem value="HALL_1A">{HALL_1A}</MenuItem>
-						<MenuItem value="OTHER">Custom</MenuItem>
-					</TextField>
-					{locationMode === 'OTHER' && (
-						<TextField
-							label="Where will you meet?"
-							size="small"
-							value={draftLocation}
-							onChange={(evt) => setDraftLocation(evt.target.value)}
-							sx={{ flex: '2 1 240px', minWidth: 240 }}
+		<Stack gap="1.25rem" className={css.details}>
+			{locationMode === 'HALL_1A' &&
+				(entry.counterpartLocation?.square ||
+					entry.counterpartLocation?.description) && (
+					<Typography variant="body2" className={css.counterpartInfo}>
+						<InfoOutlined
+							fontSize="small"
+							className={css.counterpartInfoIcon}
 						/>
-					)}
-				</Stack>
-			</Stack>
-			<Stack gap={0.75}>
-				<Typography variant="subtitle2" color="text.secondary">
-					Private/personal information
-				</Typography>
+						{[
+							entry.counterpartLocation?.description,
+							entry.counterpartLocation?.square &&
+								`their spot: ${entry.counterpartLocation.square}`,
+						]
+							.filter(Boolean)
+							.join(' · ')}
+					</Typography>
+				)}
+			{isCustom && (
 				<TextField
-					label="My notes"
-					placeholder="Private - only you can see this"
+					label="Description"
 					size="small"
 					multiline
 					minRows={2}
-					value={draftNotes}
-					onChange={(evt) => setDraftNotes(evt.target.value)}
+					value={draftDescription}
+					onChange={(evt) => setDraftDescription(evt.target.value)}
+					error={!draftDescription.trim()}
+					helperText={!draftDescription.trim() ? 'Required' : undefined}
 					fullWidth
 				/>
-				<Stack gap={0}>
-					<FormControlLabel
-						control={
-							<Checkbox
-								size="small"
-								checked={draftMessageSent}
-								onChange={(evt) =>
-									setDraftMessageSent(evt.target.checked)
-								}
-							/>
-						}
-						label="Geekmail sent"
+			)}
+			{isPureCustom && (
+				<TextField
+					label="Trade partner (BGG username)"
+					size="small"
+					value={draftCounterpart}
+					onChange={(evt) => setDraftCounterpart(evt.target.value)}
+					error={!draftCounterpart.trim()}
+					helperText={
+						!draftCounterpart.trim() ? 'Required' : undefined
+					}
+					fullWidth
+				/>
+			)}
+			<Stack direction="row" gap={2} flexWrap="wrap" alignItems="center">
+				<TextField
+					select
+					label="Day"
+					size="small"
+					value={draftDay}
+					onChange={(evt) =>
+						changeDraftDay(evt.target.value as MeetupDay | '')
+					}
+					sx={{ flex: '1 1 150px', minWidth: 150 }}
+				>
+					{DAY_OPTIONS.map((option) => (
+						<MenuItem key={option.value} value={option.value}>
+							{option.label}
+						</MenuItem>
+					))}
+				</TextField>
+				<TextField
+					label="Time"
+					size="small"
+					value={draftTime}
+					onChange={(evt) => setDraftTime(evt.target.value)}
+					sx={{ flex: '1 1 110px', minWidth: 110 }}
+				/>
+				<TextField
+					select
+					label="Location"
+					size="small"
+					value={locationMode}
+					onChange={(evt) =>
+						changeLocationMode(evt.target.value as LocationMode)
+					}
+					sx={{ flex: '1 1 150px', minWidth: 150 }}
+				>
+					<MenuItem value="HALL_1A">{HALL_1A}</MenuItem>
+					<MenuItem value="OTHER">Custom</MenuItem>
+				</TextField>
+				{locationMode === 'OTHER' && (
+					<TextField
+						label="Where will you meet?"
+						size="small"
+						value={draftLocation}
+						onChange={(evt) => setDraftLocation(evt.target.value)}
+						sx={{ flex: '2 1 240px', minWidth: 240 }}
 					/>
-					<FormControlLabel
-						control={
-							<Checkbox
-								size="small"
-								checked={draftPrepaid}
-								onChange={(evt) =>
-									setDraftPrepaid(evt.target.checked)
-								}
-							/>
-						}
-						label={
-							entry.role === 'buying'
-								? "I've already paid"
-								: 'Money received'
-						}
-					/>
-				</Stack>
+				)}
+			</Stack>
+			<TextField
+				label="My notes"
+				placeholder="Private - only you can see this"
+				size="small"
+				multiline
+				minRows={2}
+				value={draftNotes}
+				onChange={(evt) => setDraftNotes(evt.target.value)}
+				fullWidth
+			/>
+			{/* One consistent icon+label toggle per field, instead of two
+			MUI checkboxes plus a differently-styled Reminder button - same
+			shape, same click target, full labels since editing is exactly
+			when you want to be sure what you're setting. */}
+			<Stack direction="row" gap={1}>
 				<button
 					type="button"
 					className={classNames(
-						css.reminderToggleButton,
+						css.editToggle,
+						draftMessageSent ? css.statusLabel : css.statusLabelInactive,
+					)}
+					onClick={() => setDraftMessageSent((prev) => !prev)}
+					aria-pressed={draftMessageSent}
+				>
+					<MailOutlineRounded fontSize="small" />
+					Geekmail sent
+				</button>
+				<button
+					type="button"
+					className={classNames(
+						css.editToggle,
+						draftPrepaid ? css.statusLabel : css.statusLabelInactive,
+					)}
+					onClick={() => setDraftPrepaid((prev) => !prev)}
+					aria-pressed={draftPrepaid}
+				>
+					<PaidRounded fontSize="small" />
+					{entry.role === 'buying' ? "I've paid" : 'Received'}
+				</button>
+				<button
+					type="button"
+					className={classNames(
+						css.editToggle,
 						draftNotifyReminder ? css.statusLabel : css.statusLabelInactive,
 					)}
 					onClick={() => setDraftNotifyReminder((prev) => !prev)}
@@ -331,7 +321,7 @@ export const MeetupRowEditForm = ({
 					) : (
 						<NotificationsOffRounded fontSize="small" />
 					)}
-					<Typography variant="body2">Reminder</Typography>
+					Reminder
 				</button>
 			</Stack>
 			{renameError && (

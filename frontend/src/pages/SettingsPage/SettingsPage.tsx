@@ -171,7 +171,14 @@ export const SettingsPage = () => {
 	// Drafted locally and only sent on Save (not per keystroke/toggle) -
 	// these are free text plus a multi-select, not a single flip like the
 	// other settings on this page, so autosaving every change would mean a
-	// request per keystroke.
+	// request per keystroke. Seeded here from whatever geekmailSettings
+	// happens to be on first render, which is usually the empty-defaults
+	// fallback (user is still loading) - the effect below re-seeds once
+	// the real value actually arrives, same pattern as editUsername further
+	// down. Without it, these three looked like they never saved: the
+	// draft locked onto the pre-load empty/default values forever, and
+	// hitting Save then wrote those empty/default values right back over
+	// whatever was actually persisted.
 	const [draftTradeDays, setDraftTradeDays] = useState<MeetupDay[]>(
 		geekmailSettings.preferredTradeDays,
 	);
@@ -181,6 +188,18 @@ export const SettingsPage = () => {
 	const [draftBuyerTemplate, setDraftBuyerTemplate] = useState(
 		geekmailSettings.buyerMessageTemplate,
 	);
+	useEffect(() => {
+		if (!geekmailSaving) {
+			setDraftTradeDays(user?.preferredTradeDays ?? []);
+			setDraftSellerTemplate(geekmailSettings.sellerMessageTemplate);
+			setDraftBuyerTemplate(geekmailSettings.buyerMessageTemplate);
+		}
+	}, [
+		user?.preferredTradeDays,
+		geekmailSettings.sellerMessageTemplate,
+		geekmailSettings.buyerMessageTemplate,
+		geekmailSaving,
+	]);
 
 	const saveGeekmailSettings = () => {
 		setGeekmailSettings({

@@ -17,6 +17,7 @@ import { groupByDay, sortByCompletedAtDesc } from './meetupDisplay';
 import { RenameInput, RoleGroup } from './MeetupRow';
 import css from './MeetupsPage.module.css';
 import { MyMeetupSpotLink } from './MyMeetupSpotLink';
+import { OfflineBanner } from './OfflineBanner';
 import { exportMeetupsToXlsx } from './xlsxExport';
 
 export const MeetupsPage = () => {
@@ -156,6 +157,7 @@ export const MeetupsPage = () => {
 						</Button>
 					}
 				/>
+				<OfflineBanner />
 				<Stack gap={0.5}>
 					<Typography variant="subtitle2" color="text.secondary">
 						What others see about you

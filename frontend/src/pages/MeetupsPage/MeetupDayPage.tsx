@@ -27,6 +27,7 @@ import {
 import { RenameInput, RoleGroup } from './MeetupRow';
 import css from './MeetupsPage.module.css';
 import { MyMeetupSpotLink } from './MyMeetupSpotLink';
+import { OfflineBanner } from './OfflineBanner';
 
 const VALID_DAYS = new Set<string>(Object.keys(DAY_LABELS));
 
@@ -192,6 +193,7 @@ export const MeetupDayPage = () => {
 			gap={3}
 		>
 			<Title title={title} left={<BackButton to="/meetups" />} />
+			<OfflineBanner />
 			<MyMeetupSpotLink square={mySquare} description={myDescription} />
 
 			{isLoading ? (

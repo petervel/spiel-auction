@@ -41,3 +41,30 @@ describe("starting bid parsing", () => {
 		expect(item.currentBid).toBe(15);
 	});
 });
+
+describe("explicit end markers", () => {
+	// Long enough (after stripping, which here is a no-op - nothing is
+	// struck through) that the "mostly struck through" heuristic alone
+	// (stripped.length < 200) can't explain isEnded - isolates the
+	// explicit-text path from the other two isEnded triggers.
+	const longUnstruckPrefix = "A".repeat(250);
+
+	it("ends on 'auction ended' even with plenty of leftover un-struck text", () => {
+		// Used to be set here and then unconditionally overwritten a few
+		// lines later, so writing this phrase did nothing at all.
+		const item = buildItem(`${longUnstruckPrefix} Auction ended.`);
+		expect(item.isEnded).toBe(true);
+	});
+
+	it("ends on 'sold to [user=' - BGG's own @-mention markup for naming a winner", () => {
+		const item = buildItem(
+			`${longUnstruckPrefix} Sold to [user=SomeWinner]`,
+		);
+		expect(item.isEnded).toBe(true);
+	});
+
+	it("does not end on long plain text with neither marker", () => {
+		const item = buildItem(longUnstruckPrefix);
+		expect(item.isEnded).toBe(false);
+	});
+});

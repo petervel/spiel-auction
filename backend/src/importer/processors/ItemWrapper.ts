@@ -128,9 +128,17 @@ export class ItemWrapper {
 			...this.getDerivedData(source["body"], [], false, referenceYear),
 		};
 
-		if (source["body"].toLowerCase().includes("auction ended")) {
-			itemData.isEnded = true;
-		}
+		// Explicit, reliable ways to end an item regardless of the
+		// heuristics below (which can miss a listing whose leftover
+		// un-struck text is still long, or whose end date hasn't passed
+		// yet) - preserved through the unconditional reassignment further
+		// down by OR'ing it back in there, not reapplied here. "sold to
+		// [user=" is BGG's own @-mention markup, so a seller naming the
+		// winner that way is as explicit a signal as "auction ended".
+		const lowerBody = source["body"].toLowerCase();
+		const explicitlyEnded =
+			lowerBody.includes("auction ended") ||
+			lowerBody.includes("sold to [user=");
 		const commentData = ItemCommentWrapper.loadAll(
 			itemData,
 			source["comment"],
@@ -163,6 +171,7 @@ export class ItemWrapper {
 			itemData.currentBid == itemData.binPrice;
 
 		itemData.isEnded =
+			explicitlyEnded ||
 			itemData.isSold ||
 			(stripped.length < 200 &&
 				(stripped.length == 0 ||

@@ -98,13 +98,19 @@ export function removeAllBggTags(text: string): string {
 }
 
 export function removeKnownContexts(text: string): string {
-	text = text.replace(/\b(\d+)\s*sec(onds|s)?/gi, ""); // 12 seconds
-	text = text.replace(/\b(\d+)\s*days?/gi, ""); // 12 days
-	text = text.replace(/\b(\d+)\s*games?/gi, ""); // 12 games
+	// Every pattern needs a trailing \b - without one, e.g. "games?" also
+	// matches the first few letters of a longer word right after it (a
+	// real bid of "€4 Gamer Over! ..." - a game titled "Gamer Over!" -
+	// had its "4" eaten because "4 Game" matched inside "4 Gamer", same
+	// risk for "sec"/"day"/month abbreviations into any word starting
+	// the same way).
+	text = text.replace(/\b(\d+)\s*sec(onds|s)?\b/gi, ""); // 12 seconds
+	text = text.replace(/\b(\d+)\s*days?\b/gi, ""); // 12 days
+	text = text.replace(/\b(\d+)\s*games?\b/gi, ""); // 12 games
 	text = text.replace(/\b(\d+)\s*%/gi, ""); // 12%
-	text = text.replace(/\b(\d+)\.?\s*(aug|sept|oct|okt)/gi, ""); // 12 sept, 12. Okt
-	text = text.replace(/\b(\d+)-(\d+)/gi, ""); // 12-9
-	text = text.replace(/\b(\d+)(th|st|nd)/gi, ""); // 12th
+	text = text.replace(/\b(\d+)\.?\s*(aug|sept|oct|okt)\b/gi, ""); // 12 sept, 12. Okt
+	text = text.replace(/\b(\d+)-(\d+)\b/gi, ""); // 12-9
+	text = text.replace(/\b(\d+)(th|st|nd)\b/gi, ""); // 12th
 	return text;
 }
 export function parseEndDateString(

@@ -25,6 +25,10 @@ export class ItemCommentWrapper {
 		return this.dbObject.username;
 	}
 
+	public get text(): string {
+		return this.dbObject.text;
+	}
+
 	public static fromXml(
 		item: Item,
 		source: Record<string, any>,

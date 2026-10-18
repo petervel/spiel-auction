@@ -3,9 +3,22 @@ import { describe, expect, it } from "vitest";
 import { ItemWrapper } from "../processors/ItemWrapper";
 
 // Same inline-XML-through-the-real-parser approach as outbidBidders.test.ts.
-const buildItem = (body: string) => {
-	const xml = `<item id="1" objecttype="thing" subtype="boardgame" objectid="1" objectname="Test Item" username="owner" postdate="Wed, 19 Oct 2022 11:32:50 +0000" editdate="Wed, 19 Oct 2022 11:42:50 +0000" thumbs="0" imageid="1">
+const buildItem = (
+	body: string,
+	options: {
+		sold?: boolean;
+		comments?: { username: string; text: string }[];
+	} = {},
+) => {
+	const commentsXml = (options.comments ?? [])
+		.map(
+			(c) =>
+				`<comment username="${c.username}" date="Wed, 19 Oct 2022 12:00:00 +0000" postdate="Wed, 19 Oct 2022 12:00:00 +0000" editdate="Wed, 19 Oct 2022 12:00:00 +0000" thumbs="0">${c.text}</comment>`,
+		)
+		.join("\n");
+	const xml = `<item id="1" objecttype="thing" subtype="boardgame" objectid="1" objectname="Test Item" username="owner" postdate="Wed, 19 Oct 2022 11:32:50 +0000" editdate="Wed, 19 Oct 2022 11:42:50 +0000" thumbs="0"${options.sold ? ' sold="1"' : ""} imageid="1">
 	<body>${body}</body>
+	${commentsXml}
 </item>`;
 
 	const parser = new XMLParser({
@@ -65,6 +78,40 @@ describe("explicit end markers", () => {
 
 	it("does not end on long plain text with neither marker", () => {
 		const item = buildItem(longUnstruckPrefix);
+		expect(item.isEnded).toBe(false);
+	});
+
+	it("ends when the SELLER comments 'sold to [user=', not just in the body", () => {
+		const item = buildItem(longUnstruckPrefix, {
+			comments: [{ username: "owner", text: "Sold to [user=SomeWinner]" }],
+		});
+		expect(item.isEnded).toBe(true);
+	});
+
+	it("does not end when a bidder (not the seller) comments 'sold to [user='", () => {
+		// Only the seller's own word is trusted here - a bidder could write
+		// anything, including falsely claiming to have won.
+		const item = buildItem(longUnstruckPrefix, {
+			comments: [
+				{ username: "someBidder", text: "Sold to [user=SomeWinner]" },
+			],
+		});
+		expect(item.isEnded).toBe(false);
+	});
+});
+
+describe("native sold attribute", () => {
+	it("marks both isSold and isEnded, trusted over every other heuristic", () => {
+		const item = buildItem("Plain listing, no markers at all.", {
+			sold: true,
+		});
+		expect(item.isSold).toBe(true);
+		expect(item.isEnded).toBe(true);
+	});
+
+	it("leaves isSold/isEnded false without it", () => {
+		const item = buildItem("Plain listing, no markers at all.");
+		expect(item.isSold).toBe(false);
 		expect(item.isEnded).toBe(false);
 	});
 });

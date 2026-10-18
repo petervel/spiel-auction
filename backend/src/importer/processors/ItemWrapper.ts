@@ -49,6 +49,10 @@ export class ItemWrapper {
 		return this.dbObject.isEnded;
 	}
 
+	public get isSold(): boolean {
+		return this.dbObject.isSold;
+	}
+
 	public get highestBidder(): string | null {
 		return this.dbObject.highestBidder;
 	}
@@ -128,22 +132,37 @@ export class ItemWrapper {
 			...this.getDerivedData(source["body"], [], false, referenceYear),
 		};
 
-		// Explicit, reliable ways to end an item regardless of the
-		// heuristics below (which can miss a listing whose leftover
-		// un-struck text is still long, or whose end date hasn't passed
-		// yet) - preserved through the unconditional reassignment further
-		// down by OR'ing it back in there, not reapplied here. "sold to
-		// [user=" is BGG's own @-mention markup, so a seller naming the
-		// winner that way is as explicit a signal as "auction ended".
-		const lowerBody = source["body"].toLowerCase();
-		const explicitlyEnded =
-			lowerBody.includes("auction ended") ||
-			lowerBody.includes("sold to [user=");
+		// BGG's own authoritative "sold" flag (the XML item tag also carries
+		// a price/currency alongside it, not parsed here - only the flag is
+		// used), trusted over every heuristic below.
+		const xmlSold = source["@_sold"] === "1";
+
 		const commentData = ItemCommentWrapper.loadAll(
 			itemData,
 			source["comment"],
 			updateTime,
 		);
+
+		// Explicit, reliable ways to end an item regardless of the
+		// heuristics below (which can miss a listing whose leftover
+		// un-struck text is still long, or whose end date hasn't passed
+		// yet) - preserved through the unconditional reassignment further
+		// down by OR'ing it back in there, not reapplied here. "sold to
+		// [user=" is BGG's own @-mention markup, so naming the winner that
+		// way - in the listing body, or in the seller's own comment on it
+		// (never a bidder's, who could write anything) - is as explicit a
+		// signal as "auction ended". Comment text is already decode()d by
+		// ItemCommentWrapper, unlike source["body"] here, which is raw.
+		const lowerBody = source["body"].toLowerCase();
+		const explicitlyEnded =
+			lowerBody.includes("auction ended") ||
+			lowerBody.includes("sold to [user=") ||
+			commentData.some(
+				(comment) =>
+					comment.username.toLowerCase() ===
+						itemData.username.toLowerCase() &&
+					comment.text.toLowerCase().includes("sold to [user="),
+			);
 
 		const unstrikedData = this.getDerivedData(
 			source["body"],
@@ -167,8 +186,9 @@ export class ItemWrapper {
 
 		const stripped = removeStrikethrough(source["body"]);
 		itemData.isSold =
-			!!itemData.highestBidder &&
-			itemData.currentBid == itemData.binPrice;
+			xmlSold ||
+			(!!itemData.highestBidder &&
+				itemData.currentBid == itemData.binPrice);
 
 		itemData.isEnded =
 			explicitlyEnded ||

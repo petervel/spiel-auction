@@ -24,9 +24,13 @@ const exportWhere = (entry: MeetupEntry) => {
 	return square ? `${HALL_1A}: ${square}` : HALL_1A;
 };
 
-// One row per item (same granularity the export has always had).
+// One row per item (same granularity the export has always had) - except a
+// pure custom meetup (see POST /api/meetups/custom), which has no items at
+// all and would otherwise vanish from the export entirely. null itemId
+// marks that case: no BGG auction to link to, same as MeetupRow.tsx falling
+// back to customDescription for the name.
 type ExportRow = {
-	itemId: number;
+	itemId: number | null;
 	name: string;
 	price?: number;
 	username: string;
@@ -47,11 +51,8 @@ const flattenEntries = (
 ): ExportRow[] =>
 	entries
 		.filter((entry) => entry.role === role)
-		.flatMap((entry) =>
-			entry.items.map((item) => ({
-				itemId: item.id,
-				name: item.objectName,
-				price: item.currentBid,
+		.flatMap((entry): ExportRow[] => {
+			const common = {
 				username: entry.counterpart,
 				where: exportWhere(entry),
 				description: entry.counterpartLocation?.description ?? null,
@@ -59,8 +60,26 @@ const flattenEntries = (
 				time: exportTime(entry),
 				sortTime: entry.meetup.time,
 				notes: entry.meetup.myNotes,
-			})),
-		);
+			};
+
+			if (entry.items.length === 0) {
+				return [
+					{
+						...common,
+						itemId: null,
+						name: entry.meetup.customDescription ?? '',
+						price: undefined,
+					},
+				];
+			}
+
+			return entry.items.map((item) => ({
+				...common,
+				itemId: item.id,
+				name: item.objectName,
+				price: item.currentBid,
+			}));
+		});
 
 const compareStrings = (a?: string, b?: string) => {
 	if (!a || !b) {
@@ -89,6 +108,7 @@ const linkAuctions = (
 	rows: ExportRow[],
 ) => {
 	rows.forEach((row, index) => {
+		if (row.itemId == null) return;
 		const sheetRow = sheet.getRow(index + 2);
 		sheetRow.getCell('name').value = {
 			text: row.name,

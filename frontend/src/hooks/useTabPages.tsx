@@ -1,4 +1,5 @@
 import {
+	HandshakeRounded,
 	HeartBrokenRounded,
 	Sell,
 	ShoppingBasket,
@@ -14,8 +15,9 @@ export type TabPageId =
 	| 'search'
 	| 'selling'
 	| 'buying'
+	| 'liked'
 	| 'wishlist'
-	| 'liked';
+	| 'meetups';
 
 export type TabPageData = {
 	id: TabPageId;
@@ -70,6 +72,12 @@ export const useTabPages = () => {
 			label: 'Wishlist',
 			renderIcon: () => <StarRounded />,
 			url: `/wishlist`,
+		},
+		{
+			id: 'meetups',
+			label: 'Meetups',
+			renderIcon: () => <HandshakeRounded />,
+			url: `/meetups`,
 		},
 	];
 

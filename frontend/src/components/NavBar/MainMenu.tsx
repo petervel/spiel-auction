@@ -1,7 +1,6 @@
 import {
 	AdminPanelSettingsRounded,
 	ForumRounded,
-	HandshakeRounded,
 	LoginRounded,
 	LogoutRounded,
 	PersonOffRounded,
@@ -61,17 +60,6 @@ const MainMenu = ({ anchorEl, close }: MenuProps) => {
 							<SettingsRounded className={css.menuIcon} />
 						</ListItemIcon>
 						Settings
-					</MenuItem>
-					<MenuItem
-						className={css.menuItem}
-						component={NavLink}
-						onClick={close}
-						to="/meetups"
-					>
-						<ListItemIcon>
-							<HandshakeRounded className={css.menuIcon} />
-						</ListItemIcon>
-						Meetups
 					</MenuItem>
 					<MenuItem
 						className={css.menuItem}

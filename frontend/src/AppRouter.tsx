@@ -33,6 +33,8 @@ export const AppRouter = () => {
 				<Route path="/search" element={<SearchPage />} />
 				<Route path="/liked" element={<LikedPage />} />
 				<Route path="/wishlist" element={<WishlistPage />} />
+				<Route path="/meetups" element={<MeetupsPage />} />
+				<Route path="/meetups/:day" element={<MeetupDayPage />} />
 			</Route>
 
 			<Route path="/login/verify" element={<VerifyLoginPage />} />
@@ -41,8 +43,6 @@ export const AppRouter = () => {
 			<Route path="/settings/:tab" element={<SettingsPage />} />
 			<Route path="/duplicates" element={<DuplicatesPage />} />
 			<Route path="/deleted" element={<DeletedPage />} />
-			<Route path="/meetups" element={<MeetupsPage />} />
-			<Route path="/meetups/:day" element={<MeetupDayPage />} />
 			<Route path="/admin" element={<AdminPage />} />
 			<Route path="/admin/fairs" element={<AdminFairsPage />} />
 			<Route path="/donate" element={<DonatePage />} />

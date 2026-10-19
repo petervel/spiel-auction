@@ -2,7 +2,6 @@ import { ChevronRightRounded } from '@mui/icons-material';
 import { Button, Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BackButton } from '../../components/BackButton/BackButton';
 import { LoginLink } from '../../components/LoginLink/LoginLink';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
@@ -48,7 +47,7 @@ export const MeetupsPage = () => {
 				paddingInline="1rem"
 				paddingBottom="2rem"
 			>
-				<Title title="Meetups" left={<BackButton />} />
+				<Title title="Meetups" />
 				<p>
 					<LoginLink /> to see your meetups.
 				</p>
@@ -66,7 +65,7 @@ export const MeetupsPage = () => {
 				paddingInline="1rem"
 				paddingBottom="2rem"
 			>
-				<Title title="Meetups" left={<BackButton />} />
+				<Title title="Meetups" />
 				<Typography>
 					Set your BGG username in{' '}
 					<Link to="/settings">Settings</Link> before using meetups.
@@ -84,7 +83,7 @@ export const MeetupsPage = () => {
 				paddingInline="1rem"
 				paddingBottom="2rem"
 			>
-				<Title title="Meetups" left={<BackButton />} />
+				<Title title="Meetups" />
 				<Typography>
 					Verify your BGG username in{' '}
 					<Link to="/settings">Settings</Link> before using meetups -
@@ -145,7 +144,6 @@ export const MeetupsPage = () => {
 			>
 				<Title
 					title="Meetups"
-					left={<BackButton />}
 					right={
 						<Button
 							variant="contained"

@@ -4,7 +4,7 @@ import {
 	HandshakeRounded,
 	PlaceRounded,
 } from '@mui/icons-material';
-import { Stack, Typography } from '@mui/material';
+import { Stack, Tooltip, Typography } from '@mui/material';
 import classNames from 'classnames';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -16,6 +16,7 @@ import {
 	gameNamesOf,
 	getDisplayLocation,
 	getDisplayTime,
+	meetupKey,
 } from './meetupDisplay';
 import { MeetupRowDetails } from './MeetupRowDetails';
 import { MeetupRowEditForm } from './MeetupRowEditForm';
@@ -35,12 +36,18 @@ export const RoleGroup = ({
 	onChangeFor,
 	onRenameFor,
 	onDeleteFor,
+	highlightedKey,
+	onHighlighted,
 }: {
 	label: string;
 	entries: MeetupEntry[];
 	onChangeFor: (entry: MeetupEntry) => (changes: MeetupChanges) => void;
 	onRenameFor: (entry: MeetupEntry) => (input: RenameInput) => Promise<unknown>;
 	onDeleteFor: (entry: MeetupEntry) => () => Promise<unknown>;
+	// The meetup (see meetupKey) a just-added custom meetup landed on, if
+	// any - scrolled to, expanded and briefly flashed once its row mounts.
+	highlightedKey?: string | null;
+	onHighlighted?: () => void;
 }) => (
 	<Stack gap={0.75}>
 		<Typography variant="subtitle2" color="text.secondary">
@@ -49,11 +56,13 @@ export const RoleGroup = ({
 		<div className={css.list}>
 			{entries.map((entry) => (
 				<MeetupRow
-					key={`${entry.role}-${entry.counterpart}`}
+					key={meetupKey(entry)}
 					entry={entry}
 					onChange={onChangeFor(entry)}
 					onRename={onRenameFor(entry)}
 					onDelete={onDeleteFor(entry)}
+					highlighted={meetupKey(entry) === highlightedKey}
+					onHighlighted={onHighlighted}
 				/>
 			))}
 		</div>
@@ -65,11 +74,15 @@ export const MeetupRow = ({
 	onChange,
 	onRename,
 	onDelete,
+	highlighted = false,
+	onHighlighted,
 }: {
 	entry: MeetupEntry;
 	onChange: (changes: MeetupChanges) => void;
 	onRename: (input: RenameInput) => Promise<unknown>;
 	onDelete: () => Promise<unknown>;
+	highlighted?: boolean;
+	onHighlighted?: () => void;
 }) => {
 	// Collapsed by default. Expanding just reveals the full read-only detail -
 	// editing is a separate step behind its own icon, so tapping a row to
@@ -80,6 +93,20 @@ export const MeetupRow = ({
 	const [expanded, setExpanded] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [isMessaging, setIsMessaging] = useState(false);
+
+	// Expands (and keeps expanded, even after the flash below fades) the
+	// moment `highlighted` first turns true - a just-added/merged custom
+	// meetup (see MeetupsPage's handleAddCustom) is otherwise invisible,
+	// possibly collapsed inside "Unfinished"/"Completed" or scrolled
+	// off-screen. React's documented "adjust state during render" pattern
+	// (comparing against the previous prop value) rather than an effect -
+	// it applies before this render paints, so there's no flash-of-
+	// collapsed-then-expanded, and no setState-in-effect lint violation.
+	const [prevHighlighted, setPrevHighlighted] = useState(highlighted);
+	if (highlighted !== prevHighlighted) {
+		setPrevHighlighted(highlighted);
+		if (highlighted) setExpanded(true);
+	}
 
 	// Ticking the checkbox jumps this row to a different section (Completed,
 	// or back out of it) - committing that instantly made it feel like the
@@ -101,6 +128,24 @@ export const MeetupRow = ({
 	);
 
 	useEffect(() => () => clearTimeout(leaveTimeout.current), []);
+
+	// Scrolls the row into view and, once the flash (driven directly off
+	// `highlighted` below, no local state needed for it) has had time to
+	// register, tells the parent to let go of the highlight.
+	useEffect(() => {
+		if (!highlighted) return;
+		const raf = requestAnimationFrame(() =>
+			rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+		);
+		const timeout = setTimeout(() => onHighlighted?.(), 2200);
+		return () => {
+			cancelAnimationFrame(raf);
+			clearTimeout(timeout);
+		};
+		// Only the highlighted->true transition should re-run this - not
+		// onHighlighted re-identifying on every parent render.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [highlighted]);
 
 	const toggleCompleted = () => {
 		if (leaving) return;
@@ -136,6 +181,13 @@ export const MeetupRow = ({
 			? gameNamesOf(entry)
 			: entry.meetup.customDescription ?? '';
 
+	// The addendum case: a custom meetup added on top of a genuine
+	// buying/selling pair (POST /api/meetups/custom merging onto an
+	// existing row) - otherwise invisible in the collapsed line, since
+	// gameNames above only ever shows the real item names here.
+	const hasCustomNoteAddendum =
+		entry.items.length > 0 && !!entry.meetup.customDescription;
+
 	return (
 		<div
 			className={classNames(css.rowOuter, leaving && css.collapsed)}
@@ -151,6 +203,7 @@ export const MeetupRow = ({
 					css.row,
 					entry.role === 'buying' ? css.buying : css.selling,
 					leaving && css.fadingOut,
+					highlighted && css.justAdded,
 				)}
 			>
 				<div className={css.collapsedLine}>
@@ -175,7 +228,17 @@ export const MeetupRow = ({
 							</span>
 						)}
 						<span className={css.main}>
-							<span className={css.game}>{gameNames}</span>
+							<span className={css.game}>
+								<span className={css.gameName}>{gameNames}</span>
+								{hasCustomNoteAddendum && (
+									<Tooltip title="Also has a custom note - see below">
+										<HandshakeRounded
+											fontSize="inherit"
+											className={css.customNoteBadge}
+										/>
+									</Tooltip>
+								)}
+							</span>
 							<span className={css.counterpart}>
 								{entry.counterpart}
 							</span>

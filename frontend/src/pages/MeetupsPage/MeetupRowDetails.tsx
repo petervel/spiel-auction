@@ -1,5 +1,6 @@
 import {
 	EditRounded,
+	HandshakeRounded,
 	InfoOutlined,
 	MailOutlineRounded,
 	NotificationsRounded,
@@ -77,12 +78,19 @@ export const MeetupRowDetails = ({
 		<Stack gap="1rem" className={css.details}>
 			{/* Additive, not a replacement - a pure custom meetup (no items)
 			already shows its description as the "game name" in the
-			collapsed row, so it's only repeated here when there's also a
-			real item. */}
+			collapsed row (also flagged there via the badge next to it, see
+			MeetupRow's hasCustomNoteAddendum), so it's only repeated here
+			when there's also a real item. */}
 			{entry.items.length > 0 && entry.meetup.customDescription && (
-				<Typography variant="body2" color="text.secondary">
-					{entry.meetup.customDescription}
-				</Typography>
+				<div className={css.customNote}>
+					<HandshakeRounded
+						fontSize="small"
+						className={css.customNoteIcon}
+					/>
+					<Typography variant="body2">
+						{entry.meetup.customDescription}
+					</Typography>
+				</div>
 			)}
 			{entry.items.length > 1 && (
 				<Stack gap={0.25}>

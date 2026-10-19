@@ -7,12 +7,17 @@ import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
 import { useBggUsername } from '../../hooks/useBggUsername';
 import { useListId } from '../../hooks/useListId';
-import { MeetupChanges, MeetupEntry, useMeetups } from '../../hooks/useMeetups';
+import {
+	CustomMeetupInput,
+	MeetupChanges,
+	MeetupEntry,
+	useMeetups,
+} from '../../hooks/useMeetups';
 import { useUser } from '../../hooks/useUser';
 import { AddCustomMeetupDialog } from './AddCustomMeetupDialog';
 import { CollapsibleSection } from './CollapsibleSection';
 import { CompletedSection } from './CompletedSection';
-import { groupByDay, sortByCompletedAtDesc } from './meetupDisplay';
+import { groupByDay, meetupKey, sortByCompletedAtDesc } from './meetupDisplay';
 import { RenameInput, RoleGroup } from './MeetupRow';
 import css from './MeetupsPage.module.css';
 import { MyMeetupSpotLink } from './MyMeetupSpotLink';
@@ -32,6 +37,10 @@ export const MeetupsPage = () => {
 		deleteCustomMeetup,
 	} = useMeetups();
 	const [addingCustom, setAddingCustom] = useState(false);
+	// The meetup (see meetupKey) a just-added/merged custom meetup landed
+	// on - cleared by MeetupRow itself once it's finished scrolling to and
+	// flashing that row (see RoleGroup/CompletedSection's onHighlighted).
+	const [highlightedKey, setHighlightedKey] = useState<string | null>(null);
 	const { bggUsername, verification, fetchVerification } = useBggUsername();
 
 	useEffect(() => {
@@ -134,6 +143,24 @@ export const MeetupsPage = () => {
 			role: entry.role,
 		});
 
+	// Whichever section the custom meetup landed on (a brand new pair, or
+	// an addendum merged onto an already-existing one) only knows its own
+	// final shape once the refetch this triggers (see useMeetups'
+	// addCustomMeetup) comes back - highlightedKey just records the
+	// (role, counterpart) to look for, and whichever row/section actually
+	// ends up holding it picks that up from there.
+	const handleAddCustom = async (input: CustomMeetupInput) => {
+		await addCustomMeetup(input);
+		setHighlightedKey(
+			meetupKey({
+				role: input.role,
+				counterpart: input.counterpartUsername.trim(),
+			}),
+		);
+	};
+
+	const clearHighlight = () => setHighlightedKey(null);
+
 	return (
 		<>
 			<Stack
@@ -185,6 +212,13 @@ export const MeetupsPage = () => {
 								{unfinished.length > 0 && (
 									<CollapsibleSection
 										label={`Unfinished (${unfinished.length})`}
+										forceOpen={
+											highlightedKey != null &&
+											unfinished.some(
+												(entry) =>
+													meetupKey(entry) === highlightedKey,
+											)
+										}
 									>
 										<Stack gap={1.5}>
 											{unfinishedSelling.length > 0 && (
@@ -194,6 +228,8 @@ export const MeetupsPage = () => {
 													onChangeFor={onChangeFor}
 													onRenameFor={onRenameFor}
 													onDeleteFor={onDeleteFor}
+													highlightedKey={highlightedKey}
+													onHighlighted={clearHighlight}
 												/>
 											)}
 											{unfinishedBuying.length > 0 && (
@@ -203,6 +239,8 @@ export const MeetupsPage = () => {
 													onChangeFor={onChangeFor}
 													onRenameFor={onRenameFor}
 													onDeleteFor={onDeleteFor}
+													highlightedKey={highlightedKey}
+													onHighlighted={clearHighlight}
 												/>
 											)}
 										</Stack>
@@ -233,6 +271,8 @@ export const MeetupsPage = () => {
 												onChangeFor={onChangeFor}
 												onRenameFor={onRenameFor}
 												onDeleteFor={onDeleteFor}
+												highlightedKey={highlightedKey}
+												onHighlighted={clearHighlight}
 											/>
 										)}
 										{section.buying.length > 0 && (
@@ -242,6 +282,8 @@ export const MeetupsPage = () => {
 												onChangeFor={onChangeFor}
 												onRenameFor={onRenameFor}
 												onDeleteFor={onDeleteFor}
+												highlightedKey={highlightedKey}
+												onHighlighted={clearHighlight}
 											/>
 										)}
 									</Stack>
@@ -252,6 +294,8 @@ export const MeetupsPage = () => {
 									onChangeFor={onChangeFor}
 									onRenameFor={onRenameFor}
 									onDeleteFor={onDeleteFor}
+									highlightedKey={highlightedKey}
+									onHighlighted={clearHighlight}
 								/>
 							</>
 						)}
@@ -269,7 +313,7 @@ export const MeetupsPage = () => {
 			<AddCustomMeetupDialog
 				open={addingCustom}
 				onClose={() => setAddingCustom(false)}
-				onAdd={addCustomMeetup}
+				onAdd={handleAddCustom}
 			/>
 		</>
 	);

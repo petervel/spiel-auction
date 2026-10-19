@@ -56,6 +56,14 @@ export const getDisplayLocation = (
 export const gameNamesOf = (entry: MeetupEntry) =>
 	entry.items.map((item) => item.objectName).join(', ');
 
+// Identifies a meetup by its (fairId-scoped) unique pair, same as the
+// backend's own @@unique([fairId, buyerUsername, sellerUsername]) - used
+// both as the list `key` and to find/highlight a specific entry (e.g. one
+// just added/merged via POST /api/meetups/custom) regardless of whatever
+// casing the counterpart's username happens to be typed/stored in.
+export const meetupKey = (entry: Pick<MeetupEntry, 'role' | 'counterpart'>) =>
+	`${entry.role}-${entry.counterpart.toLowerCase()}`;
+
 export const byTimeThenCounterpart = (a: MeetupEntry, b: MeetupEntry) => {
 	if (a.meetup.time !== b.meetup.time) {
 		return a.meetup.time.localeCompare(b.meetup.time);

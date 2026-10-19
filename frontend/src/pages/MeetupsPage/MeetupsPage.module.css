@@ -32,6 +32,23 @@
 	transition: opacity 200ms ease;
 }
 
+/* Briefly marks the row a just-added/merged custom meetup landed on (see
+   MeetupRow's `highlighted` prop) - a fading ring rather than a
+   background tint, since the row's own background already carries
+   meaning (role accent) this shouldn't compete with. */
+@keyframes justAddedPulse {
+	0% {
+		box-shadow: 0 0 0 3px color-mix(in srgb, #cda876 70%, transparent);
+	}
+	100% {
+		box-shadow: 0 0 0 3px transparent;
+	}
+}
+
+.justAdded {
+	animation: justAddedPulse 2.2s ease-out;
+}
+
 /* Separates the always-visible collapsed line from the expanded/edit
    content below it, in both states. */
 .rowDivider {
@@ -241,10 +258,31 @@ body:global(.dark) .buying .statusLabel {
 
 .game {
 	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-weight: 600;
+}
+
+.gameName {
+	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	font-weight: 600;
+}
+
+/* Flags the addendum case (a custom meetup merged onto an otherwise
+   genuine buying/selling pair, see MeetupRow's hasCustomNoteAddendum) -
+   same warm "manually annotated" palette as .coordinateChip/.customNote,
+   so it reads as "there's more below", not just decoration. */
+.customNoteBadge {
+	flex-shrink: 0;
+	font-size: 15px;
+	color: #9c6b1f;
+}
+
+body:global(.dark) .customNoteBadge {
+	color: #cda876;
 }
 
 .counterpart {
@@ -425,4 +463,39 @@ body:global(.dark) .counterpartInfo {
 
 body:global(.dark) .counterpartInfoIcon {
 	color: hsl(210, 95%, 55%);
+}
+
+/* The addendum case (a custom meetup merged onto a genuine buying/selling
+   pair) used to render as a single plain secondary-text line, easy to
+   miss among the rest of the detail. A filled box (not just a left
+   accent bar, unlike .counterpartInfo - that one competes with the role
+   accent less since it's about the *other* person's own info, this one
+   is "why does this row look different") makes it read as its own
+   distinct, deliberate annotation. Same warm palette as .coordinateChip/
+   .customNoteBadge, so all three read as the same "custom" language. */
+.customNote {
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+	border-radius: 6px;
+	padding: 8px 10px;
+	background: #faf6ec;
+	border: 1px solid #cda876;
+	color: #1f2937;
+}
+
+.customNoteIcon {
+	flex-shrink: 0;
+	margin-top: 1px;
+	color: #9c6b1f;
+}
+
+body:global(.dark) .customNote {
+	background: #2c2620;
+	border-color: #9c6b1f;
+	color: #e8dccb;
+}
+
+body:global(.dark) .customNoteIcon {
+	color: #cda876;
 }

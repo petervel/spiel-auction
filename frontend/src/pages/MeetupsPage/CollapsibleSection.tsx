@@ -10,13 +10,29 @@ import css from './MeetupsPage.module.css';
 export const CollapsibleSection = ({
 	label,
 	defaultOpen = false,
+	forceOpen = false,
 	children,
 }: {
 	label: string;
 	defaultOpen?: boolean;
+	// Opens the section regardless of its current state, e.g. because it
+	// now contains the entry a just-added custom meetup landed on - never
+	// closes it back once that stops being true, so toggling it shut again
+	// is always still the user's own call.
+	forceOpen?: boolean;
 	children: ReactNode;
 }) => {
 	const [open, setOpen] = useState(defaultOpen);
+
+	// React's documented "adjust state during render" pattern (compare
+	// against the previous prop value, not a useEffect) - this needs to
+	// apply before the section's own first render with forceOpen true
+	// paints, not one tick later.
+	const [prevForceOpen, setPrevForceOpen] = useState(forceOpen);
+	if (forceOpen !== prevForceOpen) {
+		setPrevForceOpen(forceOpen);
+		if (forceOpen) setOpen(true);
+	}
 
 	return (
 		<Stack gap={1}>

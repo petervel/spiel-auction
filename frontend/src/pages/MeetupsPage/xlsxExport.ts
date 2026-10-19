@@ -45,6 +45,23 @@ type ExportRow = {
 	notes: string | null;
 };
 
+// A custom meetup merged onto an otherwise genuine buying/selling pair
+// (see POST /api/meetups/custom) carries its customDescription as an
+// addendum, not a replacement for the real item names (see MeetupRow's
+// hasCustomNoteAddendum) - the export used to only ever read it for the
+// *pure* custom case (no items), so this addendum silently never made it
+// onto the sheet at all. Folded into the "Info" column alongside the
+// counterpart's own location description, rather than a new column, since
+// both are "extra context about this meetup" rather than the row's own
+// identity (name/price/where).
+const exportInfo = (entry: MeetupEntry) => {
+	const customNote =
+		entry.items.length > 0 ? entry.meetup.customDescription : null;
+	return [customNote, entry.counterpartLocation?.description]
+		.filter((value): value is string => !!value)
+		.join(' | ');
+};
+
 const flattenEntries = (
 	entries: MeetupEntry[],
 	role: MeetupRole,
@@ -55,7 +72,7 @@ const flattenEntries = (
 			const common = {
 				username: entry.counterpart,
 				where: exportWhere(entry),
-				description: entry.counterpartLocation?.description ?? null,
+				description: exportInfo(entry) || null,
 				day: entry.meetup.day,
 				time: exportTime(entry),
 				sortTime: entry.meetup.time,

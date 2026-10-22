@@ -7,6 +7,7 @@ import {
 	EMULATED_USER_COOKIE,
 	requireAdmin,
 } from "../../../middleware/auth";
+import { sendPushToUser } from "../../push/webPushClient";
 import { redisClient } from "../redisClient";
 
 const router = express.Router();
@@ -227,6 +228,64 @@ router.delete(
 	(_req: AuthenticatedRequest, res) => {
 		res.clearCookie(EMULATED_USER_COOKIE, { path: "/" });
 		return res.json({ emulating: false });
+	},
+);
+
+// Fans out a push notification to every user who hasn't opted out (see
+// User.notifyOnAdminBroadcast) - same sendPushToUser/Promise.all pattern
+// every other notifier in this codebase uses, just across the whole
+// install rather than one triggering event's own target users. The
+// frontend is expected to confirm with the admin before calling this -
+// there's no undo once it's fanned out.
+router.post(
+	"/broadcast",
+	authenticateUser,
+	requireAdmin,
+	async (req: AuthenticatedRequest, res) => {
+		try {
+			const { title, body, url } = req.body;
+
+			if (typeof title !== "string" || !title.trim()) {
+				res.status(400).json({ error: "title is required" });
+				return;
+			}
+			if (typeof body !== "string" || !body.trim()) {
+				res.status(400).json({ error: "body is required" });
+				return;
+			}
+			if (url !== undefined && typeof url !== "string") {
+				res.status(400).json({ error: "url must be a string" });
+				return;
+			}
+
+			// Eligible (notifyOnAdminBroadcast) alone overcounts hugely - most
+			// users have never enabled push at all, so sendPushToUser is a
+			// silent no-op for them (zero PushSubscription rows). Requiring at
+			// least one subscription makes the reported count mean "actually
+			// got a push attempt", not just "didn't opt out".
+			const recipients = await prisma.user.findMany({
+				where: {
+					notifyOnAdminBroadcast: true,
+					PushSubscription: { some: {} },
+				},
+				select: { id: true },
+			});
+
+			await Promise.all(
+				recipients.map((recipient) =>
+					sendPushToUser(recipient.id, {
+						title: title.trim(),
+						body: body.trim(),
+						url: url?.trim() || undefined,
+					}),
+				),
+			);
+
+			res.status(200).json({ sentToUsers: recipients.length });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Database error" });
+		}
 	},
 );
 

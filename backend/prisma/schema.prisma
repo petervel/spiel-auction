@@ -33,6 +33,9 @@ model User {
   notifyOnAuctionWon         Boolean @default(true)
   notifyOnWishlistItemListed Boolean @default(true)
   notifyOnMeetupReminder     Boolean @default(true)
+  // Admin-sent broadcast push notifications (see POST /api/admin/broadcast) -
+  // opt-out, not opt-in, like every other notifyOn* field here.
+  notifyOnAdminBroadcast     Boolean @default(true)
 
   // Days this user expects to be trading at the fair, used to fill in the
   // [day] token in their geekmail templates below (joined as "Thursday or

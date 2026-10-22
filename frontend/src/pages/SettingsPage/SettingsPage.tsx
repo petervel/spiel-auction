@@ -886,6 +886,22 @@ export const SettingsPage = () => {
 										}
 										label="Meetup reminder (30 min before trading starts)"
 									/>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={
+													notificationPreferences.notifyOnAdminBroadcast
+												}
+												disabled={preferencesSaving}
+												onChange={() =>
+													togglePreference(
+														'notifyOnAdminBroadcast',
+													)
+												}
+											/>
+										}
+										label="General announcements"
+									/>
 								</Stack>
 								<Stack gap={2} direction="row">
 									<Button

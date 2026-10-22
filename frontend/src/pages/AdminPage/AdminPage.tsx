@@ -6,6 +6,7 @@ import { Spinner } from '../../components/Spinner/Spinner';
 import { Title } from '../../components/Title/Title';
 import { AdminStats, useAdminStats } from '../../hooks/useAdminStats';
 import { useUser } from '../../hooks/useUser';
+import { SendBroadcastDialog } from './SendBroadcastDialog';
 
 // Matches SettingsPage's sectionSx - a bordered card per group, consistent
 // with how the rest of the app sets settings/info sections apart.
@@ -176,6 +177,7 @@ export const AdminPage = () => {
 	const [results, setResults] = useState<AdminUserResult[] | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
+	const [sendingBroadcast, setSendingBroadcast] = useState(false);
 
 	if (isLoading) return <Spinner />;
 
@@ -228,81 +230,111 @@ export const AdminPage = () => {
 	};
 
 	return (
-		<Stack
-			paddingInline="2rem"
-			paddingBottom="2rem"
-			gap={2}
-			sx={{ width: '100%', maxWidth: 640, marginInline: 'auto' }}
-		>
-			<Title title="Admin" left={<BackButton />} />
-
-			<Button
-				component={Link}
-				to="/admin/fairs"
-				variant="outlined"
-				sx={{ alignSelf: 'start' }}
+		<>
+			<Stack
+				paddingInline="2rem"
+				paddingBottom="2rem"
+				gap={2}
+				sx={{ width: '100%', maxWidth: 640, marginInline: 'auto' }}
 			>
-				Manage fairs
-			</Button>
+				<Title title="Admin" left={<BackButton />} />
 
-			<FairStats />
-
-			<Typography variant="h6">Emulate user</Typography>
-			<Stack component="form" onSubmit={search} direction="row" gap={1}>
-				<TextField
-					size="small"
-					label="BGG username"
-					value={query}
-					onChange={(evt) => setQuery(evt.target.value)}
-					fullWidth
-				/>
-				<Button type="submit" variant="contained" disabled={busy}>
-					Search
-				</Button>
-			</Stack>
-
-			{error && <Typography color="error">{error}</Typography>}
-
-			{results && results.length === 0 && (
-				<Typography color="text.secondary">No users found.</Typography>
-			)}
-
-			{results?.map((result) => (
-				<Stack
-					key={result.id}
-					direction="row"
-					alignItems="center"
-					justifyContent="space-between"
-					gap={1}
+				<Button
+					component={Link}
+					to="/admin/fairs"
+					variant="outlined"
+					sx={{ alignSelf: 'start' }}
 				>
-					<Stack direction="row" alignItems="center" gap={1}>
-						<Typography>
-							{result.bggUsername ??
-								`(no BGG username, #${result.id})`}
-						</Typography>
-						{result.verified ? (
-							<Chip
-								size="small"
-								label="verified"
-								color="success"
-							/>
-						) : (
-							<Chip size="small" label="not verified" />
-						)}
-						{result.accessLevel !== 'NORMAL' && (
-							<Chip size="small" label={result.accessLevel} />
-						)}
-					</Stack>
+					Manage fairs
+				</Button>
+
+				<FairStats />
+
+				<Stack gap={1} sx={sectionSx}>
+					<Typography variant="subtitle2" color="text.secondary">
+						Announcements
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+						Send a push notification to every user who hasn't opted
+						out of admin announcements in Settings.
+					</Typography>
 					<Button
-						size="small"
 						variant="outlined"
-						disabled={busy}
-						onClick={() => emulate(result.id)}
+						sx={{ alignSelf: 'start' }}
+						onClick={() => setSendingBroadcast(true)}
 					>
-						Emulate
+						Send notification to all users
 					</Button>
 				</Stack>
-			))}
-		</Stack>
+
+				<Typography variant="h6">Emulate user</Typography>
+				<Stack
+					component="form"
+					onSubmit={search}
+					direction="row"
+					gap={1}
+				>
+					<TextField
+						size="small"
+						label="BGG username"
+						value={query}
+						onChange={(evt) => setQuery(evt.target.value)}
+						fullWidth
+					/>
+					<Button type="submit" variant="contained" disabled={busy}>
+						Search
+					</Button>
+				</Stack>
+
+				{error && <Typography color="error">{error}</Typography>}
+
+				{results && results.length === 0 && (
+					<Typography color="text.secondary">
+						No users found.
+					</Typography>
+				)}
+
+				{results?.map((result) => (
+					<Stack
+						key={result.id}
+						direction="row"
+						alignItems="center"
+						justifyContent="space-between"
+						gap={1}
+					>
+						<Stack direction="row" alignItems="center" gap={1}>
+							<Typography>
+								{result.bggUsername ??
+									`(no BGG username, #${result.id})`}
+							</Typography>
+							{result.verified ? (
+								<Chip
+									size="small"
+									label="verified"
+									color="success"
+								/>
+							) : (
+								<Chip size="small" label="not verified" />
+							)}
+							{result.accessLevel !== 'NORMAL' && (
+								<Chip size="small" label={result.accessLevel} />
+							)}
+						</Stack>
+						<Button
+							size="small"
+							variant="outlined"
+							disabled={busy}
+							onClick={() => emulate(result.id)}
+						>
+							Emulate
+						</Button>
+					</Stack>
+				))}
+			</Stack>
+			<SendBroadcastDialog
+				open={sendingBroadcast}
+				onClose={() => setSendingBroadcast(false)}
+			/>
+		</>
 	);
 };

@@ -483,6 +483,7 @@ router.post(
 				notifyOnAuctionWon,
 				notifyOnWishlistItemListed,
 				notifyOnMeetupReminder,
+				notifyOnAdminBroadcast,
 			} = req.body;
 
 			if (
@@ -490,10 +491,11 @@ router.post(
 				typeof notifyOnNewBid !== "boolean" ||
 				typeof notifyOnAuctionWon !== "boolean" ||
 				typeof notifyOnWishlistItemListed !== "boolean" ||
-				typeof notifyOnMeetupReminder !== "boolean"
+				typeof notifyOnMeetupReminder !== "boolean" ||
+				typeof notifyOnAdminBroadcast !== "boolean"
 			) {
 				return res.status(400).json({
-					error: "notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon, notifyOnWishlistItemListed, and notifyOnMeetupReminder must all be booleans",
+					error: "notifyOnOutbid, notifyOnNewBid, notifyOnAuctionWon, notifyOnWishlistItemListed, notifyOnMeetupReminder, and notifyOnAdminBroadcast must all be booleans",
 				});
 			}
 
@@ -509,6 +511,7 @@ router.post(
 					notifyOnAuctionWon,
 					notifyOnWishlistItemListed,
 					notifyOnMeetupReminder,
+					notifyOnAdminBroadcast,
 				},
 			});
 

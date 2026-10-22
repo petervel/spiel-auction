@@ -15,6 +15,7 @@ export interface User {
 	notifyOnAuctionWon?: boolean;
 	notifyOnWishlistItemListed?: boolean;
 	notifyOnMeetupReminder?: boolean;
+	notifyOnAdminBroadcast?: boolean;
 
 	preferredTradeDays?: (
 		| 'WEDNESDAY'

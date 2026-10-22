@@ -7,6 +7,7 @@ export type NotificationPreferences = {
 	notifyOnAuctionWon: boolean;
 	notifyOnWishlistItemListed: boolean;
 	notifyOnMeetupReminder: boolean;
+	notifyOnAdminBroadcast: boolean;
 };
 
 export const useNotificationPreferences = () => {
@@ -19,6 +20,7 @@ export const useNotificationPreferences = () => {
 		notifyOnAuctionWon: user?.notifyOnAuctionWon ?? true,
 		notifyOnWishlistItemListed: user?.notifyOnWishlistItemListed ?? true,
 		notifyOnMeetupReminder: user?.notifyOnMeetupReminder ?? true,
+		notifyOnAdminBroadcast: user?.notifyOnAdminBroadcast ?? true,
 	};
 
 	const setPreferences = useCallback(

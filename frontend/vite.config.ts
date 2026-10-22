@@ -26,7 +26,11 @@ export default defineConfig(({ mode }) => {
 				strategies: 'injectManifest',
 				srcDir: 'src',
 				filename: 'sw.ts',
-				registerType: 'autoUpdate',
+				// 'prompt', not 'autoUpdate' - autoUpdate's generated register
+				// code reloads the page the instant any new SW activates, no
+				// matter what's on screen. main.tsx decides when that's safe
+				// (only once the tab's backgrounded) instead.
+				registerType: 'prompt',
 				includeAssets: [
 					'favicon.svg',
 					'robots.txt',
@@ -34,7 +38,12 @@ export default defineConfig(({ mode }) => {
 					'icon/icon-192x192.png',
 					'icon/icon-512x512.png',
 				],
-				injectRegister: 'auto',
+				// Registered by hand in main.tsx instead (via
+				// virtual:pwa-register) so it can also poll for updates -
+				// the browser's own update check only fires on navigation,
+				// throttled to ~once/24h, which a phone PWA that's rarely
+				// fully closed/reloaded can go a long time without hitting.
+				injectRegister: false,
 				devOptions: {
 					enabled: true,
 					type: 'module',

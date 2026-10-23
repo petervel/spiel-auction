@@ -4,11 +4,13 @@ import css from './TradeFloorGrid.module.css';
 // Row order top to bottom, left to right - row 8 at the top, row 1 nearest
 // the entrance. Columns A-F run the full height; G/H sit beyond F but only
 // exist for the middle rows - the room doesn't extend that far right at
-// the very back (row 8) or the front two rows (1-2).
+// the front two rows (1-2). G reaches one row further back than H (up to
+// row 8 as well), so the two aren't quite the same shape.
 const MAIN_COLUMNS = ['A', 'B', 'C', 'D', 'E'];
 const ROWS = [8, 7, 6, 5, 4, 3, 2, 1];
 const EXT_COLUMNS = ['G', 'H'];
 const EXT_ROWS = [7, 6, 5, 4, 3];
+const G_ROWS = [8, ...EXT_ROWS];
 
 // The 9 "main block" pillars (A/C/E x rows 2/4/6), per the reference map,
 // plus a 4th column of 2 more in G - rows 4/6 only, no pillar at G2.
@@ -65,10 +67,13 @@ const GRID_HEIGHT = ROW_HEIGHTS.reduce((sum, height) => sum + height, 0);
 
 const rowIndex = (row: number) => ROWS.indexOf(row);
 const extRowIndices = EXT_ROWS.map(rowIndex);
-// The vertical span G/H actually occupy - rows 3-7, not the full height.
+// The vertical span H occupies - rows 3-7, not the full height. G shares
+// this same bottom, but reaches one row further up (see ROW_8_BOTTOM).
 const EXT_TOP = ROW_TOPS[Math.min(...extRowIndices)];
 const EXT_BOTTOM =
 	ROW_TOPS[Math.max(...extRowIndices)] + ROW_HEIGHTS[Math.max(...extRowIndices)];
+// Where row 8 ends - the point G's own extra row steps back in to meet H.
+const ROW_8_BOTTOM = ROW_TOPS[rowIndex(8)] + ROW_HEIGHTS[rowIndex(8)];
 
 // Every column this grid can draw, full-height (A-F) or extension-only
 // (G/H) - shared by cells, headers, pillars and the outline below, so
@@ -93,8 +98,10 @@ const COLUMNS: ColumnLayout[] = [
 		id: 'G',
 		x: FULL_HEIGHT_WIDTH,
 		width: EXT_COLUMN_WIDTHS.G,
-		rows: EXT_ROWS,
-		headerTop: EXT_TOP,
+		// Reaches row 8 too, same as A-F - its header sits on that same
+		// main header row rather than down at H's lower one.
+		rows: G_ROWS,
+		headerTop: 0,
 	},
 	{
 		id: 'H',
@@ -107,6 +114,16 @@ const COLUMNS: ColumnLayout[] = [
 const GRID_WIDTH = FULL_HEIGHT_WIDTH + EXT_WIDTH;
 
 const columnById = (id: string) => COLUMNS.find((col) => col.id === id);
+
+// How far right any column actually reaches for a given row - varies by
+// row now that G and H aren't quite the same shape (row 8: just G: rows
+// 3-7: G+H; rows 1-2: neither, F is rightmost). Used by the row labels and
+// the outline below instead of hand-casing each range.
+const rightExtentForRow = (row: number) =>
+	COLUMNS.reduce(
+		(extent, col) => (col.rows.includes(row) ? Math.max(extent, col.x + col.width) : extent),
+		0,
+	);
 
 // A square's on-screen rect, or null if that column/row combination
 // doesn't exist (e.g. "G2" - G only exists for rows 3-7).
@@ -322,8 +339,7 @@ export const TradeFloorGrid = ({
 				const j = rowIndex(row);
 				const cy = GRID_TOP + ROW_TOPS[j] + ROW_HEIGHTS[j] / 2;
 				const leftChipCx = 40;
-				const hasExt = EXT_ROWS.includes(row);
-				const rightEdge = GRID_LEFT + FULL_HEIGHT_WIDTH + (hasExt ? EXT_WIDTH : 0);
+				const rightEdge = GRID_LEFT + rightExtentForRow(row);
 				const rightChipCx = rightEdge + 80;
 				return (
 					<g key={row}>
@@ -588,30 +604,32 @@ export const TradeFloorGrid = ({
 				})()}
 
 			{/* Outer grid border, thick, with a gap under column B for the
-			    entrance and a bump out on the right (G/H) spanning only
-			    the middle rows (EXT_ROWS). */}
+			    entrance. The right side steps out twice - G joins the main
+			    block's own top edge at row 8 (it reaches that far back,
+			    unlike H), then steps out further still where H joins in at
+			    row 7, before stepping back in again below row 3. */}
 			<g className={css.gridOutline}>
 				<line
 					x1={GRID_LEFT}
 					y1={GRID_TOP}
-					x2={GRID_LEFT + FULL_HEIGHT_WIDTH}
+					x2={GRID_LEFT + FULL_HEIGHT_WIDTH + EXT_COLUMN_WIDTHS.G}
 					y2={GRID_TOP}
 				/>
 				<line
-					x1={GRID_LEFT + FULL_HEIGHT_WIDTH}
+					x1={GRID_LEFT + FULL_HEIGHT_WIDTH + EXT_COLUMN_WIDTHS.G}
 					y1={GRID_TOP}
-					x2={GRID_LEFT + FULL_HEIGHT_WIDTH}
-					y2={GRID_TOP + EXT_TOP}
+					x2={GRID_LEFT + FULL_HEIGHT_WIDTH + EXT_COLUMN_WIDTHS.G}
+					y2={GRID_TOP + ROW_8_BOTTOM}
 				/>
 				<line
-					x1={GRID_LEFT + FULL_HEIGHT_WIDTH}
-					y1={GRID_TOP + EXT_TOP}
+					x1={GRID_LEFT + FULL_HEIGHT_WIDTH + EXT_COLUMN_WIDTHS.G}
+					y1={GRID_TOP + ROW_8_BOTTOM}
 					x2={GRID_LEFT + FULL_HEIGHT_WIDTH + EXT_WIDTH}
-					y2={GRID_TOP + EXT_TOP}
+					y2={GRID_TOP + ROW_8_BOTTOM}
 				/>
 				<line
 					x1={GRID_LEFT + FULL_HEIGHT_WIDTH + EXT_WIDTH}
-					y1={GRID_TOP + EXT_TOP}
+					y1={GRID_TOP + ROW_8_BOTTOM}
 					x2={GRID_LEFT + FULL_HEIGHT_WIDTH + EXT_WIDTH}
 					y2={GRID_TOP + EXT_BOTTOM}
 				/>

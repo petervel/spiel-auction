@@ -78,6 +78,7 @@ services:
         VITE_DEFAULT_GEEKLIST_ID: ${DEFAULT_GEEKLIST_ID}
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
         VITE_GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+        VITE_PLOTSELING_SITE_ID: ${PLOTSELING_SITE_ID}
     container_name: auctions-frontend
     environment:
       VITE_API_URL: /api
